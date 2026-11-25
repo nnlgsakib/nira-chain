@@ -49,7 +49,9 @@ a["evm"]["params"]["active_static_precompiles"] = [
     "0x0000000000000000000000000000000000000806",  # slashing
 ]
 
-if "community" in a:
-    a["community"]["params"]["bond_denom"] = DENOM
+# x/community: short epochs for local testing (production defaults: spec §7)
+cp = a["community"]["params"]
+cp.update(bond_denom=DENOM, epoch_blocks="20", apphash_window=10, target_committee=1000,
+          max_proofs_per_epoch=2000, unbonding_blocks="15", alert_ttl_blocks="200")
 
 json.dump(g, open(p, "w"), indent=1)
