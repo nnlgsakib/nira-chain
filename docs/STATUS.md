@@ -66,8 +66,8 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 |---|---|---|
 | Go unit + invariants | `make test-unit` | 42 test functions: power cap (randomised 2000 ops), community (real IAVL proofs, every rejection path, randomised 120 blocks), spec test vectors |
 | Genesis builder | `make test-genesis` | 11 |
-| Cosmos e2e | `make e2e-cosmos` | 7 + 6 |
-| EVM e2e | `make e2e-evm` | 10 + 9 |
+| Cosmos e2e | `make e2e-cosmos` | 8 + 6 |
+| EVM e2e | `make e2e-evm` | 11 + 9 + 2 (precompile atomicity) |
 | Multi-validator + BFT | `make localtest && make localtest-check` | 8 |
 
 ## Known dependency vulnerabilities (govulncheck, 2026-11-25)

@@ -61,7 +61,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 |---|---|---|---|---|
 | G-SEC-2 | **No threat model document** covering the idea's §11 list (prevention, detection, recovery, test per threat) | T | — | quality-security |
 | G-SEC-3 | No fuzzing: MerkleProof decoding, precompile ABI decoding, msg handlers, genesis import | T | — | quality-testing / quality-security |
-| G-SEC-4 | Precompile atomicity untested: an EVM call that invokes `0x…0900` and then **reverts** must leave no community state or escrow behind (the class of GO-2025-3684) | T | no test with a reverting contract | build-smart-contracts + quality-testing |
+| G-SEC-4 ✅ FIXED (tests/evm-e2e/atomicity.mjs) | Precompile atomicity untested: an EVM call that invokes `0x…0900` and then **reverts** must leave no community state or escrow behind (the class of GO-2025-3684) | T | no test with a reverting contract | build-smart-contracts + quality-testing |
 | G-SEC-5 | 4 dependency advisories without upstream fixes (K9) | I | `make govulncheck` | quality-security |
 | G-SEC-6 | `ExperimentalEVMMempool` in use; txs that fail CheckTx are dropped silently (K7) | T | `app/evm.go`, hang seen in e2e | stack-cosmos-evm |
 | G-SEC-7 | Validator key management: remote signer / HSM not set up or tested | M | docs only | quality-security + ops-infrastructure |

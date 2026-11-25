@@ -84,7 +84,7 @@ e2e-cosmos: ## Cosmos-interface e2e (needs a running localnet)
 
 e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
 	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1); \
-	  cd tests/evm-e2e && KEY=$$KEY node e2e.mjs && KEY=$$KEY node community.mjs
+	  cd tests/evm-e2e && KEY=$$KEY node e2e.mjs && KEY=$$KEY node community.mjs && KEY=$$KEY node atomicity.mjs
 
 e2e: e2e-cosmos e2e-evm ## All e2e suites against a running localnet
 
