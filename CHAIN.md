@@ -79,13 +79,15 @@ Detail: `docs/spec/architecture.md`
 | ADR-0003 | Community layer: hash-onion sortition + ICS-23 state proofs | accepted |
 | ADR-0004 | Per-validator voting-power cap at delegation time | accepted |
 | ADR-0005 | Stack: Cosmos SDK + cosmos/evm via Ignite | accepted |
+| ADR-0007 | Nira naming for chain-owned APIs, modules and binary | accepted |
+| ADR-0008 | Validator-set cadence (per-block) and performance-aware eligibility | accepted |
 | ADR-0006 | x/community reachable from Cosmos and EVM (precompile 0x…0900) | accepted |
 
 ## Open questions
 Full gap analysis: docs/GAPS.md (IDs G-*). Requirement-by-requirement check: docs/COMPLIANCE.md (65 met+tested, 29 met untested, 20 partial, 3 deviations, 7 missing; economics excluded).
-- [ ] Q8 Epoch-based validator set changes vs per-block (G-DES-1) — owner decision
-- [ ] Q9 Performance/slashing-history-aware validator selection vs stake-only (G-DES-2) — owner decision
-- [ ] Q10 Community bond slashing / provable misconduct beyond alert deposits (G-COMM-1)
+- [x] Q8 Decided per-block (ADR-0008); owner may override
+- [x] Q9 Decided: performance gates eligibility, power = stake (ADR-0008); owner may override
+- [x] Q10 Done: false-alert bond slashing (G-COMM-1)
 - [ ] Q7 Live power-cap *rejection* needs ≥ 15 validators (cap activation); 4-validator ceremony + BFT fault tests done (tests/genesis/check_localtest.sh)
 - [ ] Q6 Dev bootstrap uses scripts/localnet.sh (eth_secp256k1 keys); `ignite chain serve` creates plain secp256k1 keys that can't sign EVM txs — don't use it for EVM testing
 - [ ] Q1 Token supply, genesis allocation and vesting — now data-driven: edit genesis/networks/<net>.toml (template: mainnet.example.toml, all values proposed). Decision still needed from the user before mainnet

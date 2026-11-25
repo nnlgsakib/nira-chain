@@ -43,7 +43,7 @@
 | **Minimum validator self-bond** / "significant self-bonded stake" | ✅ | **Fixed:** x/policy `min_self_bond` (100 000 NIRA) checked in `AfterValidatorCreated` for every creation path; SDK keeps self-bond ≥ min or jails. Tests: unit, Cosmos e2e #8, EVM precompile. Previously ❌: x/staking has **no chain-wide floor**. Each validator sets its own `min_self_delegation` (≥ 1 anira). Params: `unbonding_time, max_validators, max_entries, historical_entries, bond_denom, min_commission_rate` only. **G-STAKE-1** |
 | Delegated voting power | ✅ | power = bonded tokens / 10¹⁸; delegations add power (`tests/cosmos-e2e/e2e.sh`, EVM precompile test) |
 | Active validator selection | ✅ | top `max_validators` by power each EndBlock; 4-validator net all bonded (`check_localtest.sh`) |
-| Epoch-based validator management | 🔶 | Set updates **every block**, not per epoch. Safe, but not what's asked. **G-DES-1** |
+| Epoch-based validator management | 🔶 | Decided per-block for safety (ADR-0008): misbehaving validators lose power within 2 blocks. Epochs used for the community layer and rewards |
 | Validator rotation | 🟢 | Ranking changes from stake, jailing and unbonding rotate the set at EndBlock. No forced rotation. Not tested (G-CONS-1) |
 | Block proposal / voting / finality | ✅ | CometBFT, unmodified (ADR-0002); all 4 validators sign each block |
 | Deterministic execution | ✅ | determinism audit 0 findings; identical block hashes across 4 nodes after recovery |
@@ -162,7 +162,7 @@
 | Requirement | Verdict | Evidence |
 |---|---|---|
 | Self-bonded + delegated stake | ✅ | power = total bonded |
-| **Performance, infrastructure reliability, slashing history in selection** | 🔶 | Selection is stake-only. Performance only acts through jailing. **G-DES-2** |
+| **Performance, infrastructure reliability, slashing history in selection** | 🔶 | Decided (ADR-0008): power = slashable stake; performance gates **eligibility** (downtime jail, permanent tombstone, min self-bond, cap); history visible to delegators |
 | Active-set capacity | ✅ | `max_validators` |
 | Voting-power concentration | ✅ | x/policy cap |
 | Stake monopolies / delegation concentration | ✅ | cap |
