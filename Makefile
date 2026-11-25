@@ -95,13 +95,21 @@ e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
 e2e-gov: ## Governance e2e: param change (CLI + EVM vote), false-alert slashing (running localnet)
 	@tests/cosmos-e2e/governance.sh
 
+BENCH_CHAIN_ID ?= nira_47201-1
+BENCH_HOME ?= $(HOME)/.nira
+bench-load: ## Throughput baseline (native, evm, mixed) against a running network → docs/benchmarks/raw
+	@go build -o $(BUILDDIR)/loadgen ./tools/loadgen
+	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test --home $(BENCH_HOME) 2>/dev/null | tail -1); \
+	  for m in native evm mixed; do $(BUILDDIR)/loadgen --mode $$m --accounts 100 --txs 50 --funder-key $$KEY \
+	    --chain-id $(BENCH_CHAIN_ID) | tee docs/benchmarks/raw/latest-$$m.json; done
+
 e2e: e2e-cosmos e2e-evm e2e-gov ## All e2e suites against a running localnet
 
 upgrade-rehearsal: install ## Software upgrade with a real binary switch (stop other nodes first)
 	@go build $(BUILD_FLAGS) -tags rehearsal -o $(BUILDDIR)/$(BINARY)-rehearsal ./cmd/$(BINARY)
 	@tests/upgrade/rehearsal.sh
 
-.PHONY: fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e upgrade-rehearsal
+.PHONY: fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e upgrade-rehearsal bench-load
 
 ###################
 ###  Networks  ###

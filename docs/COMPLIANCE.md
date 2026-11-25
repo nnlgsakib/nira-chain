@@ -95,7 +95,7 @@
 | Double-sign protection / recovery procedures | ✅ | evidence path tested; jailed validator unjail path tested. Was 🟢: evidence handling built in; recovery runbook not written |
 | Community nodes can't affect consensus | ✅ | x/community emits no validator updates and hooks never error (INV-COMM-8); chain runs with zero community nodes |
 | No custom consensus changes | ✅ | CometBFT unmodified |
-| Predictable block times / efficient messaging | 🟢 | CometBFT; not benchmarked (G-TEST-4) |
+| Predictable block times / efficient messaging | ✅ | measured: p50 1.01–1.38 s up to 4 validators, 2.18 s at 16 co-located (docs/benchmarks) |
 
 ## §4 Non-custodial staking and delegation
 

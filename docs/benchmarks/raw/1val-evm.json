@@ -1,0 +1,16 @@
+{
+  "accounts": 100,
+  "block_time_p50_s": 1.01,
+  "block_time_p95_s": 1.01,
+  "blocks": 2,
+  "busy_blocks": 2,
+  "included": 5000,
+  "max_txs_per_block": 4544,
+  "measured_seconds": 2.45,
+  "mode": "evm",
+  "rejected_at_submit": 0,
+  "submit_seconds": 2.67,
+  "submitted": 5000,
+  "tps": 2037.02,
+  "txs_per_account": 50
+}
