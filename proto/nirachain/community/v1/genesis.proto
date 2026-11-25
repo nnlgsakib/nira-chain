@@ -1,0 +1,17 @@
+syntax = "proto3";
+package nirachain.community.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "nirachain/community/v1/params.proto";
+
+option go_package = "nira-chain/x/community/types";
+
+// GenesisState defines the community module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

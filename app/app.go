@@ -56,6 +56,7 @@ import (
 	"github.com/spf13/cast"
 
 	"nira-chain/docs"
+	communitymodulekeeper "nira-chain/x/community/keeper"
 	nirachainmodulekeeper "nira-chain/x/nirachain/keeper"
 )
 
@@ -121,7 +122,8 @@ type App struct {
 	Erc20Keeper        erc20keeper.Keeper
 
 	// AppConfig returns the default app config.
-	EVMMempool *evmmempool.ExperimentalEVMMempool
+	EVMMempool      *evmmempool.ExperimentalEVMMempool
+	CommunityKeeper communitymodulekeeper.Keeper
 }
 
 func init() {
@@ -201,6 +203,7 @@ func New(
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
 		&app.NirachainKeeper, &app.FeeGrantKeeper,
+		&app.CommunityKeeper,
 	); err != nil {
 		panic(err)
 	}

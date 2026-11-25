@@ -1,6 +1,8 @@
 package app
 
 import (
+	_ "nira-chain/x/community/module"
+	communitymoduletypes "nira-chain/x/community/types"
 	_ "nira-chain/x/nirachain/module"
 	nirachainmoduletypes "nira-chain/x/nirachain/types"
 	"time"
@@ -91,7 +93,7 @@ var (
 		{Account: evmmoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}}, {Account: erc20moduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: feemarketmoduletypes.ModuleName},
 		// blocked account addresses
-	}
+		{Account: communitymoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}}}
 	blockAccAddrs = []string{
 		authtypes.FeeCollectorName,
 		distrtypes.ModuleName,
@@ -130,14 +132,14 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName},
+						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName, communitymoduletypes.ModuleName},
 					EndBlockers: []string{
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
 						// chain modules
-						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName},
+						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName, communitymoduletypes.ModuleName},
 					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -175,7 +177,7 @@ var (
 						ibctransfertypes.ModuleName,
 						icatypes.ModuleName,
 						// chain modules
-						erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName},
+						erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName, communitymoduletypes.ModuleName},
 				}),
 			},
 			{
@@ -273,6 +275,9 @@ var (
 			{
 				Name:   nirachainmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&nirachainmoduletypes.Module{}),
+			}, {
+				Name:   communitymoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&communitymoduletypes.Module{}),
 			}},
 	})
 )
