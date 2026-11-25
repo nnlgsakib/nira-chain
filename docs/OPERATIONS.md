@@ -12,6 +12,10 @@
 | **Archive node** | full node that keeps everything | `pruning = "nothing"` in app.toml | multi-TB |
 | **Community Node** | full node + `nirad tx community run` | default pruning (must keep ≥ `apphash_window + epoch_blocks` versions); a funded key with ≥ `min_bond` | 4 cores, 8 GB, 500 GB SSD, 25 Mbps; may go offline |
 
+## Hardened role profiles
+
+`scripts/node-profile.py <validator|sentry|rpc|archive|community> --home ~/.nira [...]` applies the per-role configuration from [`docs/spec/network.md`](spec/network.md): validator behind sentries, sentries with a private validator ID, API exposure, pruning, snapshots, Prometheus on localhost. It's idempotent and prints every change.
+
 ## Files and ports
 
 Home directory: `~/.nira` (override with `--home`).
