@@ -1,0 +1,420 @@
+{
+ "_format": "hh-sol-artifact-1",
+ "contractName": "ICommunity",
+ "sourceName": "precompiles/community/ICommunity.sol",
+ "abi": [
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    },
+    {
+     "indexed": true,
+     "internalType": "uint64",
+     "name": "alertId",
+     "type": "uint64"
+    },
+    {
+     "indexed": false,
+     "internalType": "int64",
+     "name": "height",
+     "type": "int64"
+    }
+   ],
+   "name": "DivergenceReported",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    },
+    {
+     "indexed": false,
+     "internalType": "int64",
+     "name": "unbondCompleteHeight",
+     "type": "int64"
+    }
+   ],
+   "name": "NodeDeregistered",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "bond",
+     "type": "uint256"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint64",
+     "name": "baseEpoch",
+     "type": "uint64"
+    }
+   ],
+   "name": "NodeRegistered",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint64",
+     "name": "baseEpoch",
+     "type": "uint64"
+    }
+   ],
+   "name": "OnionRotated",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    },
+    {
+     "indexed": true,
+     "internalType": "uint64",
+     "name": "epoch",
+     "type": "uint64"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint32",
+     "name": "taskIndex",
+     "type": "uint32"
+    }
+   ],
+   "name": "TaskProven",
+   "type": "event"
+  },
+  {
+   "inputs": [],
+   "name": "currentEpoch",
+   "outputs": [
+    {
+     "components": [
+      {
+       "internalType": "uint64",
+       "name": "number",
+       "type": "uint64"
+      },
+      {
+       "internalType": "int64",
+       "name": "startHeight",
+       "type": "int64"
+      },
+      {
+       "internalType": "int64",
+       "name": "nextEpochHeight",
+       "type": "int64"
+      },
+      {
+       "internalType": "bytes32",
+       "name": "seed",
+       "type": "bytes32"
+      },
+      {
+       "internalType": "uint256",
+       "name": "eligibleBond",
+       "type": "uint256"
+      },
+      {
+       "internalType": "uint256",
+       "name": "budget",
+       "type": "uint256"
+      },
+      {
+       "internalType": "uint256",
+       "name": "totalActiveBond",
+       "type": "uint256"
+      }
+     ],
+     "internalType": "struct EpochInfo",
+     "name": "epoch",
+     "type": "tuple"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "deregisterNode",
+   "outputs": [
+    {
+     "internalType": "int64",
+     "name": "unbondCompleteHeight",
+     "type": "int64"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    }
+   ],
+   "name": "getNode",
+   "outputs": [
+    {
+     "components": [
+      {
+       "internalType": "string",
+       "name": "moniker",
+       "type": "string"
+      },
+      {
+       "internalType": "uint256",
+       "name": "bond",
+       "type": "uint256"
+      },
+      {
+       "internalType": "uint8",
+       "name": "status",
+       "type": "uint8"
+      },
+      {
+       "internalType": "uint64",
+       "name": "registeredEpoch",
+       "type": "uint64"
+      },
+      {
+       "internalType": "uint64",
+       "name": "onionBaseEpoch",
+       "type": "uint64"
+      },
+      {
+       "internalType": "uint64",
+       "name": "unitsTotal",
+       "type": "uint64"
+      },
+      {
+       "internalType": "uint32",
+       "name": "unitsThisEpoch",
+       "type": "uint32"
+      },
+      {
+       "internalType": "int64",
+       "name": "unbondCompleteHeight",
+       "type": "int64"
+      }
+     ],
+     "internalType": "struct NodeInfo",
+     "name": "node",
+     "type": "tuple"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "operator",
+     "type": "address"
+    }
+   ],
+   "name": "getTasks",
+   "outputs": [
+    {
+     "components": [
+      {
+       "internalType": "uint32",
+       "name": "index",
+       "type": "uint32"
+      },
+      {
+       "internalType": "string",
+       "name": "store",
+       "type": "string"
+      },
+      {
+       "internalType": "int64",
+       "name": "height",
+       "type": "int64"
+      },
+      {
+       "internalType": "bytes32",
+       "name": "key",
+       "type": "bytes32"
+      }
+     ],
+     "internalType": "struct TaskInfo[]",
+     "name": "tasks",
+     "type": "tuple[]"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "string",
+     "name": "moniker",
+     "type": "string"
+    },
+    {
+     "internalType": "uint256",
+     "name": "bond",
+     "type": "uint256"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "onionTip",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "uint32",
+     "name": "onionLength",
+     "type": "uint32"
+    }
+   ],
+   "name": "registerNode",
+   "outputs": [
+    {
+     "internalType": "uint64",
+     "name": "baseEpoch",
+     "type": "uint64"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "int64",
+     "name": "height",
+     "type": "int64"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "claimedAppHash",
+     "type": "bytes32"
+    }
+   ],
+   "name": "reportDivergence",
+   "outputs": [
+    {
+     "internalType": "uint64",
+     "name": "alertId",
+     "type": "uint64"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "bytes32",
+     "name": "onionTip",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "uint32",
+     "name": "onionLength",
+     "type": "uint32"
+    }
+   ],
+   "name": "rotateOnion",
+   "outputs": [
+    {
+     "internalType": "uint64",
+     "name": "baseEpoch",
+     "type": "uint64"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "uint64",
+     "name": "epoch",
+     "type": "uint64"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "reveal",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "uint32",
+     "name": "taskIndex",
+     "type": "uint32"
+    },
+    {
+     "internalType": "string",
+     "name": "store",
+     "type": "string"
+    },
+    {
+     "internalType": "int64",
+     "name": "height",
+     "type": "int64"
+    },
+    {
+     "internalType": "bytes",
+     "name": "value",
+     "type": "bytes"
+    },
+    {
+     "internalType": "bytes",
+     "name": "proof",
+     "type": "bytes"
+    }
+   ],
+   "name": "submitTaskProof",
+   "outputs": [
+    {
+     "internalType": "bool",
+     "name": "success",
+     "type": "bool"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  }
+ ],
+ "bytecode": "0x",
+ "deployedBytecode": "0x",
+ "linkReferences": {},
+ "deployedLinkReferences": {}
+}

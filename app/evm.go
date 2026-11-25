@@ -35,6 +35,10 @@ import (
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
+	gethvm "github.com/ethereum/go-ethereum/core/vm"
+
+	communityprecompile "nira-chain/precompiles/community"
+	communitykeeper "nira-chain/x/community/keeper"
 )
 
 func init() {
@@ -88,17 +92,7 @@ func (app *App) registerEVMModules(appOpts servertypes.AppOptions) error {
 		chainID,
 		tracer,
 	).WithStaticPrecompiles(
-		precompiletypes.DefaultStaticPrecompiles(
-			*app.StakingKeeper,
-			app.DistrKeeper,
-			app.BankKeeper,
-			&app.Erc20Keeper,
-			&app.TransferKeeper,
-			app.IBCKeeper.ChannelKeeper,
-			*app.GovKeeper,
-			app.SlashingKeeper,
-			app.appCodec,
-		),
+		app.staticPrecompiles(),
 	).WithDefaultEvmCoinInfo(evmtypes.EvmCoinInfo{
 		Denom:         BaseDenom,
 		ExtendedDenom: BaseDenom,
@@ -127,6 +121,31 @@ func (app *App) registerEVMModules(appOpts servertypes.AppOptions) error {
 	}
 
 	return nil
+}
+
+// staticPrecompiles returns the cosmos/evm default precompiles plus Nira's
+// x/community precompile at 0x…0900 (ADR-0006). Precompiles are only callable
+// when listed in evm params active_static_precompiles.
+func (app *App) staticPrecompiles() map[common.Address]gethvm.PrecompiledContract {
+	pcs := precompiletypes.DefaultStaticPrecompiles(
+		*app.StakingKeeper,
+		app.DistrKeeper,
+		app.BankKeeper,
+		&app.Erc20Keeper,
+		&app.TransferKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		*app.GovKeeper,
+		app.SlashingKeeper,
+		app.appCodec,
+	)
+	cp := communityprecompile.NewPrecompile(
+		communitykeeper.NewMsgServerImpl(app.CommunityKeeper),
+		communitykeeper.NewQueryServerImpl(app.CommunityKeeper),
+		app.BankKeeper,
+		app.AuthKeeper.AddressCodec(),
+	)
+	pcs[cp.Address()] = cp
+	return pcs
 }
 
 // setEVMMempool sets the EVM priority nonce mempool

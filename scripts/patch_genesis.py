@@ -47,6 +47,7 @@ a["evm"]["params"]["active_static_precompiles"] = [
     "0x0000000000000000000000000000000000000804",  # bank
     "0x0000000000000000000000000000000000000805",  # gov
     "0x0000000000000000000000000000000000000806",  # slashing
+    "0x0000000000000000000000000000000000000900",  # x/community (ADR-0006)
 ]
 
 # x/community: short epochs for local testing (production defaults: spec §7)
