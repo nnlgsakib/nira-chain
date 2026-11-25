@@ -47,6 +47,14 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-DES-2 | **Selection ignores performance and slashing history** (idea §8): the active set is top-N by stake only | M | x/staking | decision needed → ADR (on-chain metrics only, or keep stake-only) |
 | G-COMM-1 | **Community bonds are never slashed.** "Penalties for provable misconduct" (idea §5) are limited to forfeiting alert deposits, because v1 has no provable fraud on the bond | M | spec §12 | ADR + design when v2 task types add fraud proofs |
 
+### From the requirement compliance check (docs/COMPLIANCE.md)
+
+| ID | Gap | Sev | Evidence | Close with |
+|---|---|---|---|---|
+| G-STAKE-1 | **No protocol-wide minimum self-bond** (idea §1A, §2.1, §8); each validator picks `min_self_delegation` ≥ 1 anira | M | staking params have no floor | x/policy `min_self_bond` + `AfterValidatorCreated` check (SDK jails below own min) |
+| G-GOV-1 | `gov.min_initial_deposit_ratio = 0`: proposals can be opened with no upfront deposit (spam) | T | genesis params | set in network files (e.g. 0.25) |
+| G-EVM-1 | `txpool` namespace off by default; filter, fee and net methods respond (live probe) but aren't in automated tests | I | `api = "eth,net,web3"` | config + extend `evm-e2e` |
+
 ### Security
 
 | ID | Gap | Sev | Evidence | Close with |

@@ -82,7 +82,7 @@ Detail: `docs/spec/architecture.md`
 | ADR-0006 | x/community reachable from Cosmos and EVM (precompile 0x…0900) | accepted |
 
 ## Open questions
-Full gap analysis: docs/GAPS.md (IDs G-*).
+Full gap analysis: docs/GAPS.md (IDs G-*). Requirement-by-requirement check: docs/COMPLIANCE.md (65 met+tested, 29 met untested, 20 partial, 3 deviations, 7 missing; economics excluded).
 - [ ] Q8 Epoch-based validator set changes vs per-block (G-DES-1) — owner decision
 - [ ] Q9 Performance/slashing-history-aware validator selection vs stake-only (G-DES-2) — owner decision
 - [ ] Q10 Community bond slashing / provable misconduct beyond alert deposits (G-COMM-1)
@@ -114,7 +114,7 @@ Network definition (supply, allocations, vesting, initial validators and communi
 `scripts/localnet.sh && nirad start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nirad keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
 
 ## Docs
-[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [gap analysis](docs/GAPS.md) · [genesis](genesis/README.md)
+[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [gap analysis](docs/GAPS.md) · [requirement compliance](docs/COMPLIANCE.md) · [genesis](genesis/README.md)
 
 ## Production readiness
 Not started. See docs/readiness.md (to be written by ops-production-readiness).
