@@ -1,0 +1,13 @@
+syntax = "proto3";
+package nirachain.nirachain.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "nira-chain/x/nirachain/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "nirachain/x/nirachain/Params";
+  option (gogoproto.equal) = true;
+}
