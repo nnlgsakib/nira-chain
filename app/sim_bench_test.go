@@ -56,7 +56,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		evmAppStateFn(app),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 		BlockedAddresses(),

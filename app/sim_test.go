@@ -24,6 +24,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -92,7 +93,7 @@ func BenchmarkSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		bApp.BaseApp,
-		simtestutil.AppStateFn(bApp.AppCodec(), bApp.SimulationManager(), bApp.DefaultGenesis()),
+		evmAppStateFn(bApp),
 		simulationtypes.RandomAccounts,
 		simtestutil.BuildSimulationOperations(bApp, bApp.AppCodec(), config, bApp.TxConfig()),
 		BlockedAddresses(),
@@ -132,14 +133,14 @@ func TestFullAppSimulation(t *testing.T) {
 	if !simcli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}
-	require.Equal(t, "nira-chain", app.Name())
+	require.Equal(t, "nira", app.Name())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		evmAppStateFn(app),
 		simulationtypes.RandomAccounts,
 		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 		BlockedAddresses(),
@@ -183,7 +184,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		bApp.BaseApp,
-		simtestutil.AppStateFn(bApp.AppCodec(), bApp.SimulationManager(), bApp.DefaultGenesis()),
+		evmAppStateFn(bApp),
 		simulationtypes.RandomAccounts,
 		simtestutil.BuildSimulationOperations(bApp, bApp.AppCodec(), config, bApp.TxConfig()),
 		BlockedAddresses(),
@@ -303,7 +304,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		bApp.BaseApp,
-		simtestutil.AppStateFn(bApp.AppCodec(), bApp.SimulationManager(), bApp.DefaultGenesis()),
+		evmAppStateFn(bApp),
 		simulationtypes.RandomAccounts,
 		simtestutil.BuildSimulationOperations(bApp, bApp.AppCodec(), config, bApp.TxConfig()),
 		BlockedAddresses(),
@@ -353,7 +354,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newApp.BaseApp,
-		simtestutil.AppStateFn(bApp.AppCodec(), bApp.SimulationManager(), bApp.DefaultGenesis()),
+		evmAppStateFn(bApp),
 		simulationtypes.RandomAccounts,
 		simtestutil.BuildSimulationOperations(newApp, newApp.AppCodec(), config, newApp.TxConfig()),
 		BlockedAddresses(),
@@ -433,11 +434,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				bApp.BaseApp,
-				simtestutil.AppStateFn(
-					bApp.AppCodec(),
-					bApp.SimulationManager(),
-					bApp.DefaultGenesis(),
-				),
+				evmAppStateFn(bApp),
 				simulationtypes.RandomAccounts,
 				simtestutil.BuildSimulationOperations(bApp, bApp.AppCodec(), config, bApp.TxConfig()),
 				BlockedAddresses(),
@@ -460,5 +457,32 @@ func TestAppStateDeterminism(t *testing.T) {
 				)
 			}
 		}
+	}
+}
+
+// evmAppStateFn wraps the SDK's random genesis generator with the EVM
+// prerequisites it doesn't know about: bank denom metadata for the native
+// token. Without it x/vm InitGenesis panics ("denom metadata anira could not
+// be found").
+func evmAppStateFn(app *App) simulationtypes.AppStateFn {
+	base := simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis())
+	return func(r *rand.Rand, accs []simulationtypes.Account, config simulationtypes.Config) (json.RawMessage, []simulationtypes.Account, string, time.Time) {
+		state, accs, chainID, genTime := base(r, accs, config)
+		var gs map[string]json.RawMessage
+		if err := json.Unmarshal(state, &gs); err != nil {
+			panic(err)
+		}
+		var bank banktypes.GenesisState
+		app.AppCodec().MustUnmarshalJSON(gs[banktypes.ModuleName], &bank)
+		bank.DenomMetadata = append(bank.DenomMetadata, banktypes.Metadata{
+			Description: "Nira native token", Base: BaseDenom, Display: DisplayDenom, Name: "Nira", Symbol: "NIRA",
+			DenomUnits: []*banktypes.DenomUnit{{Denom: BaseDenom, Exponent: 0}, {Denom: DisplayDenom, Exponent: 18}},
+		})
+		gs[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bank)
+		out, err := json.Marshal(gs)
+		if err != nil {
+			panic(err)
+		}
+		return out, accs, chainID, genTime
 	}
 }
