@@ -17,3 +17,7 @@ const (
 
 // ParamsKey is the prefix to retrieve all Params
 var ParamsKey = collections.NewPrefix("p_nirachain")
+
+// PreDelegationTokensPrefix holds a validator's tokens as seen just before a
+// delegation change; entries never outlive the staking call (ADR-0004).
+var PreDelegationTokensPrefix = collections.NewPrefix(1)

@@ -192,7 +192,7 @@ func RegisterEVM(cdc codec.Codec, interfaceRegistry codectypes.InterfaceRegistry
 		feemarkettypes.ModuleName: feemarket.NewAppModule(feemarketkeeper.Keeper{}),
 	}
 
-	for _, m := range modules {
+	for _, m := range modules { // audit:ok client-side interface registration, order-independent
 		if mr, ok := m.(module.AppModuleBasic); ok {
 			mr.RegisterInterfaces(cdc.InterfaceRegistry())
 		}

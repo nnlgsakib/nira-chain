@@ -22,6 +22,7 @@ type fixture struct {
 	ctx          context.Context
 	keeper       keeper.Keeper
 	addressCodec address.Codec
+	staking      *mockStakingKeeper
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -32,7 +33,9 @@ func initFixture(t *testing.T) *fixture {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	storeService := runtime.NewKVStoreService(storeKey)
-	ctx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
+	tKey := storetypes.NewTransientStoreKey("transient_test")
+	ctx := testutil.DefaultContextWithDB(t, storeKey, tKey).Ctx
+	staking := newMockStakingKeeper()
 
 	authority := authtypes.NewModuleAddress(types.GovModuleName)
 
@@ -41,6 +44,7 @@ func initFixture(t *testing.T) *fixture {
 		encCfg.Codec,
 		addressCodec,
 		authority,
+		staking,
 	)
 
 	// Initialize params
@@ -52,5 +56,6 @@ func initFixture(t *testing.T) *fixture {
 		ctx:          ctx,
 		keeper:       k,
 		addressCodec: addressCodec,
+		staking:      staking,
 	}
 }

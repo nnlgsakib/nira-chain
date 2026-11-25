@@ -155,7 +155,7 @@ func RegisterIBC(cdc codec.Codec) map[string]appmodule.AppModule {
 		solomachine.ModuleName:      solomachine.NewAppModule(solomachine.NewLightClientModule(cdc, ibcclienttypes.StoreProvider{})),
 	}
 
-	for _, m := range modules {
+	for _, m := range modules { // audit:ok client-side interface registration, order-independent
 		if mr, ok := m.(module.AppModuleBasic); ok {
 			mr.RegisterInterfaces(cdc.InterfaceRegistry())
 		}
