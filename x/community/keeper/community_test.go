@@ -395,3 +395,34 @@ func TestINV_COMM_Randomised(t *testing.T) {
 }
 
 var _ = math.ZeroInt
+
+// G-SEC-1: the onion hash chain is gas-metered before it is computed.
+// Identical failing txs at reveal distance 3 and 13 differ by ≥ 10·RevealGasPerHash.
+func TestRevealIsGasMetered(t *testing.T) {
+	gasAt := func(height int64) uint64 {
+		f := initFixture(t)
+		a := f.newOperator(t, 1, nira(10_000))
+		startEligible(t, f, a)
+		f.advance(t, height)
+		m := f.proofMsg(t, a, 0)
+		m.Proof = []byte{0xff} // reveal passes, proof decoding fails
+		before := f.ctx.GasMeter().GasConsumed()
+		_, err := f.msg.SubmitTaskProof(f.ctx, m)
+		require.ErrorIs(t, err, types.ErrInvalidProof)
+		return f.ctx.GasMeter().GasConsumed() - before
+	}
+	near := gasAt(41) // epoch 4, anchor epoch 1 → d = 3
+	far := gasAt(141) // epoch 14 → d = 13
+	require.GreaterOrEqual(t, far-near, 10*types.RevealGasPerHash, "near %d far %d", near, far)
+
+	// beyond max_reveal_distance: rejected before hashing
+	f := initFixture(t)
+	a := f.newOperator(t, 1, nira(10_000))
+	startEligible(t, f, a)
+	f.advance(t, 141)
+	p, _ := f.keeper.Params.Get(f.ctx)
+	p.MaxRevealDistance = 2
+	require.NoError(t, f.keeper.Params.Set(f.ctx, p))
+	_, err := f.msg.SubmitTaskProof(f.ctx, f.proofMsg(t, a, 0))
+	require.ErrorIs(t, err, types.ErrInvalidReveal)
+}

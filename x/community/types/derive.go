@@ -17,6 +17,11 @@ import (
 
 const HashLen = 32
 
+// RevealGasPerHash is charged per SHA-256 iteration when verifying an onion
+// reveal: the EVM SHA-256 precompile price for a 32-byte input (60 + 12·1).
+// Without it a reveal at max_reveal_distance is unmetered CPU (gap G-SEC-1).
+const RevealGasPerHash uint64 = 72
+
 var (
 	domainSeed   = []byte("nira/comm/seed")
 	domainTicket = []byte("nira/comm/ticket")
@@ -43,6 +48,15 @@ func NextSeed(prev, blockHash []byte, epoch uint64) []byte {
 		prev = make([]byte, HashLen)
 	}
 	return h(domainSeed, prev, blockHash, be8(epoch))
+}
+
+// RevealDistance returns d = epoch - anchorEpoch (0 if epoch ≤ anchorEpoch),
+// so callers can charge RevealGasPerHash·d before calling VerifyReveal.
+func RevealDistance(anchorEpoch, epoch uint64) uint64 {
+	if epoch <= anchorEpoch {
+		return 0
+	}
+	return epoch - anchorEpoch
 }
 
 // VerifyReveal checks H^d(reveal) == anchor with d = epoch - anchorEpoch,

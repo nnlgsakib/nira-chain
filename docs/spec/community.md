@@ -1,6 +1,6 @@
 # Spec — COMM: Community Participation Layer
 
-- Version: 0.2 (2026-11-25)
+- Version: 0.3 (2026-11-25)
 - Status: specified
 - Design: ADR-0003. Mechanism skills: protocol-verifiable-participation, protocol-randomness
 - Implementation surface: native module `x/community` plus an EVM precompile at `0x0000000000000000000000000000000000000900` (ADR-0006)
@@ -46,7 +46,7 @@ Addr        = bytes[20]                    // account address (same bytes for be
 | Epoch | — (current) | number: u64, start_height: i64, seed: Hash32, eligible_bond: Int, budget: Int, proofs: u32 | BeginBlock | 1 |
 | EpochWork | (epoch, operator) | units: u32 | submit proof | ≤ P-COMM-max_proofs_per_epoch per epoch; deleted at settlement |
 | TaskDone | (epoch, operator, task_index) | — | submit proof | same bound; deleted at settlement |
-| AppHash | height | Hash32 | BeginBlock | ring of P-COMM-apphash_window entries |
+| AppHash | height | Hash32 | BeginBlock | ring of apphash_window + epoch_blocks entries (≤ 2 deleted per block, self-heals after param changes) |
 | UnbondingQueue | (complete_height, operator) | amount | deregister | 1 per node |
 | Alert | id: u64 | reporter, height, claimed_app_hash, deposit, status, expires_height | report / resolve / EndBlock | ≤ P-COMM-max_open_alerts open |
 | AlertIndex | (height, reporter) | id | report | 1 per (height, reporter) |
@@ -101,7 +101,7 @@ Checks, in order:
 2. C2 node exists, ACTIVE, `registered_epoch < epoch.number` (INV-COMM-3) → `ErrNodeNotEligible`
 3. C3 `msg.epoch = epoch.number` → `ErrWrongEpoch` (proofs are accepted only during their epoch)
 4. C4 `epoch.number ≥ onion_base_epoch`
-5. C5 reveal check (§5): if `onion_anchor_epoch = epoch.number`, require `reveal = onion_anchor`; otherwise run the full check → `ErrInvalidReveal`
+5. C5 reveal check (§5): if `onion_anchor_epoch = epoch.number`, require `reveal = onion_anchor`. Otherwise reject `d > max_reveal_distance`, charge `72·d` gas (EVM SHA-256 price, gap G-SEC-1), then run the full check → `ErrInvalidReveal`
 6. C6 selected(ticket) → `ErrNotSelected`
 7. C7 `task_index < P-COMM-tasks_per_selection` and TaskDone(epoch, op, i) absent → `ErrTaskDone`
 8. C8 `epoch.proofs < P-COMM-max_proofs_per_epoch` → `ErrEpochFull`
@@ -195,7 +195,7 @@ Each step runs in a cache context. On error the step is discarded and `comm_hook
 | INV-COMM-4 | balance(community) = Σ ACTIVE bonds + Σ UNBONDING bonds + Σ OPEN deposits + current epoch.budget |
 | INV-COMM-5 | TotalActiveBond = Σ bond over ACTIVE nodes |
 | INV-COMM-6 | epoch.proofs ≤ max_proofs_per_epoch; units(e, op) ≤ tasks_per_selection |
-| INV-COMM-7 | At most apphash_window AppHash entries exist; every accepted proof's height had an AppHash entry |
+| INV-COMM-7 | At most apphash_window + epoch_blocks (+2 while catching up) AppHash entries exist; every accepted proof's height had an AppHash entry |
 | INV-COMM-8 | COMM hooks never return an error and never emit validator updates (off the finality path) |
 | INV-COMM-9 | onion_anchor_epoch is strictly increasing per onion; H^d(new_anchor) = old_anchor |
 | INV-COMM-10 | Open alerts ≤ max_open_alerts; ≤ 1 alert per (height, reporter) |
@@ -262,5 +262,6 @@ task 1: height offset 41, store index 3, key 8e943b4a68c9aef377d174f2f5db8832b89
 (Height offsets use W = 100; store index mod 4.)
 
 ## Changelog
+- 0.3 (2026-11-25): reveal hashing gas-metered (72 gas per hash, gap G-SEC-1); app-hash ring size documented as implemented (window + epoch_blocks).
 - 0.2 (2026-11-25): default sample_stores changed from [acc, bank, staking, evm] after live measurement: random-key non-membership proofs failed for 70 % of staking keys and 0.5 % of bank keys (KeySet entries with empty values), and 100 % for empty stores.
 - 0.1 (2026-11-25): initial spec. Changes from the architecture draft: miss counters removed (selection is secret, so misses are unobservable); rewards funded from a share of the fee collector each block.

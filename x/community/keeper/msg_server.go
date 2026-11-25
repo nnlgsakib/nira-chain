@@ -173,6 +173,12 @@ func (k msgServer) SubmitTaskProof(ctx context.Context, msg *types.MsgSubmitTask
 			return nil, errorsmod.Wrap(types.ErrInvalidReveal, "reveal differs from this epoch's revealed layer")
 		}
 	} else {
+		d := types.RevealDistance(node.OnionAnchorEpoch, ep.Number)
+		if d > uint64(p.MaxRevealDistance) {
+			return nil, errorsmod.Wrapf(types.ErrInvalidReveal, "reveal distance %d > max %d: rotate the onion", d, p.MaxRevealDistance)
+		}
+		// Meter the hash chain before computing it (unmetered CPU otherwise).
+		sdk.UnwrapSDKContext(ctx).GasMeter().ConsumeGas(types.RevealGasPerHash*d, "community onion reveal")
 		if err := types.VerifyReveal(msg.Reveal, node.OnionAnchor, node.OnionAnchorEpoch, ep.Number,
 			node.OnionBaseEpoch, node.OnionLength, p.MaxRevealDistance); err != nil {
 			return nil, errorsmod.Wrap(types.ErrInvalidReveal, err.Error())
