@@ -42,7 +42,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-SPEC-1 ✅ (docs/spec/policy.md) | x/policy (power cap) has an ADR but no component spec (state, params, failure cases) | M | `docs/spec/` has no `staking.md` | design-spec + protocol-staking-validators |
 | G-SPEC-2 | **Tokenomics not specified or simulated.** The idea's 50/25/15/10 split isn't modelled: the validator/delegator split is set by commission (min 5 %), the reserve gets 2 % community tax plus undistributed community budget, and only the 15 % community share exists as a parameter. There is no security-budget or inflation simulation | M | no `docs/spec/tokenomics.md`; Q1/Q3 open | protocol-tokenomics |
 | G-SPEC-3 ✅ v0.1 (docs/spec/governance.md; timelock/council proposed) | Governance not specified: no analysis of quorum/threshold attacks, no emergency policy. x/circuit is wired with no documented authority | M | no `docs/spec/governance.md` | protocol-governance |
-| G-SPEC-4 🟡 (docs/spec/network.md + scripts/node-profile.py; live sentry test pending) | P2P/network: no topology (sentries, seeds), peer limits or eclipse hardening defined | T | CometBFT defaults | general knowledge (no protocol-p2p skill installed) |
+| G-SPEC-4 ✅ (docs/spec/network.md + scripts/node-profile.py; sentry topology verified live in the Docker testnet: the sentried validator's only peer is its sentry, no other node peers with it, and it signs every block) | P2P/network: no topology (sentries, seeds), peer limits or eclipse hardening defined | T | CometBFT defaults | general knowledge (no protocol-p2p skill installed) |
 | G-DES-1 ✅ DECIDED (ADR-0008, per-block for safety) | **Epoch-based validator management** (idea §2.1): the SDK updates the validator set every block, not per epoch | M | x/staking EndBlock | decision needed → ADR (per-block is safe; epochs add predictability) |
 | G-DES-2 ✅ DECIDED (ADR-0008, performance gates eligibility) | **Selection ignores performance and slashing history** (idea §8): the active set is top-N by stake only | M | x/staking | decision needed → ADR (on-chain metrics only, or keep stake-only) |
 | G-COMM-1 ✅ FIXED | **Community bonds are never slashed.** Now: a governance-rejected alert slashes 10 % of the bond (`false_alert_slash_bps`). "Penalties for provable misconduct" (idea §5) are limited to forfeiting alert deposits, because v1 has no provable fraud on the bond | M | spec §12 | ADR + design when v2 task types add fraud proofs |
@@ -71,7 +71,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
-| G-CONS-1 🟡 | **Tested now** (tests/consensus/check_validators.sh, 16 validators): double-sign evidence → slash + tombstone + delegator propagation, downtime jail/unjail, rotation. Still untested: real network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
+| G-CONS-1 🟡 | **Docker testnet (8 validators):** real network partitions verified: 6|2 → majority finalises, minority stuck, catches up on heal; 5|3 (≥ 1/3 cut off) → halt, then resume with no fork (`make testnet-test SCENARIO=partition`). Soak/long-run still to run. Earlier: **Tested now** (tests/consensus/check_validators.sh, 16 validators): double-sign evidence → slash + tombstone + delegator propagation, downtime jail/unjail, rotation. Still untested: real network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
 | G-CONS-2 ✅ FIXED (live via Cosmos tx + EVM precompile on 16 validators) | Live power-cap **rejection** never observed (needs ≥ 15 validators to activate) | T | Q7 | quality-testing (localtest N=16) |
 | G-CONS-3 | Weak subjectivity: no trusted-checkpoint publishing or state-sync trust procedure | M | — | ops-launch |
 
@@ -80,7 +80,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
 | G-COMM-2 | Proof outsourcing to archive RPCs (K1); v2 local-data tasks (history serving, DA sampling) not built | M | ADR-0003 | protocol-verifiable-participation |
-| G-COMM-3 🟡 | Node software is CLI-only. Reward tracking **done** (`rewards_total` via CLI, REST, precompile); still missing: resource monitoring/limits, installer, or Windows/macOS validation | T | `x/community/client/cli` | build-node-software |
+| G-COMM-3 🟡 | 6 containerised community nodes ran the prove loop unattended (30 tasks, all rewarded) in the Docker testnet. Node software is CLI-only. Reward tracking **done** (`rewards_total` via CLI, REST, precompile); still missing: resource monitoring/limits, installer, or Windows/macOS validation | T | `x/community/client/cli` | build-node-software |
 | G-COMM-4 | Genesis export drops in-epoch work, so operators lose unsettled units across an export/import upgrade | I | `genesis.proto` comment | stack-cosmos-ignite |
 
 ### Testing, infrastructure, operations

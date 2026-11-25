@@ -46,6 +46,24 @@ make localtest                      # 4 validators through the genesis ceremony,
 make localtest-stop
 ```
 
+## Docker testnet (multi-node, on one machine)
+
+```bash
+make testnet-up VALIDATORS=8 COMMUNITY=6   # builds nira:local from source, runs the genesis ceremony in a container
+make testnet-test                          # health, sentry, community, partition, soak (or SCENARIO=…)
+python3 deploy/testnet/testnet.py status   # height + peers of every node
+make testnet-down                          # removes containers and the chain data volume
+```
+
+| Container | Role |
+|---|---|
+| `val0`…`val{N-2}` | validators on the public mesh |
+| `val{N-1}` + `sentry0` | validator behind a sentry (validator profile; its ID is private on the sentry) |
+| `rpc0` | RPC node, exposed on the host: CometBFT `127.0.0.1:36657`, REST `31317`, JSON-RPC `38545` / WS `38546` |
+| `cn0`…`cn{M-1}` | community nodes: full node + `nirad tx community run` (genesis-registered, restart-safe) |
+
+Scenarios: `partition` cuts nodes off the Docker network (`docker network disconnect`); `soak` runs `tools/loadgen` against `rpc0` with `scripts/monitor.py` watching for halts, slashing, jailing and hook errors, and reports per-container memory.
+
 ## Joining a network (once a genesis exists)
 
 ```bash

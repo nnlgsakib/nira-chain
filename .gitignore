@@ -9,3 +9,4 @@ release/
 *.ign
 node_modules/
 build/
+deploy/testnet/docker-compose.yml

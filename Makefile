@@ -154,6 +154,25 @@ genesis-check: ## Validate a network file: make genesis-check NET=genesis/networ
 
 .PHONY: localnet localtest localtest-check localtest-stop validators-test sync-test genesis-check
 
+##########################
+###  Docker testnet  ###
+##########################
+VALIDATORS ?= 8
+COMMUNITY ?= 6
+docker-build: ## Build the nira:local image from source
+	@python3 deploy/testnet/testnet.py build
+
+testnet-up: docker-build ## Docker testnet: VALIDATORS (one behind a sentry) + COMMUNITY prove-loop nodes + RPC node
+	@python3 deploy/testnet/testnet.py up --validators $(VALIDATORS) --community $(COMMUNITY)
+
+testnet-test: ## Scenarios on the running Docker testnet: SCENARIO=health|sentry|community|partition|soak|all
+	@python3 deploy/testnet/testnet.py test $(or $(SCENARIO),all)
+
+testnet-down: ## Stop the Docker testnet and delete its data volume
+	@python3 deploy/testnet/testnet.py down
+
+.PHONY: docker-build testnet-up testnet-test testnet-down
+
 ##################
 ###  Protobuf  ###
 ##################
