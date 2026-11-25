@@ -1,6 +1,6 @@
 # Spec — COMM: Community Participation Layer
 
-- Version: 0.1 (2026-11-25)
+- Version: 0.2 (2026-11-25)
 - Status: specified
 - Design: ADR-0003. Mechanism skills: protocol-verifiable-participation, protocol-randomness
 - Implementation surface: native module `x/community` plus an EVM precompile at `0x0000000000000000000000000000000000000900` (ADR-0006)
@@ -156,7 +156,7 @@ Effects:
 | P-COMM-tasks_per_selection | u32 | 2 | 1 | 16 | | |
 | P-COMM-max_proofs_per_epoch | u32 | 1 024 | 1 | 10 000 | | bounds settlement work |
 | P-COMM-apphash_window | u32 | 100 | 10 | 10 000 | heights | nodes must retain ≥ window + epoch_blocks versions |
-| P-COMM-sample_stores | []string | [acc, bank, staking, evm] | 1 item | 16 items | | must be mounted IAVL stores |
+| P-COMM-sample_stores | []string | [acc, evm, distribution, slashing] | 1 item | 16 items | | must be mounted IAVL stores whose entries never have empty values and that are never empty (ICS-23 cannot prove non-membership next to an empty-value leaf). Check with tools/proofprobe before changing |
 | P-COMM-max_proof_bytes | u32 | 16 384 | 1 024 | 65 536 | bytes | |
 | P-COMM-proof_gas_per_byte | u64 | 20 | 1 | 1 000 | gas | |
 | P-COMM-max_onion_length | u32 | 1 000 000 | 1 | 10 000 000 | epochs | |
@@ -262,4 +262,5 @@ task 1: height offset 41, store index 3, key 8e943b4a68c9aef377d174f2f5db8832b89
 (Height offsets use W = 100; store index mod 4.)
 
 ## Changelog
+- 0.2 (2026-11-25): default sample_stores changed from [acc, bank, staking, evm] after live measurement: random-key non-membership proofs failed for 70 % of staking keys and 0.5 % of bank keys (KeySet entries with empty values), and 100 % for empty stores.
 - 0.1 (2026-11-25): initial spec. Changes from the architecture draft: miss counters removed (selection is secret, so misses are unobservable); rewards funded from a share of the fee collector each block.
