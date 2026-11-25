@@ -291,6 +291,10 @@ class Network:
         for m, b in bonds:
             if total_bonded and Decimal(b) / Decimal(total_bonded) * 10000 > cap_bps:
                 warns.append(f"validator '{m}' starts above the {cap_bps} bps cap: it cannot receive new delegations once the cap activates")
+        min_self = int(self.params.get("policy", {}).get("min_self_bond", str(100_000 * BASE)))
+        for m, b in bonds:
+            if b < min_self:
+                e(f"validator '{m}': self_bond {fmt(b)} < policy.min_self_bond {fmt(min_self)} NIRA")
         maxv = int(self.params.get("staking", {}).get("max_validators", 100))
         if len(self.validators) > maxv:
             e(f"{len(self.validators)} validators > staking.max_validators {maxv}")
@@ -413,6 +417,8 @@ def build_pregenesis(net: Network, binary: str, home: Path) -> dict:
     s["evm"]["params"]["active_static_precompiles"] = PRECOMPILES
     s["community"]["params"]["bond_denom"] = net.denom
     g["consensus"]["params"]["block"]["max_gas"] = "100000000"
+    # G-GOV-1: proposals need 25 % of min_deposit upfront unless the network file says otherwise
+    s["gov"]["params"]["min_initial_deposit_ratio"] = "0.250000000000000000"
 
     # Economic / policy parameters from the network file
     for module, p in net.params.items():
@@ -486,6 +492,10 @@ def check_gentxs(net: Network, gentx_dir: Path) -> list[Path]:
             raise SystemExit(f"{f}: second gentx for {v['moniker']}")
         if m["value"]["denom"] != net.denom or int(m["value"]["amount"]) != nira_to_base(v["self_bond"]):
             raise SystemExit(f"{f}: self-bond {m['value']} != configured {v['self_bond']} NIRA for {v['moniker']}")
+        min_self = int(net.params.get("policy", {}).get("min_self_bond", str(100_000 * BASE)))
+        if int(m.get("min_self_delegation", "0")) < min_self:
+            raise SystemExit(f"{f}: min_self_delegation {m.get('min_self_delegation')} < policy.min_self_bond {min_self}: "
+                             f"re-run gentx with --min-self-delegation {min_self}")
         got[b] = f
     missing = [v["moniker"] for b, v in want.items() if b not in got]
     if missing:

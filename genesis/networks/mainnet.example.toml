@@ -75,7 +75,8 @@ address = "0x00000000000000000000000000000000000000d1"
 amount = "195957980"                      # remainder so the ledger sums exactly
 
 # --------------------------------------------------------- initial Core Validators
-# balance includes self_bond; each validator submits a gentx with exactly self_bond.
+# balance includes self_bond; each validator submits a gentx with exactly self_bond
+# and --min-self-delegation ≥ params.policy.min_self_bond (base units).
 
 [[validator]]
 moniker = "core-1"
@@ -152,6 +153,7 @@ min_deposit = [{ denom = "anira", amount = "10000 NIRA" }]
 expedited_min_deposit = [{ denom = "anira", amount = "50000 NIRA" }]
 voting_period = "432000s"                 # 5 days
 expedited_voting_period = "86400s"
+min_initial_deposit_ratio = "0.250000000000000000"   # 25 % of min_deposit upfront (anti-spam, G-GOV-1)
 quorum = "0.334000000000000000"
 threshold = "0.500000000000000000"
 veto_threshold = "0.334000000000000000"
@@ -159,7 +161,8 @@ veto_threshold = "0.334000000000000000"
 [params.feemarket]
 min_gas_price = "10000000000.000000000000000000"   # 10 gwei floor: closes risk K6 (near-free spam)
 
-[params.policy]                        # ADR-0004 voting-power cap
+[params.policy]                        # ADR-0004 voting-power cap + G-STAKE-1 minimum self-bond
+min_self_bond = "100000 NIRA"             # every validator must declare min_self_delegation ≥ this
 max_validator_power_bps = 1000
 cap_activation_bonded = "5000000 NIRA"
 cap_activation_min_validators = 15

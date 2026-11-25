@@ -50,6 +50,10 @@ class TestBuilder(unittest.TestCase):
         errs = self.errors(t)
         self.assertTrue(any("core-4" in e and "of genesis voting power" in e for e in errs), errs)
 
+    def test_self_bond_below_min_self_bond(self):
+        t = self.base.replace('balance = "1010000"\nself_bond = "1000000"', 'balance = "1010000"\nself_bond = "99999"', 1)
+        self.assertTrue(any("policy.min_self_bond" in e for e in self.errors(t)))
+
     def test_self_bond_above_balance(self):
         t = self.base.replace('balance = "1010000"\nself_bond = "1000000"', 'balance = "1010000"\nself_bond = "2000000"', 1)
         self.assertTrue(any("> balance" in e for e in self.errors(t)))

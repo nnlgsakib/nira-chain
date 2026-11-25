@@ -115,5 +115,20 @@ await check("delegate + undelegate via staking precompile (power-cap hook path, 
   assert.equal(after.amount, before.amount);
 });
 
+await check("createValidator via staking precompile enforces the chain minimum self-bond (G-STAKE-1)", async () => {
+  const st = new ethers.Contract("0x0000000000000000000000000000000000000800", [
+    "function createValidator((string moniker,string identity,string website,string securityContact,string details) description, (uint256 rate,uint256 maxRate,uint256 maxChangeRate) commissionRates, uint256 minSelfDelegation, address validatorAddress, string pubkey, uint256 value) returns (bool)",
+  ], wallet);
+  const pubkey = Buffer.from(ethers.randomBytes(32)).toString("base64"); // ed25519 consensus key
+  const desc = { moniker: "e2e", identity: "", website: "", securityContact: "", details: "" };
+  const rates = { rate: ethers.parseEther("0.1"), maxRate: ethers.parseEther("0.2"), maxChangeRate: ethers.parseEther("0.01") };
+  const value = ethers.parseEther("200000");
+  // below the floor (1 NIRA) → reverts
+  await assert.rejects(st.createValidator.staticCall(desc, rates, ethers.parseEther("1"), wallet.address, pubkey, value, { gasLimit: 2_000_000 }),
+    e => /self-bond|min_self/i.test(String(e.shortMessage ?? e.message) + JSON.stringify(e.info ?? {})));
+  // at the floor (100 000 NIRA) → would succeed
+  assert.equal(await st.createValidator.staticCall(desc, rates, ethers.parseEther("100000"), wallet.address, pubkey, value, { gasLimit: 2_000_000 }), true);
+});
+
 console.log(`\n${passed} checks passed`);
 process.exit(0);

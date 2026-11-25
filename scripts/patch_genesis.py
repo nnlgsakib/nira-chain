@@ -37,6 +37,7 @@ a["mint"]["params"]["mint_denom"] = DENOM
 gp = a["gov"]["params"]
 gp["min_deposit"] = [{"denom": DENOM, "amount": "10000000000000000000000"}]
 gp["expedited_min_deposit"] = [{"denom": DENOM, "amount": "50000000000000000000000"}]
+gp["min_initial_deposit_ratio"] = "0.250000000000000000"  # G-GOV-1: no zero-deposit proposal spam
 
 a["evm"]["params"]["evm_denom"] = DENOM
 a["evm"]["params"]["active_static_precompiles"] = [

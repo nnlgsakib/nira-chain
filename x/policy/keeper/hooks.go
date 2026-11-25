@@ -45,7 +45,13 @@ func (h Hooks) BeforeDelegationRemoved(ctx context.Context, _ sdk.AccAddress, va
 	return err
 }
 
-func (Hooks) AfterValidatorCreated(context.Context, sdk.ValAddress) error   { return nil }
+// AfterValidatorCreated enforces the chain-wide minimum self-bond (G-STAKE-1).
+// x/staking calls it after storing the validator (with its
+// min_self_delegation) and before the initial self-delegation, for every
+// creation path: Cosmos tx, authz, gentx and the EVM staking precompile.
+func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
+	return h.k.CheckMinSelfBond(ctx, valAddr)
+}
 func (Hooks) BeforeValidatorModified(context.Context, sdk.ValAddress) error { return nil }
 func (Hooks) AfterValidatorRemoved(context.Context, sdk.ConsAddress, sdk.ValAddress) error {
 	return nil

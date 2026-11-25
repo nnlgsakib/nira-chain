@@ -27,6 +27,14 @@ func (m *mockStakingKeeper) set(addr sdk.ValAddress, tokens math.Int, bonded boo
 	m.vals[string(addr)] = stakingtypes.Validator{OperatorAddress: addr.String(), Tokens: tokens, Status: status}
 }
 
+// setMin registers a just-created validator (no tokens yet) with the given
+// min_self_delegation, as x/staking stores it before AfterValidatorCreated.
+func (m *mockStakingKeeper) setMin(addr sdk.ValAddress, minSelf math.Int) {
+	m.vals[string(addr)] = stakingtypes.Validator{
+		OperatorAddress: addr.String(), Tokens: math.ZeroInt(), Status: stakingtypes.Unbonded, MinSelfDelegation: minSelf,
+	}
+}
+
 func (m *mockStakingKeeper) GetValidator(_ context.Context, addr sdk.ValAddress) (stakingtypes.Validator, error) {
 	v, ok := m.vals[string(addr)]
 	if !ok {

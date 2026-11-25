@@ -40,7 +40,7 @@
 | Requirement | Verdict | Evidence / logic |
 |---|---|---|
 | Permissionless validator registration | 🟢 | `MsgCreateValidator` (Cosmos tx and staking precompile `0x…0800`), no allow-list |
-| **Minimum validator self-bond** / "significant self-bonded stake" | ❌ | x/staking has **no chain-wide floor**. Each validator sets its own `min_self_delegation` (≥ 1 anira). Params: `unbonding_time, max_validators, max_entries, historical_entries, bond_denom, min_commission_rate` only. **G-STAKE-1** |
+| **Minimum validator self-bond** / "significant self-bonded stake" | ✅ | **Fixed:** x/policy `min_self_bond` (100 000 NIRA) checked in `AfterValidatorCreated` for every creation path; SDK keeps self-bond ≥ min or jails. Tests: unit, Cosmos e2e #8, EVM precompile. Previously ❌: x/staking has **no chain-wide floor**. Each validator sets its own `min_self_delegation` (≥ 1 anira). Params: `unbonding_time, max_validators, max_entries, historical_entries, bond_denom, min_commission_rate` only. **G-STAKE-1** |
 | Delegated voting power | ✅ | power = bonded tokens / 10¹⁸; delegations add power (`tests/cosmos-e2e/e2e.sh`, EVM precompile test) |
 | Active validator selection | ✅ | top `max_validators` by power each EndBlock; 4-validator net all bonded (`check_localtest.sh`) |
 | Epoch-based validator management | 🔶 | Set updates **every block**, not per epoch. Safe, but not what's asked. **G-DES-1** |
@@ -171,7 +171,7 @@
 | Validator collusion | 🟡 | BFT tolerates < 1/3; cap raises the number of colluders needed (≥ 4 to halt at 10 %) |
 | Transparent path community → validator | ✅ | permissionless `create-validator`; community record (`units_total`) public |
 | No reserved founder seats | ✅ | none in code; genesis builder treats every validator equally |
-| Minimum self-bond as a qualification | ❌ | see §2.1 (G-STAKE-1) |
+| Minimum self-bond as a qualification | ✅ | fixed (G-STAKE-1) |
 
 ## §9 Networking, §10 Storage
 
@@ -199,7 +199,7 @@
 | Upgrades | 🟡 | x/upgrade present; **no upgrade-handler framework** (G-OPS-1) |
 | Validator and economic policy changes | 🟢 | via params |
 | No hidden admin powers | ✅ | every module authority = gov; circuit breaker has no authorised accounts (`account_permissions: []`) |
-| Safeguards against governance attacks | 🟡 | quorum 33.4 %, veto 33.4 %. **`min_initial_deposit_ratio = 0`** lets anyone open proposals without upfront deposit (spam). **G-GOV-1** |
+| Safeguards against governance attacks | 🟡 | quorum 33.4 %, veto 33.4 %, **25 % of min_deposit upfront** (fixed G-GOV-1); no formal governance attack analysis yet (G-SPEC-3) |
 
 ## §13 Node software
 

@@ -27,7 +27,7 @@ func setupValidators(t *testing.T, f *fixture, n int, each int64) {
 	for i := 0; i < n; i++ {
 		f.staking.set(valAddr(i), nira(each), true)
 	}
-	require.NoError(t, f.keeper.Params.Set(f.ctx, types.NewParams(1000, nira(1), 10)))
+	require.NoError(t, f.keeper.Params.Set(f.ctx, types.NewParams(1000, nira(1), 10, nira(1))))
 }
 
 // delegate simulates x/staking Delegate: Before hook, tokens grow, After hook.
@@ -118,7 +118,7 @@ func TestPowerCapInactiveBelowActivation(t *testing.T) {
 	require.NoError(t, delegate(f, valAddr(0), nira(1_000_000)))
 
 	// enough stake but too few validators
-	require.NoError(t, f.keeper.Params.Set(f.ctx, types.NewParams(1000, nira(1), 15)))
+	require.NoError(t, f.keeper.Params.Set(f.ctx, types.NewParams(1000, nira(1), 15, nira(1))))
 	for i := 1; i < 14; i++ {
 		f.staking.set(valAddr(i), nira(1), true)
 	}
@@ -161,11 +161,13 @@ func TestINV_STAKE_CAP_Randomised(t *testing.T) {
 func TestParamsValidate(t *testing.T) {
 	require.NoError(t, types.DefaultParams().Validate())
 	cases := []types.Params{
-		types.NewParams(299, nira(1), 34),
-		types.NewParams(3334, nira(1), 4),
-		types.NewParams(1000, nira(1), 9), // 10 % needs ≥ 10 validators
-		types.NewParams(1000, math.NewInt(-1), 10),
-		types.NewParams(1000, nira(1), 1001),
+		types.NewParams(299, nira(1), 34, nira(1)),
+		types.NewParams(3334, nira(1), 4, nira(1)),
+		types.NewParams(1000, nira(1), 9, nira(1)), // 10 % needs ≥ 10 validators
+		types.NewParams(1000, math.NewInt(-1), 10, nira(1)),
+		types.NewParams(1000, nira(1), 1001, nira(1)),
+		types.NewParams(1000, nira(1), 10, math.ZeroInt()),      // min self-bond < 1 NIRA
+		types.NewParams(1000, nira(1), 10, nira(1_000_000_001)), // > 1e9 NIRA
 	}
 	for i, p := range cases {
 		require.Error(t, p.Validate(), "case %d", i)
@@ -191,4 +193,25 @@ func TestINV_STAKE_CAP_3_NoResidue(t *testing.T) {
 	n, err := f.keeper.PreDelegationEntries(f.ctx)
 	require.NoError(t, err)
 	require.Zero(t, n)
+}
+
+// INV-STAKE-SELF-1 (G-STAKE-1): a validator can only be created with
+// min_self_delegation ≥ min_self_bond. Called by x/staking for every creation
+// path (Cosmos tx, gentx, EVM staking precompile).
+func TestINV_STAKE_SELF_1_MinSelfBond(t *testing.T) {
+	f := initFixture(t)
+	require.NoError(t, f.keeper.Params.Set(f.ctx, types.NewParams(1000, nira(1), 10, nira(100_000))))
+	h := f.keeper.Hooks()
+
+	low := valAddr(1)
+	f.staking.setMin(low, nira(99_999))
+	require.ErrorIs(t, h.AfterValidatorCreated(f.ctx, low), types.ErrMinSelfBond)
+
+	exact := valAddr(2)
+	f.staking.setMin(exact, nira(100_000))
+	require.NoError(t, h.AfterValidatorCreated(f.ctx, exact))
+
+	high := valAddr(3)
+	f.staking.setMin(high, nira(1_000_000))
+	require.NoError(t, h.AfterValidatorCreated(f.ctx, high))
 }

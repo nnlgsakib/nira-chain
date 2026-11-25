@@ -131,3 +131,24 @@ func (k Keeper) PreDelegationEntries(ctx context.Context) (int, error) {
 	}
 	return n, nil
 }
+
+// CheckMinSelfBond rejects a validator whose min_self_delegation is below
+// P-STAKE-min_self_bond. The SDK guarantees the initial self-bond ≥
+// min_self_delegation, that min_self_delegation can only increase, and jails a
+// validator whose self-delegation falls below it — so the floor holds for the
+// validator's whole life (INV-STAKE-SELF-1).
+func (k Keeper) CheckMinSelfBond(ctx context.Context, valAddr sdk.ValAddress) error {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+	if val.MinSelfDelegation.LT(params.MinSelfBond) {
+		return errorsmod.Wrapf(types.ErrMinSelfBond, "min_self_delegation %s < required %s (base units)",
+			val.MinSelfDelegation, params.MinSelfBond)
+	}
+	return nil
+}

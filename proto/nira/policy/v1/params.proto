@@ -31,4 +31,16 @@ message Params {
   // this many validators are bonded, so that the cap can always be satisfied.
   // P-STAKE-cap_activation_min_validators, bounds [ceil(10000/bps), 1000].
   uint32 cap_activation_min_validators = 3;
+
+  // min_self_bond is the chain-wide floor for a validator's
+  // min_self_delegation (G-STAKE-1). Enforced at validator creation; the SDK
+  // then jails any validator whose self-delegation drops below its own
+  // min_self_delegation, which can only ever be raised.
+  // P-STAKE-min_self_bond, bounds [1 NIRA, 1e9 NIRA].
+  string min_self_bond = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }

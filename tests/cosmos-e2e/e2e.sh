@@ -114,5 +114,29 @@ fi
   || fail "params changed by non-gov signer"
 ok "params unchanged by non-governance signer"
 
+# 8. Chain minimum self-bond at validator creation (G-STAKE-1). `--gas auto` simulates the tx
+#    against the real state machine; we decline the broadcast prompt, so nothing is submitted.
+mkval() {
+  cat >"$1" <<JSON
+{"pubkey":{"@type":"/cosmos.crypto.ed25519.PubKey","key":"$(python3 -c 'import base64,os;print(base64.b64encode(os.urandom(32)).decode())')"},
+ "amount":"200000000000000000000000anira","moniker":"e2e","commission-rate":"0.10","commission-max-rate":"0.20",
+ "commission-max-change-rate":"0.01","min-self-delegation":"$2"}
+JSON
+}
+simulate_create_validator() {
+  echo n | $BIN tx staking create-validator "$1" --from dev2 --chain-id "$CHAIN_ID" "${KR[@]}" --gas auto \
+    --gas-adjustment 1.5 --gas-prices "$(gas_price)" 2>&1 || true
+}
+VJ=$(mktemp)
+mkval "$VJ" 1000000000000000000
+out=$(simulate_create_validator "$VJ")
+echo "$out" | grep -q "below chain minimum self-bond" || fail "create-validator below min self-bond not rejected: $out"
+mkval "$VJ" 100000000000000000000000
+out=$(simulate_create_validator "$VJ")
+echo "$out" | grep -q "gas estimate" || fail "create-validator at min self-bond rejected: $out"
+rm -f "$VJ"
+[ "$($BIN q policy params --output json --home "$HOME_DIR" | json "d['params']['min_self_bond']")" = "100000000000000000000000" ] || fail "min_self_bond param"
+ok "create-validator: min_self_delegation 1 NIRA rejected, 100 000 NIRA accepted (chain floor via x/policy)"
+
 echo
 echo "$PASSED checks passed"

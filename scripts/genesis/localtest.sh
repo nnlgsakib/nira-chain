@@ -107,7 +107,7 @@ for i in $(seq 0 $((N - 1))); do
   H=$ROOT/val$i
   cp "$OUT/pregenesis.json" "$H/config/genesis.json"
   $BIN genesis gentx val 1000000000000000000000000anira --chain-id $CHAIN_ID "${KR[@]}" --home "$H" \
-    --moniker "core-$i" --commission-rate 0.10 --commission-max-rate 0.20 --commission-max-change-rate 0.01 \
+    --moniker "core-$i" --min-self-delegation 100000000000000000000000 --commission-rate 0.10 --commission-max-rate 0.20 --commission-max-change-rate 0.01 \
     --output-document "$OUT/gentx/core-$i.json" >/dev/null 2>&1
 done
 

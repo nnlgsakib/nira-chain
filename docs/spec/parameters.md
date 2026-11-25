@@ -14,6 +14,8 @@ All values are (proposed) unless stated. Governance changes every parameter thro
 | P-STAKE-max_validator_power_bps | STAKE | 1000 | 300–3333 | x/policy params |
 | P-STAKE-cap_activation_bonded | STAKE | 5 000 000 NIRA | ≥ 0 | x/policy params |
 | P-STAKE-cap_activation_min_validators | STAKE | 15 | ceil(10000/bps)–1000 | x/policy params |
+| P-STAKE-min_self_bond | STAKE | 100 000 NIRA | 1 – 1e9 NIRA | x/policy params (G-STAKE-1) |
+| P-GOV-min_initial_deposit_ratio | GOV | 0.25 | 0–1 | x/gov params (G-GOV-1) |
 | P-EXEC-block_max_gas | EXEC | 100 000 000 | finite | consensus params |
 | P-EXEC-evm_chain_id | EXEC | 47201 | fixed forever | app constant (Q2) |
 | P-GOV-min_deposit | GOV | 10 000 NIRA | — | x/gov params |

@@ -32,7 +32,7 @@ python3 "$SCRIPT_DIR/patch_genesis.py" "$HOME_DIR/config/genesis.json"
 
 # 1M NIRA self-bond
 $BIN genesis gentx validator 1000000000000000000000000$DENOM --chain-id "$CHAIN_ID" \
-  --min-self-delegation 1 --commission-rate 0.10 --commission-max-rate 0.20 \
+  --min-self-delegation 100000000000000000000000 --commission-rate 0.10 --commission-max-rate 0.20 \
   --commission-max-change-rate 0.01 $KR >/dev/null 2>&1
 $BIN genesis collect-gentxs --home "$HOME_DIR" >/dev/null 2>&1
 $BIN genesis validate --home "$HOME_DIR"

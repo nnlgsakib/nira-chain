@@ -37,6 +37,7 @@ python3 scripts/genesis/build_genesis.py pregenesis genesis/networks/mainnet.tom
 
 # 3. Each validator, on their own machine, with the pregenesis as config/genesis.json:
 nirad genesis gentx <key> <self_bond>anira --chain-id nira_47201-1 --moniker core-1 \
+  --min-self-delegation 100000000000000000000000 \
   --commission-rate 0.10 --commission-max-rate 0.20 --commission-max-change-rate 0.01 \
   --output-document core-1.json
 #    … and sends core-1.json to the coordinator (public data, no secrets)
@@ -54,7 +55,8 @@ Community node operators send their onion tip: `nirad tx community onion-init` p
 - Allocations that don't sum to `supply.total` exactly
 - An address used twice (bech32 and hex forms are compared)
 - Fewer than `rules.min_validators` validators, or any validator at or above `rules.max_genesis_power_share` of genesis voting power (it could halt the chain alone)
-- `self_bond` greater than the validator's balance
+- `self_bond` greater than the validator's balance, or below `params.policy.min_self_bond`
+- A gentx whose `min_self_delegation` is below `params.policy.min_self_bond`
 - A gentx that is missing, duplicated, for an unlisted validator, or with a self-bond different from the file
 - Community node bonds below `params.community.min_bond`; invalid onion tips
 - Parameter fields that don't exist in genesis (typos fail loudly)
