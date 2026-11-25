@@ -26,7 +26,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 14 | Full node support | ✅ | Default node mode; all test networks |
 | 15 | Archive node support | 🟡 | `pruning = "nothing"` documented. *Not tested* |
 | 16 | Snapshot synchronisation | 🟡 | SDK snapshots + CometBFT state sync available. *Not configured or tested* |
-| 17 | Governance | 🟡 | x/gov with params set in the genesis network file; module authorities = gov. *No proposal lifecycle e2e test yet (param change, ResolveAlert, upgrade)* |
+| 17 | Governance | ✅ | x/gov; module authorities = gov; e2e: param-change proposal (vote via CLI and EVM gov precompile), ResolveAlert slashing, software-upgrade rehearsal with binary switch |
 | 18 | Monitoring / observability | 🟡 | Prometheus endpoints available (`prometheus = true`); typed module events. *No dashboards or alerts* |
 | 19 | Security testing | 🟡 | Adversarial unit tests (forged proofs, grinding, copying, duplicate pay, hook failure isolation); determinism audit (0 findings); govulncheck. *No threat model document, no fuzzing, no external audit* |
 | 20 | Performance benchmarks | ⬜ | Not started (R-N1/R-N4 targets unverified) |
@@ -68,6 +68,8 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | Genesis builder | `make test-genesis` | 11 |
 | Cosmos e2e | `make e2e-cosmos` | 8 + 6 |
 | EVM e2e | `make e2e-evm` | 11 + 9 + 2 (precompile atomicity) |
+| Governance e2e | `make e2e-gov` | 2 (param change with EVM-precompile vote; false-alert slashing via proposal) |
+| Upgrade rehearsal | `make upgrade-rehearsal` | 4 (old binary halts at plan height, new binary applies handler, state + EVM preserved) |
 | Multi-validator + BFT | `make localtest && make localtest-check` | 8 |
 
 ## Known dependency vulnerabilities (govulncheck, 2026-11-25)

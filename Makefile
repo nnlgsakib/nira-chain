@@ -86,9 +86,16 @@ e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
 	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1); \
 	  cd tests/evm-e2e && KEY=$$KEY node e2e.mjs && KEY=$$KEY node community.mjs && KEY=$$KEY node atomicity.mjs
 
-e2e: e2e-cosmos e2e-evm ## All e2e suites against a running localnet
+e2e-gov: ## Governance e2e: param change (CLI + EVM vote), false-alert slashing (running localnet)
+	@tests/cosmos-e2e/governance.sh
 
-.PHONY: test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e
+e2e: e2e-cosmos e2e-evm e2e-gov ## All e2e suites against a running localnet
+
+upgrade-rehearsal: install ## Software upgrade with a real binary switch (stop other nodes first)
+	@go build $(BUILD_FLAGS) -tags rehearsal -o $(BUILDDIR)/$(BINARY)-rehearsal ./cmd/$(BINARY)
+	@tests/upgrade/rehearsal.sh
+
+.PHONY: test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e upgrade-rehearsal
 
 ###################
 ###  Networks  ###

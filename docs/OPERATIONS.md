@@ -80,6 +80,15 @@ nirad tx community deregister-node --from cnode            # bond returns after 
 - After more than `max_reveal_distance` epochs offline, run `nirad tx community rotate-onion <new tip> <length>`. Create the new tip with `onion-init --overwrite`. It's valid from the next epoch.
 - The same operations are available from Solidity and Ethereum wallets through the precompile at `0x0000000000000000000000000000000000000900` (`precompiles/community/ICommunity.sol`).
 
+## Software upgrades
+
+1. A release that needs a state migration adds one entry to `app.Upgrades` (`app/upgrades_<name>.go`), with the plan name, handler and store changes. **Only the target release carries the entry**: x/upgrade halts a node whose binary already contains the handler of a plan that hasn't been reached yet.
+2. Governance passes `MsgSoftwareUpgrade{name, height}`.
+3. At `height` every node on the old binary halts with `UPGRADE "<name>" NEEDED at height: <h>`. Nothing is finalised past it.
+4. Operators stop the old binary and start the new one (manually, or with Cosmovisor). The handler runs at `<h>` and blocks continue.
+
+Rehearse every release on a test network first: `make upgrade-rehearsal` performs exactly this flow with a `-tags rehearsal` binary, and asserts that the halt height, handler height, state and EVM are preserved.
+
 ## Example systemd unit
 
 ```ini

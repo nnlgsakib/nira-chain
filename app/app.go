@@ -251,6 +251,8 @@ func New(
 		return app.App.InitChainer(ctx, req)
 	})
 
+	app.setupUpgrades()
+
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
