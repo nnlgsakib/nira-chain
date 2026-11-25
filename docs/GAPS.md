@@ -71,7 +71,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
-| G-CONS-1 🟡 | **Docker testnet (8 validators):** real network partitions verified: 6|2 → majority finalises, minority stuck, catches up on heal; 5|3 (≥ 1/3 cut off) → halt, then resume with no fork (`make testnet-test SCENARIO=partition`). Soak/long-run still to run. Earlier: **Tested now** (tests/consensus/check_validators.sh, 16 validators): double-sign evidence → slash + tombstone + delegator propagation, downtime jail/unjail, rotation. Still untested: real network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
+| G-CONS-1 🟡 | **Docker testnet (8 validators):** real network partitions verified: 6|2 → majority finalises, minority stuck, catches up on heal; 5|3 (≥ 1/3 cut off) → halt, then resume with no fork (`make testnet-test SCENARIO=partition`). 10-min soak under load passed (52 074 txs, no alerts, memory falls back when idle); 24 h soak still open. Earlier: **Tested now** (tests/consensus/check_validators.sh, 16 validators): double-sign evidence → slash + tombstone + delegator propagation, downtime jail/unjail, rotation. Still untested: real network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
 | G-CONS-2 ✅ FIXED (live via Cosmos tx + EVM precompile on 16 validators) | Live power-cap **rejection** never observed (needs ≥ 15 validators to activate) | T | Q7 | quality-testing (localtest N=16) |
 | G-CONS-3 | Weak subjectivity: no trusted-checkpoint publishing or state-sync trust procedure | M | — | ops-launch |
 

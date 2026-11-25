@@ -72,6 +72,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | Upgrade rehearsal | `make upgrade-rehearsal` | 4 (old binary halts at plan height, new binary applies handler, state + EVM preserved) |
 | Multi-validator + BFT | `make localtest && make localtest-check` | 8 |
 | Sync + archive | `make sync-test` | 2 |
+| Docker testnet (8 val + sentry + RPC + 6 community) | `make testnet-up && make testnet-test` | 9: health, sentry, community, partitions 6\|2 and 5\|3, 10-min soak (52 074 txs) |
 | Validator lifecycle (16 validators) | `make validators-test` | 7: rotation, live cap rejection (Cosmos + EVM), double-sign slash/tombstone/propagation, downtime jail + unjail, no fork |
 
 ## Known dependency vulnerabilities (govulncheck, 2026-11-25)

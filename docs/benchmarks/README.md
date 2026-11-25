@@ -34,9 +34,23 @@ A full epoch at the maximum (`max_proofs_per_epoch = 1024`) costs about 46 ms of
 2. **Native txs hit the 4 096-tx mempool cap** under burst load; excess is rejected at submission (clients must retry). Tune with the EVM mempool config if needed.
 3. **Block time grows with co-located validators** (1.0 → 1.33 s idle at 4 and 16 validators). Separate-machine measurements are required before conclusions about vote-gossip overhead.
 
+## Docker testnet soak (2026-11-26)
+
+`make testnet-up VALIDATORS=8 COMMUNITY=6 && make testnet-test`: 16 containers on one host (8 validators, one behind a sentry, 1 sentry, 1 RPC node, 6 community nodes running the prove loop). Raw log: `raw/docker-testnet-2026-11-26.log`.
+
+| Scenario | Result |
+|---|---|
+| health | 8/8 validators sign; 16 nodes agree on block hashes |
+| sentry | sentried validator's only peer is its sentry; it signs every block |
+| community | 6 nodes proved 24 tasks, all rewarded (19.54 NIRA) |
+| partition | 6\|2: majority continues, minority catches up; 5\|3: halt, then resume with identical hashes on all 16 nodes |
+| **soak, 10 min** | **52 074 txs** (mixed native/EVM, 52 load rounds) in 417 blocks (1.45 s mean block time under load); **no halt, slash, jail or hook-error alerts**; no panics or consensus failures; 0 duplicate-tx ERROR lines |
+
+Memory per container (MiB): ~150–250 at start → ~450–585 at the end of the soak → **~400–510 after 2 idle minutes**. It falls when load stops (val0 485 → 415, rpc0 525 → 444), consistent with caches and heap sized by the workload, not a monotonic leak. A 10-minute run can't rule out a slow leak: the 24 h soak below is still required.
+
 ## Not yet measured
 
-Network propagation across real hosts, snapshot-sync duration on a large state, community nodes at scale (hundreds of provers), and long-duration (24 h+) soak. Each needs dedicated infrastructure (multiple machines, G-OPS-3).
+Network propagation across real hosts, snapshot-sync duration on a large state, community nodes at scale (hundreds of provers), and long-duration (24 h+) soak (`make testnet-test SCENARIO=soak` with `--soak-minutes 1440` on a dedicated host). Each needs dedicated infrastructure (multiple machines, G-OPS-3).
 
 ## Reproduce
 
