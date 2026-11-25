@@ -1,6 +1,6 @@
 # Requirement compliance — does the logic meet the master prompt?
 
-- Date: 2026-11-25 · Source: `docs/idea.md` §1–§13, §19
+- Date: 2026-11-25 (updated after the gap-closing round) · Source: `docs/idea.md` §1–§13, §19
 - **Out of scope by request:** §7 token distribution and reward split (allocation percentages, inflation, sustainability). Those are tracked as G-SPEC-2.
 - Method: each requirement is checked against the code path that implements it. Evidence is a file, a test, or a live probe on a running node. Gaps reference `docs/GAPS.md`.
 
@@ -16,24 +16,26 @@
 
 | Section | ✅ | 🟢 | 🟡 | 🔶 | ❌ |
 |---|---:|---:|---:|---:|---:|
-| §1 / §2.1 Core Validator Network | 7 | 5 | 1 | 1 | 1 |
+| §1 / §2.1 Core Validator Network | 11 | 2 | 1 | 1 | 0 |
 | §2.2 Community Node Network | 8 | 1 | 1 | 0 | 1 |
-| §2.3 Full nodes, archive nodes, sync | 1 | 2 | 1 | 0 | 0 |
-| §3 Consensus and finality | 6 | 5 | 1 | 0 | 0 |
-| §4 Non-custodial staking and delegation | 9 | 4 | 0 | 0 | 0 |
-| §5 Community verification layer | 11 | 0 | 3 | 0 | 0 |
-| §6 Native EVM | 13 | 2 | 3 | 0 | 0 |
-| §8 Validator selection and decentralisation | 6 | 0 | 1 | 2 | 2 |
-| §9 Networking, §10 Storage | 1 | 6 | 3 | 0 | 1 |
+| §2.3 Full nodes, archive nodes, sync | 3 | 0 | 1 | 0 | 0 |
+| §3 Consensus and finality | 8 | 3 | 1 | 0 | 0 |
+| §4 Non-custodial staking and delegation | 10 | 3 | 0 | 0 | 0 |
+| §5 Community verification layer | 12 | 0 | 2 | 0 | 0 |
+| §6 Native EVM | 16 | 0 | 2 | 0 | 0 |
+| §8 Validator selection and decentralisation | 7 | 0 | 1 | 2 | 1 |
+| §9 Networking, §10 Storage | 2 | 5 | 3 | 0 | 1 |
 | §12 Governance | 1 | 4 | 2 | 0 | 0 |
-| §13 Node software | 2 | 0 | 4 | 0 | 2 |
-| **Total** | **65** | **29** | **20** | **3** | **7** |
+| §13 Node software | 3 | 0 | 3 | 0 | 2 |
+| **Total** | **81** | **18** | **17** | **3** | **5** |
 
-**Verdict:** the core logic meets the prompt for consensus safety, non-custodial staking, the native EVM, and a non-decorative, sybil-neutral community verification layer. Four logic gaps contradict explicit requirements:
-1. **No protocol-wide minimum self-bond** (§1A, §2.1): ❌, cheap to fix (G-STAKE-1).
-2. **Validator selection ignores performance and slashing history** (§8): 🔶, owner decision (G-DES-2).
-3. **Validator-set changes are per block, not per epoch** (§2.1): 🔶, owner decision (G-DES-1).
-4. **Community penalties cover alert deposits only, never the bond** (§5): 🟡 (G-COMM-1).
+**Verdict (updated):** the core logic meets the prompt for consensus safety, non-custodial staking, the native EVM, and a non-decorative, sybil-neutral community verification layer. The four logic gaps found in the first check are resolved:
+1. Minimum self-bond: **implemented** (G-STAKE-1).
+2. Performance-aware selection: **decided**: power = slashable stake, performance gates eligibility (ADR-0008).
+3. Per-block vs epoch validator updates: **decided**: per-block for safety (ADR-0008).
+4. Community misconduct penalties: **implemented**: a governance-rejected alert slashes 10 % of the bond (G-COMM-1).
+
+What remains ❌ is outside the current logic: infrastructure-concentration controls, a data-availability layer, community-node resource limits and safe updates, and validator sybil detection (not solvable on-chain).
 
 ## §1 / §2.1 Core Validator Network
 

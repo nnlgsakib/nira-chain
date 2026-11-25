@@ -4,9 +4,9 @@
 
 ## Status
 - Mode: production
-- Phase: build (design and stack ADRs accepted; component specs partial, see Components)
-- Last updated: 2026-11-25 by stack-cosmos-ignite
-- Next step: owner decisions (Q1/Q3/Q8–Q10) in parallel with threat model (quality-security, G-SEC-2) → precompile atomicity test (G-SEC-4) → upgrade framework (ops-upgrades, G-OPS-1). See docs/GAPS.md
+- Phase: quality (build complete for CONS/STAKE/EXEC/COMM/GOV; threat model v0.1; testnets under fault, sync, upgrade and load tests). Ops gate still open: external audit, multi-host testnet, runbooks
+- Last updated: 2026-11-25 by blockchain-dev (gap-closing round)
+- Next step: owner decisions (economics Q1/Q3, license), then multi-host public testnet (ops-launch) and external audit (quality-security). Open engineering items: docs/GAPS.md
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.
@@ -84,7 +84,7 @@ Detail: `docs/spec/architecture.md`
 | ADR-0006 | x/community reachable from Cosmos and EVM (precompile 0x…0900) | accepted |
 
 ## Open questions
-Full gap analysis: docs/GAPS.md (IDs G-*). Requirement-by-requirement check: docs/COMPLIANCE.md (65 met+tested, 29 met untested, 20 partial, 3 deviations, 7 missing; economics excluded).
+Full gap analysis: docs/GAPS.md (IDs G-*). Requirement-by-requirement check: docs/COMPLIANCE.md (81 met+tested, 18 met untested, 17 partial, 3 deviations decided in ADR-0008, 5 missing; economics excluded).
 - [x] Q8 Decided per-block (ADR-0008); owner may override
 - [x] Q9 Decided: performance gates eligibility, power = stake (ADR-0008); owner may override
 - [x] Q10 Done: false-alert bond slashing (G-COMM-1)
