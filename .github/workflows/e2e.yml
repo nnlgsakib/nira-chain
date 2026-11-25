@@ -1,0 +1,65 @@
+name: E2E
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - run: make test
+      - run: make fuzz FUZZTIME=15s
+
+  e2e-single-node:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: make install && echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - run: make e2e-deps
+      - name: Start localnet
+        run: |
+          make localnet
+          nohup nirad start > node.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf localhost:8545 -o /dev/null && curl -sf localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest -o /dev/null && break; sleep 2; done
+      - run: make e2e
+      - if: failure()
+        run: tail -200 node.log
+
+  multi-node:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: make install && echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - run: make e2e-deps
+      - name: 4-validator ceremony + BFT fault tolerance
+        run: |
+          make localtest
+          sleep 15
+          make localtest-check
+          make localtest-stop
+      - name: State sync + archive
+        run: make sync-test
+      - name: Software-upgrade rehearsal (binary switch)
+        run: make upgrade-rehearsal
+      - if: failure()
+        run: for f in ~/.nira-localtest/*/node.log ~/.nira/rehearsal-node.log; do echo "== $f"; tail -80 "$f" || true; done
