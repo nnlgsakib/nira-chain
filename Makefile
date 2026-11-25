@@ -46,10 +46,21 @@ build: ## Build nirad into ./build/
 	@go build $(BUILD_FLAGS) -mod=readonly -o $(BUILDDIR)/$(BINARY) ./cmd/$(BINARY)
 	@echo "--> $(BUILDDIR)/$(BINARY)"
 
+GOOS ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
+RELEASE_DIR := $(BUILDDIR)/release
+release: ## Reproducible release tarball + SHA256SUMS in build/release (needs a clean git tree)
+	@test -z "$$(git status --porcelain)" || (echo "release: working tree not clean" && exit 1)
+	@mkdir -p $(RELEASE_DIR)
+	@go build $(BUILD_FLAGS) -mod=readonly -buildvcs=false -o $(RELEASE_DIR)/$(BINARY) ./cmd/$(BINARY)
+	@cd $(RELEASE_DIR) && tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner \
+	  -czf $(BINARY)-$(VERSION)-$(GOOS)-$(GOARCH).tar.gz $(BINARY) && \
+	  sha256sum $(BINARY) $(BINARY)-$(VERSION)-$(GOOS)-$(GOARCH).tar.gz > SHA256SUMS && cat SHA256SUMS
+
 clean: ## Remove build outputs
 	@rm -rf $(BUILDDIR)
 
-.PHONY: all install build clean
+.PHONY: all install build release clean
 
 ##############
 ###  Test  ###
