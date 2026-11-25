@@ -1,6 +1,12 @@
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 COMMIT := $(shell git log -1 --format='%H')
 APPNAME := nira
+BINARY := $(APPNAME)d
+BUILDDIR ?= $(CURDIR)/build
+GOVULNCHECK_VERSION := v1.1.4
+
+# go-ethereum's secp256k1 needs cgo (a C compiler)
+export CGO_ENABLED := 1
 
 # do not override user values
 ifeq (,$(VERSION))
@@ -11,39 +17,17 @@ ifeq (,$(VERSION))
   endif
 endif
 
-# Update the ldflags with the app, client & server names
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=$(APPNAME) \
-	-X github.com/cosmos/cosmos-sdk/version.AppName=$(APPNAME)d \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=$(BINARY) \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
 
-BUILD_FLAGS := -ldflags '$(ldflags)'
+BUILD_FLAGS := -ldflags '$(ldflags)' -trimpath
 
-##############
-###  Test  ###
-##############
+.DEFAULT_GOAL := help
 
-test-unit:
-	@echo Running unit tests...
-	@go test -mod=readonly -v -timeout 30m ./...
-
-test-race:
-	@echo Running unit tests with race condition reporting...
-	@go test -mod=readonly -v -race -timeout 30m ./...
-
-test-cover:
-	@echo Running unit tests and creating coverage report...
-	@go test -mod=readonly -v -timeout 30m -coverprofile=$(COVER_FILE) -covermode=atomic ./...
-	@go tool cover -html=$(COVER_FILE) -o $(COVER_HTML_FILE)
-	@rm $(COVER_FILE)
-
-bench:
-	@echo Running unit tests with benchmarking...
-	@go test -mod=readonly -v -timeout 30m -bench=. ./...
-
-test: govet govulncheck test-unit
-
-.PHONY: test test-unit test-race test-cover bench
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 #################
 ###  Install  ###
@@ -51,26 +35,87 @@ test: govet govulncheck test-unit
 
 all: install
 
-install:
+install: ## Build and install nirad into $(go env GOPATH)/bin
 	@echo "--> ensure dependencies have not been modified"
 	@go mod verify
-	@echo "--> installing $(APPNAME)d"
-	@go install $(BUILD_FLAGS) -mod=readonly ./cmd/$(APPNAME)d
+	@echo "--> installing $(BINARY) $(VERSION)"
+	@go install $(BUILD_FLAGS) -mod=readonly ./cmd/$(BINARY)
 
-.PHONY: all install
+build: ## Build nirad into ./build/
+	@mkdir -p $(BUILDDIR)
+	@go build $(BUILD_FLAGS) -mod=readonly -o $(BUILDDIR)/$(BINARY) ./cmd/$(BINARY)
+	@echo "--> $(BUILDDIR)/$(BINARY)"
+
+clean: ## Remove build outputs
+	@rm -rf $(BUILDDIR)
+
+.PHONY: all install build clean
+
+##############
+###  Test  ###
+##############
+
+test-unit: ## Go unit tests (modules, invariants, real IAVL proofs)
+	@go test -mod=readonly -timeout 30m ./...
+
+test-race: ## Go unit tests with the race detector
+	@go test -mod=readonly -race -timeout 30m ./...
+
+test-cover: ## Go unit tests with an HTML coverage report in ./build
+	@mkdir -p $(BUILDDIR)
+	@go test -mod=readonly -timeout 30m -coverprofile=$(BUILDDIR)/cover.out -covermode=atomic ./...
+	@go tool cover -html=$(BUILDDIR)/cover.out -o $(BUILDDIR)/cover.html
+	@echo "--> $(BUILDDIR)/cover.html"
+
+test-genesis: ## Genesis builder validation tests (python3)
+	@python3 -m unittest discover -s tests/genesis -p 'test_*.py'
+
+bench:
+	@go test -mod=readonly -timeout 30m -bench=. ./...
+
+test: govet test-unit test-genesis ## vet + unit + genesis builder tests
+
+e2e-deps: ## Install Node.js deps for the EVM e2e suites
+	@cd tests/evm-e2e && npm ci --silent
+
+e2e-cosmos: ## Cosmos-interface e2e (needs a running localnet)
+	@tests/cosmos-e2e/e2e.sh
+	@tests/cosmos-e2e/community.sh
+
+e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
+	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1); \
+	  cd tests/evm-e2e && KEY=$$KEY node e2e.mjs && KEY=$$KEY node community.mjs
+
+e2e: e2e-cosmos e2e-evm ## All e2e suites against a running localnet
+
+.PHONY: test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e
+
+###################
+###  Networks  ###
+###################
+
+localnet: install ## Init a 1-validator dev chain in ~/.nira (start it with `nirad start`)
+	@scripts/localnet.sh
+
+localtest: install ## 4-validator network via the full genesis ceremony (ports base+100·i)
+	@scripts/genesis/localtest.sh
+
+localtest-check: ## Verify the 4-validator network (allocations, BFT fault tolerance)
+	@tests/genesis/check_localtest.sh
+
+localtest-stop: ## Stop the 4-validator network
+	@scripts/genesis/localtest.sh stop
+
+genesis-check: ## Validate a network file: make genesis-check NET=genesis/networks/mainnet.example.toml
+	@python3 scripts/genesis/build_genesis.py check $(or $(NET),genesis/networks/mainnet.example.toml) --out $(BUILDDIR)/genesis
+
+.PHONY: localnet localtest localtest-check localtest-stop genesis-check
 
 ##################
 ###  Protobuf  ###
 ##################
 
-# Use this target if you do not want to use Ignite for generating proto files
-
-proto-deps:
-	@echo "Installing proto deps"
-	@echo "Proto deps present, run 'go tool' to see them"
-
-proto-gen:
-	@echo "Generating protobuf files..."
+proto-gen: ## Regenerate Go code from proto/ (needs Ignite CLI)
 	@ignite generate proto-go --yes
 
 .PHONY: proto-gen
@@ -79,27 +124,16 @@ proto-gen:
 ###  Linting  ###
 #################
 
-lint:
-	@echo "--> Running linter"
+lint: ## golangci-lint
 	@go tool github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --timeout 15m
 
 lint-fix:
-	@echo "--> Running linter and fixing issues"
 	@go tool github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix --timeout 15m
 
-.PHONY: lint lint-fix
-
-###################
-### Development ###
-###################
-
-govet:
-	@echo Running go vet...
+govet: ## go vet
 	@go vet ./...
 
-govulncheck:
-	@echo Running govulncheck...
-	@go tool golang.org/x/vuln/cmd/govulncheck@latest
-	@govulncheck ./...
+govulncheck: ## Known-vulnerability scan of dependencies
+	@go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
 
-.PHONY: govet govulncheck
+.PHONY: lint lint-fix govet govulncheck
