@@ -39,9 +39,9 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
-| G-SPEC-1 | x/policy (power cap) has an ADR but no component spec (state, params, failure cases) | M | `docs/spec/` has no `staking.md` | design-spec + protocol-staking-validators |
+| G-SPEC-1 ✅ (docs/spec/policy.md) | x/policy (power cap) has an ADR but no component spec (state, params, failure cases) | M | `docs/spec/` has no `staking.md` | design-spec + protocol-staking-validators |
 | G-SPEC-2 | **Tokenomics not specified or simulated.** The idea's 50/25/15/10 split isn't modelled: the validator/delegator split is set by commission (min 5 %), the reserve gets 2 % community tax plus undistributed community budget, and only the 15 % community share exists as a parameter. There is no security-budget or inflation simulation | M | no `docs/spec/tokenomics.md`; Q1/Q3 open | protocol-tokenomics |
-| G-SPEC-3 | Governance not specified: no analysis of quorum/threshold attacks, no emergency policy. x/circuit is wired with no documented authority | M | no `docs/spec/governance.md` | protocol-governance |
+| G-SPEC-3 ✅ v0.1 (docs/spec/governance.md; timelock/council proposed) | Governance not specified: no analysis of quorum/threshold attacks, no emergency policy. x/circuit is wired with no documented authority | M | no `docs/spec/governance.md` | protocol-governance |
 | G-SPEC-4 🟡 (docs/spec/network.md + scripts/node-profile.py; live sentry test pending) | P2P/network: no topology (sentries, seeds), peer limits or eclipse hardening defined | T | CometBFT defaults | general knowledge (no protocol-p2p skill installed) |
 | G-DES-1 ✅ DECIDED (ADR-0008, per-block for safety) | **Epoch-based validator management** (idea §2.1): the SDK updates the validator set every block, not per epoch | M | x/staking EndBlock | decision needed → ADR (per-block is safe; epochs add predictability) |
 | G-DES-2 ✅ DECIDED (ADR-0008, performance gates eligibility) | **Selection ignores performance and slashing history** (idea §8): the active set is top-N by stake only | M | x/staking | decision needed → ADR (on-chain metrics only, or keep stake-only) |

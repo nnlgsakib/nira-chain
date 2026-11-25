@@ -63,13 +63,13 @@ Detail: `docs/spec/architecture.md`
 | Component | protocol-* skill | Spec | Status | Evidence |
 |---|---|---|---|---|
 | CONS | protocol-consensus | architecture.md §1,6 | tested (4-validator net) | tests/genesis/check_localtest.sh: 1/4 down live, 2/4 down halts, recovery with identical hashes |
-| STAKE | protocol-staking-validators | ADR-0004 (spec pending) | tested (unit + localnet) | x/policy/keeper/power_cap_test.go (INV-STAKE-CAP-1..3, randomised 2000 ops); tests/cosmos-e2e (MsgDelegate/Undelegate), tests/evm-e2e (staking precompile delegate/undelegate). Gap: live cap *rejection* needs a ≥10-validator net |
+| STAKE | protocol-staking-validators | docs/spec/policy.md | tested (unit + localnet) | x/policy/keeper/power_cap_test.go (INV-STAKE-CAP-1..3, randomised 2000 ops); tests/cosmos-e2e (MsgDelegate/Undelegate), tests/evm-e2e (staking precompile delegate/undelegate). Gap: live cap *rejection* needs a ≥10-validator net |
 | EXEC | protocol-state-execution | ADR-0005 | tested (localnet) | tests/evm-e2e/e2e.mjs — 9/9 pass: deploy, logs/filters, receipts, revert, EIP-1559 + legacy tx, bank==EVM balance, staking precompile |
 | TOKEN | protocol-tokenomics | missing | designed | |
 | COMM | protocol-verifiable-participation | docs/spec/community.md v0.2 | tested (unit + localnet, Cosmos and EVM) | x/community/keeper/community_test.go (real IAVL proofs, all C-checks, INV-COMM-1..10 randomised); tests/cosmos-e2e/community.sh 6/6 (CLI client); tests/evm-e2e/community.mjs 9/9 via precompile 0x…0900 with Cosmos REST cross-checks |
 | RAND | protocol-randomness | community.md §5 | tested | x/community/types/derive_test.go (spec vectors, INV-COMM-9) |
-| GOV | protocol-governance | missing | designed | |
-| NET | — (no skill) | missing | todo | |
+| GOV | protocol-governance | docs/spec/governance.md | tested | tests/cosmos-e2e/governance.sh (param change, EVM vote, ResolveAlert), tests/upgrade/rehearsal.sh |
+| NET | — (no skill) | docs/spec/network.md | built (profiles) | scripts/node-profile.py; sync tests; live sentry test pending |
 
 ## Decisions
 | ADR | Title | Status |
