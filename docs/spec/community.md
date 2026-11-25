@@ -162,7 +162,7 @@ Effects:
 | P-COMM-max_onion_length | u32 | 1 000 000 | 1 | 10 000 000 | epochs | |
 | P-COMM-max_reveal_distance | u32 | 4 096 | 1 | 100 000 | hashes | gas-bounds the reveal; longer gaps need a rotation |
 | P-COMM-reward_share_bps | u32 | 1 500 | 0 | 3 000 | bps of block rewards+fees | idea's 15 % proposal (Q3) |
-| P-COMM-unbonding_blocks | u64 | 100 800 | 1 | 2 000 000 | blocks | ~1–2 weeks |
+| P-COMM-unbonding_blocks | u64 | 100 800 | 1 | 2 000 000 | blocks | ≈ 28–42 h at the measured 1.0–1.5 s block time (not weeks); raise for a longer exit delay |
 | P-COMM-max_unbond_per_block | u32 | 100 | 1 | 10 000 | | EndBlock bound |
 | P-COMM-alert_deposit | Int | 100 NIRA | 1 NIRA | 1e6 NIRA | anira | |
 | P-COMM-alert_ttl_blocks | u64 | 100 800 | 100 | 2 000 000 | blocks | |
