@@ -52,6 +52,7 @@ api_head, api_sep, api_tail = head.partition("[api]")
 head = api_head + api_sep + re.sub(r"^enable = false", "enable = true", api_tail, count=1, flags=re.M)
 tail = re.sub(r'^address = ".*"', 'address = "127.0.0.1:8545"', tail, count=1, flags=re.M)
 tail = re.sub(r'^ws-address = ".*"', 'ws-address = "127.0.0.1:8546"', tail, count=1, flags=re.M)
+tail = re.sub(r'^api = ".*"', 'api = "eth,net,web3,txpool"', tail, count=1, flags=re.M)
 open(p, "w").write(head + sep + tail)
 PY
 echo "localnet ready: $HOME_DIR (chain-id $CHAIN_ID)"

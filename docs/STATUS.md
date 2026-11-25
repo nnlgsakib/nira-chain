@@ -18,7 +18,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 6 | Reward distribution | 🟡 | x/distribution (F1) for validators and delegators. Community epoch settlement tested (INV-COMM-1, e2e payouts). *Validator/delegator reward claims not e2e tested; reward split not modelled (Q3)* |
 | 7 | Slashing and unbonding | ✅ | Unbonding (staking + community), double-sign slash + tombstone + delegator propagation, downtime jail + unjail (`make validators-test`) |
 | 8 | Native EVM execution | ✅ | cosmos/evm v0.6.0. Deploy, call, logs, revert, EIP-1559 and legacy txs (`tests/evm-e2e/e2e.mjs`) |
-| 9 | Ethereum JSON-RPC | 🟡 | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs. *No full Ethereum JSON-RPC conformance suite run yet* |
+| 9 | Ethereum JSON-RPC | 🟡 | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs, newFilter/newBlockFilter/newPendingTransactionFilter/getFilterChanges/uninstallFilter, feeHistory, syncing, net_version/listening, web3_clientVersion, txpool_status, eth_subscribe(newHeads). *No full Ethereum JSON-RPC conformance suite run yet* |
 | 10 | Solidity deployment | ✅ | `tests/evm-e2e/Counter.sol` deployed and used through ethers.js |
 | 11 | Community Node software | 🟡 | CLI client: `onion-init`, `register-node`, `prove`, `run`, `deregister-node` (Linux tested). *No GUI/desktop app; Windows/macOS untested; no resource limiting yet* |
 | 12 | Independent verification | 🟡 | Random state-possession proofs (ICS-23) verified on-chain; advisory divergence alerts (ADR-0003). *Full re-execution verification, DA sampling and history serving are v2 task types (Q4)* |
@@ -67,7 +67,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | Go unit + invariants | `make test-unit` | 42 test functions: power cap (randomised 2000 ops), community (real IAVL proofs, every rejection path, randomised 120 blocks), spec test vectors |
 | Genesis builder | `make test-genesis` | 11 |
 | Cosmos e2e | `make e2e-cosmos` | 8 + 6 |
-| EVM e2e | `make e2e-evm` | 11 + 9 + 2 (precompile atomicity) |
+| EVM e2e | `make e2e-evm` | 12 + 9 + 2 (incl. JSON-RPC filters/fee/net/WS, precompile atomicity) |
 | Governance e2e | `make e2e-gov` | 2 (param change with EVM-precompile vote; false-alert slashing via proposal) |
 | Upgrade rehearsal | `make upgrade-rehearsal` | 4 (old binary halts at plan height, new binary applies handler, state + EVM preserved) |
 | Multi-validator + BFT | `make localtest && make localtest-check` | 8 |

@@ -149,9 +149,9 @@
 | Staking balances from EVM | ✅ | staking precompile reads and writes |
 | Native token in EVM | ✅ | NIRA is the EVM native currency (msg.value, 18 decimals); no wrapped duplicate |
 | JSON-RPC: chain info, balances, submit, lookup, receipts, calls, logs | ✅ | e2e (13 methods) |
-| JSON-RPC: event filters, pending tx filter, fee info, network status | 🟢 | probed live: `eth_newFilter`, `eth_newBlockFilter`, `eth_newPendingTransactionFilter`, `eth_feeHistory`, `eth_maxPriorityFeePerGas`, `eth_syncing`, `net_version/listening/peerCount` respond. Not in automated tests |
-| Pending transactions | 🟡 | pending filter works; `txpool_*` is off by default (`api = "eth,net,web3"`); `eth_pendingTransactions` isn't implemented |
-| WebSocket subscriptions | 🟢 | `eth_subscribe` on `:8546` (not over HTTP, as on Ethereum); not tested |
+| JSON-RPC: event filters, pending tx filter, fee info, network status | ✅ | automated in `evm-e2e` (newFilter + getFilterChanges on a real event, block/pending filters, feeHistory, net_*, web3, eth_syncing, txpool_status). Was 🟢: probed live: `eth_newFilter`, `eth_newBlockFilter`, `eth_newPendingTransactionFilter`, `eth_feeHistory`, `eth_maxPriorityFeePerGas`, `eth_syncing`, `net_version/listening/peerCount` respond. Not in automated tests |
+| Pending transactions | ✅ | pending-tx filter + `txpool_status` (txpool enabled on dev/RPC nodes); `eth_pendingTransactions` not provided by cosmos/evm (non-standard method) |
+| WebSocket subscriptions | ✅ | newHeads via ethers WebSocketProvider on `:8546` (`evm-e2e`) |
 | Wallet chain identification | ✅ | `eth_chainId` and `net_version` = 47201, unused in the public registry |
 | Common developer tools | 🟡 | ethers.js automated; Foundry, Hardhat and MetaMask not automated (G-TEST-3) |
 | DoS / resource limits | 🟡 | block gas 100 M, EIP-1559; **fee floor ≈ 0 on default config** (K6), silent mempool drops (K7) |

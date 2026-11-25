@@ -130,5 +130,38 @@ await check("createValidator via staking precompile enforces the chain minimum s
   assert.equal(await st.createValidator.staticCall(desc, rates, ethers.parseEther("100000"), wallet.address, pubkey, value, { gasLimit: 2_000_000 }), true);
 });
 
+await check("JSON-RPC: log, block and pending-tx filters; fee history; net/web3/txpool; WS newHeads (G-EVM-1)", async () => {
+  const rpc = (m, p = []) => provider.send(m, p);
+  assert.equal(await rpc("net_version"), EXPECTED_CHAIN_ID.toString());
+  assert.equal(await rpc("net_listening"), true);
+  assert.equal(await rpc("eth_syncing"), false);
+  assert.match(await rpc("web3_clientVersion"), /Version/);
+  const fh = await rpc("eth_feeHistory", ["0x4", "latest", [25, 75]]);
+  assert.equal(fh.baseFeePerGas.length, 5);
+  const tp = await rpc("txpool_status");
+  assert.ok("pending" in tp && "queued" in tp);
+
+  const addr = await counter.getAddress();
+  const logFilter = await rpc("eth_newFilter", [{ address: addr, fromBlock: "latest" }]);
+  const blockFilter = await rpc("eth_newBlockFilter");
+  const pendingFilter = await rpc("eth_newPendingTransactionFilter");
+  const tx = await counter.inc(1, { type: 2 });
+  await tx.wait();
+  const logs = await rpc("eth_getFilterChanges", [logFilter]);
+  assert.ok(logs.some(l => l.transactionHash === tx.hash), "log filter returned the event");
+  assert.ok((await rpc("eth_getFilterChanges", [blockFilter])).length >= 1, "block filter returned blocks");
+  const pend = await rpc("eth_getFilterChanges", [pendingFilter]);
+  assert.ok(Array.isArray(pend), "pending tx filter answers");
+  assert.equal(await rpc("eth_uninstallFilter", [logFilter]), true);
+
+  const ws = new ethers.WebSocketProvider(process.env.WS ?? "ws://127.0.0.1:8546");
+  const head = await new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error("no newHeads within 15 s")), 15000);
+    ws.on("block", n => { clearTimeout(t); res(n); });
+  });
+  assert.ok(head > 0);
+  await ws.destroy();
+});
+
 console.log(`\n${passed} checks passed`);
 process.exit(0);

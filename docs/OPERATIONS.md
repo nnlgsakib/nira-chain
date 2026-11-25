@@ -8,7 +8,7 @@
 |---|---|---|---|
 | **Core Validator** | `nirad start` with a consensus key, behind sentry nodes | JSON-RPC **disabled**; `minimum-gas-prices` set; remote signer recommended | 8+ cores, 32 GB, 2 TB NVMe, 1 Gbps, 99.9 % uptime |
 | **Full node** | `nirad start`, no validator key | default pruning (keeps the last 362 880 states) | 4 cores, 8 GB, 500 GB SSD |
-| **RPC node** | full node with the APIs enabled | `[api] enable`, `[json-rpc] enable`, behind a reverse proxy with rate limits | 8 cores, 16 GB |
+| **RPC node** | full node with the APIs enabled | `[api] enable`, `[json-rpc] enable`, `api = "eth,net,web3,txpool"`, behind a reverse proxy with rate limits | 8 cores, 16 GB |
 | **Archive node** | full node that keeps everything | `pruning = "nothing"` in app.toml | multi-TB |
 | **Community Node** | full node + `nirad tx community run` | default pruning (must keep ≥ `apphash_window + epoch_blocks` versions); a funded key with ≥ `min_bond` | 4 cores, 8 GB, 500 GB SSD, 25 Mbps; may go offline |
 

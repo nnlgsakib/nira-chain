@@ -53,7 +53,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 |---|---|---|---|---|
 | G-STAKE-1 ✅ FIXED | **No protocol-wide minimum self-bond** (idea §1A, §2.1, §8); each validator picks `min_self_delegation` ≥ 1 anira | M | staking params have no floor | x/policy `min_self_bond` + `AfterValidatorCreated` check (SDK jails below own min) |
 | G-GOV-1 ✅ FIXED | `gov.min_initial_deposit_ratio = 0`: proposals can be opened with no upfront deposit (spam) | T | genesis params | set in network files (e.g. 0.25) |
-| G-EVM-1 | `txpool` namespace off by default; filter, fee and net methods respond (live probe) but aren't in automated tests | I | `api = "eth,net,web3"` | config + extend `evm-e2e` |
+| G-EVM-1 ✅ FIXED (txpool on dev/RPC nodes; filters/fee/net/WS in evm-e2e) | `txpool` namespace off by default; filter, fee and net methods respond (live probe) but aren't in automated tests | I | `api = "eth,net,web3"` | config + extend `evm-e2e` |
 
 ### Security
 
