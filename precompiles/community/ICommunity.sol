@@ -16,6 +16,10 @@ struct NodeInfo {
     uint64 unitsTotal;
     uint32 unitsThisEpoch;
     int64 unbondCompleteHeight;
+    /// cumulative community rewards paid to this node
+    uint256 rewardsTotal;
+    /// cumulative bond slashed for provable misconduct (rejected false alerts)
+    uint256 slashedTotal;
 }
 
 struct EpochInfo {

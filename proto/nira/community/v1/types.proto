@@ -27,6 +27,10 @@ message Node {
   uint32 onion_length = 9;
   uint64 units_total = 10;
   int64 unbond_complete_height = 11;
+  // rewards_total: cumulative community rewards paid to this node (G-COMM-3).
+  string rewards_total = 12 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // slashed_total: cumulative bond slashed for provable misconduct (G-COMM-1).
+  string slashed_total = 13 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Epoch is the current community epoch (spec §4).

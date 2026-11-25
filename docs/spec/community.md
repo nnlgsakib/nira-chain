@@ -1,6 +1,6 @@
 # Spec — COMM: Community Participation Layer
 
-- Version: 0.3 (2026-11-25)
+- Version: 0.4 (2026-11-25)
 - Status: specified
 - Design: ADR-0003. Mechanism skills: protocol-verifiable-participation, protocol-randomness
 - Implementation surface: native module `x/community` plus an EVM precompile at `0x0000000000000000000000000000000000000900` (ADR-0006)
@@ -41,7 +41,7 @@ Addr        = bytes[20]                    // account address (same bytes for be
 | Entity | Key | Fields | Writer | Bound |
 |---|---|---|---|---|
 | Params | — | §7 | gov | 1 |
-| Node | operator Addr | operator, moniker (≤ 64 B), bond: Int, status, registered_epoch: u64, onion_base_epoch: u64, onion_anchor: Hash32, onion_anchor_epoch: u64, onion_length: u32, units_total: u64, unbond_complete_height: u64 | register / rotate / reveal / deregister | 1 per address; cost = min_bond |
+| Node | operator Addr | operator, moniker (≤ 64 B), bond: Int, status, registered_epoch: u64, onion_base_epoch: u64, onion_anchor: Hash32, onion_anchor_epoch: u64, onion_length: u32, units_total: u64, unbond_complete_height: u64, rewards_total: Int, slashed_total: Int | register / rotate / reveal / deregister / settle / resolve | 1 per address; cost = min_bond |
 | TotalActiveBond | — | Int | register / deregister | 1 |
 | Epoch | — (current) | number: u64, start_height: i64, seed: Hash32, eligible_bond: Int, budget: Int, proofs: u32 | BeginBlock | 1 |
 | EpochWork | (epoch, operator) | units: u32 | submit proof | ≤ P-COMM-max_proofs_per_epoch per epoch; deleted at settlement |
@@ -141,7 +141,7 @@ Effects:
 Checks: authority = gov module account (`ErrInvalidSigner`); alert OPEN.
 Effects:
 - valid: refund the deposit, status ACCEPTED
-- invalid: deposit → community pool (protocol reserve), status REJECTED
+- invalid (**provable misconduct**, G-COMM-1): deposit **and** `floor(bond × false_alert_slash_bps / 10000)` of the reporter's bond → community pool; `bond −= slash`, `slashed_total += slash`, TotalActiveBond reduced if ACTIVE; event `community_node_slashed`; status REJECTED
 
 ### 6.7 MsgUpdateParams {authority, params} — governance only; `params.Validate()`.
 
@@ -168,6 +168,7 @@ Effects:
 | P-COMM-alert_ttl_blocks | u64 | 100 800 | 100 | 2 000 000 | blocks | |
 | P-COMM-max_open_alerts | u32 | 256 | 1 | 10 000 | | |
 | P-COMM-alert_threshold_bps | u32 | 3 334 | 1 | 10 000 | bps of active bond | |
+| P-COMM-false_alert_slash_bps | u32 | 1 000 | 0 | 5 000 | bps of reporter bond | slashed to the community pool when governance rejects an alert (G-COMM-1) |
 
 Rule: `tasks_per_selection × target_committee ≤ max_proofs_per_epoch`.
 
@@ -178,7 +179,7 @@ Each step runs in a cache context. On error the step is discarded and `comm_hook
 1. **App-hash history**: if height > 1, `AppHash[height-1] = header.app_hash`; delete `AppHash[height-1-window]` (O(1)).
 2. **Reward funding**: `amt = floor(fee_collector.balance(bond_denom) × reward_share_bps / 10000)`; move it to `community`; `epoch.budget += amt`.
 3. **Epoch transition**, if `height = epoch.start_height + epoch_blocks` (or genesis):
-   - **Settle epoch e**: `U = Σ units`. For each EpochWork(e, op) in key order, pay `floor(budget × units / U)` to the operator. Send the remainder (or the whole budget if U = 0) to the community pool. Delete EpochWork and TaskDone for e. Work ≤ max_proofs_per_epoch entries.
+   - **Settle epoch e**: `U = Σ units`. For each EpochWork(e, op) in key order, pay `floor(budget × units / U)` to the operator and add it to `rewards_total`. Send the remainder (or the whole budget if U = 0) to the community pool. Delete EpochWork and TaskDone for e. Work ≤ max_proofs_per_epoch entries.
    - **Open epoch e+1**: `seed` = §5 with `block_hash = header.hash`; `eligible_bond = TotalActiveBond`; `budget = 0`; `proofs = 0`.
 
 ### EndBlock
@@ -241,7 +242,7 @@ stateDiagram-v2
 | Outsourcing proofs to an archive RPC | Possible (K1). v1 proves state access, not local storage |
 | Fake proof | ICS-23 verification fails → tx rejected; the attacker pays gas |
 | Spam proofs | Gas per byte, selection required, per-epoch cap |
-| Malicious divergence alerts | Cost a deposit; burned if governance rejects them; advisory only |
+| Malicious divergence alerts | Cost a deposit; if governance rejects the alert, the deposit and 10 % of the bond are slashed to the community pool; advisory only |
 | Settlement error (e.g. a bank failure) | Cache context discarded, event emitted, chain continues; funds stay in the module |
 
 ## 13. Test vectors
@@ -262,6 +263,7 @@ task 1: height offset 41, store index 3, key 8e943b4a68c9aef377d174f2f5db8832b89
 (Height offsets use W = 100; store index mod 4.)
 
 ## Changelog
+- 0.4 (2026-11-25): false-alert bond slashing (`false_alert_slash_bps`, G-COMM-1); per-node `rewards_total` / `slashed_total` (G-COMM-3).
 - 0.3 (2026-11-25): reveal hashing gas-metered (72 gas per hash, gap G-SEC-1); app-hash ring size documented as implemented (window + epoch_blocks).
 - 0.2 (2026-11-25): default sample_stores changed from [acc, bank, staking, evm] after live measurement: random-key non-membership proofs failed for 70 % of staking keys and 0.5 % of bank keys (KeySet entries with empty values), and 100 % for empty stores.
 - 0.1 (2026-11-25): initial spec. Changes from the architecture draft: miss counters removed (selection is secret, so misses are unobservable); rewards funded from a share of the fee collector each block.

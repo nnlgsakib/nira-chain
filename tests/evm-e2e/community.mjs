@@ -135,6 +135,9 @@ await check("epoch settlement pays the EVM operator (community_reward event)", a
   assert.ok(ev, `no community_reward for ${bech} at ${settle} (epoch ${provenEpoch})`);
   const amt = BigInt(ev.attributes.find(a => a.key === "amount").value);
   assert.ok(amt > 0n);
+  // G-COMM-3: cumulative reward tracking, same on both interfaces
+  assert.equal((await C.getNode(wallet.address)).rewardsTotal, amt);
+  assert.equal((await rest(`/nira/community/v1/nodes/${bech}`)).node.rewards_total, amt.toString());
   console.log(`    paid ${ethers.formatEther(amt)} NIRA`);
 }, 180000);
 

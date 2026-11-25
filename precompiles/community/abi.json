@@ -230,6 +230,16 @@
        "internalType": "int64",
        "name": "unbondCompleteHeight",
        "type": "int64"
+      },
+      {
+       "internalType": "uint256",
+       "name": "rewardsTotal",
+       "type": "uint256"
+      },
+      {
+       "internalType": "uint256",
+       "name": "slashedTotal",
+       "type": "uint256"
       }
      ],
      "internalType": "struct NodeInfo",

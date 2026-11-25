@@ -130,7 +130,7 @@
 | Invalid report detection | ✅ | forged, tampered, copied and duplicate proofs rejected (`TestSubmitTaskProofRejections`, e2e) |
 | Sybil resistance; no trust in majority of identities | ✅ | nothing decided by vote; payment ∝ verified units; selection ∝ bond |
 | Verifiable completion / reward eligibility | ✅ | INV-COMM-1/2, settlement e2e on both interfaces |
-| Penalties for provable misconduct | 🟡 | Only alert deposits are forfeited. **Bond never slashed** (G-COMM-1) |
+| Penalties for provable misconduct | ✅ | A governance-rejected (false) alert forfeits the deposit **and** slashes 10 % of the bond (fixed G-COMM-1, `TestDivergenceAlerts`) |
 | Doesn't slow consensus | ✅ | bounded hooks; proof checks gas-metered (incl. reveal, G-SEC-1) |
 | Not decorative | ✅ | no reward without an on-chain-verified proof |
 
@@ -208,7 +208,7 @@
 | Operating modes (validator, community, full, archive) | ✅ | same binary, documented configs |
 | Recovery after shutdown | ✅ | `run` loop stateless; restart-safe |
 | Secure keys, nothing exposed remotely | 🟡 | local keyring; onion file 0600; no remote signer integration |
-| Contribution and reward tracking | 🟡 | `q community node` (units); rewards only visible as events, no command |
+| Contribution and reward tracking | ✅ | `units_total`, `rewards_total`, `slashed_total` per node via CLI, REST and precompile `getNode` (e2e both interfaces) |
 | Easy setup / cross-platform | 🟡 | CLI on Linux; Windows/macOS untested |
 | Resource monitoring / limits | ❌ | none |
 | Safe updates | ❌ | no Cosmovisor/upgrade flow (G-OPS-1) |

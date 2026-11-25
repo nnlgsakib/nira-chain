@@ -448,7 +448,7 @@ def build_pregenesis(net: Network, binary: str, home: Path) -> dict:
             "status": "NODE_STATUS_ACTIVE", "registered_epoch": "0", "onion_base_epoch": "1",
             "onion_anchor": base64.b64encode(bytes.fromhex(n["onion_tip"])).decode(),
             "onion_anchor_epoch": "0", "onion_length": int(n["onion_length"]), "units_total": "0",
-            "unbond_complete_height": "0"})
+            "unbond_complete_height": "0", "rewards_total": "0", "slashed_total": "0"})
     s["community"]["nodes"] = nodes
     s["community"].setdefault("next_alert_id", "1")
 

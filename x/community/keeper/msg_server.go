@@ -85,6 +85,8 @@ func (k msgServer) RegisterNode(ctx context.Context, msg *types.MsgRegisterNode)
 		OnionAnchor:      msg.OnionTip,
 		OnionAnchorEpoch: ep.Number,
 		OnionLength:      msg.OnionLength,
+		RewardsTotal:     math.ZeroInt(),
+		SlashedTotal:     math.ZeroInt(),
 	}
 	if err := k.Nodes.Set(ctx, op, node); err != nil {
 		return nil, err
@@ -412,7 +414,13 @@ func (k msgServer) ResolveAlert(ctx context.Context, msg *types.MsgResolveAlert)
 		}
 		a.Status = types.ALERT_STATUS_ACCEPTED
 	} else {
-		if err := k.distrKeeper.FundCommunityPool(ctx, deposit, k.ModuleAddress()); err != nil {
+		// Provable misconduct (G-COMM-1): governance judged the alert false.
+		// Forfeit the deposit and slash false_alert_slash_bps of the bond.
+		slashed, err := k.slashReporter(ctx, a.Reporter, p)
+		if err != nil {
+			return nil, err
+		}
+		if err := k.distrKeeper.FundCommunityPool(ctx, deposit.Add(sdk.NewCoin(p.BondDenom, slashed)), k.ModuleAddress()); err != nil {
 			return nil, err
 		}
 		a.Status = types.ALERT_STATUS_REJECTED
@@ -424,6 +432,52 @@ func (k msgServer) ResolveAlert(ctx context.Context, msg *types.MsgResolveAlert)
 		sdk.NewAttribute("alert_id", strconv.FormatUint(a.Id, 10)),
 		sdk.NewAttribute("status", a.Status.String())))
 	return &types.MsgResolveAlertResponse{}, nil
+}
+
+// slashReporter reduces the reporter's bond by false_alert_slash_bps (floor)
+// and returns the slashed amount; the caller moves it out of the module.
+// A reporter whose node no longer exists (fully unbonded) has nothing left to slash.
+func (k Keeper) slashReporter(ctx context.Context, reporter string, p types.Params) (math.Int, error) {
+	op, err := k.addressCodec.StringToBytes(reporter)
+	if err != nil {
+		return math.Int{}, err
+	}
+	node, err := k.Nodes.Get(ctx, op)
+	if errors.Is(err, collections.ErrNotFound) {
+		return math.ZeroInt(), nil
+	} else if err != nil {
+		return math.Int{}, err
+	}
+	slash := node.Bond.MulRaw(int64(p.FalseAlertSlashBps)).QuoRaw(10_000)
+	if !slash.IsPositive() {
+		return math.ZeroInt(), nil
+	}
+	node.Bond = node.Bond.Sub(slash)
+	node.SlashedTotal = orZero(node.SlashedTotal).Add(slash)
+	if err := k.Nodes.Set(ctx, op, node); err != nil {
+		return math.Int{}, err
+	}
+	if node.Status == types.NODE_STATUS_ACTIVE {
+		total, err := k.totalActiveBond(ctx)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if err := k.TotalActiveBond.Set(ctx, total.Sub(slash)); err != nil {
+			return math.Int{}, err
+		}
+	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(sdk.NewEvent("community_node_slashed",
+		sdk.NewAttribute("operator", reporter), sdk.NewAttribute("amount", slash.String()),
+		sdk.NewAttribute("reason", "false_divergence_alert")))
+	return slash, nil
+}
+
+// orZero treats an unset (nil) Int as zero (nodes created before the field existed).
+func orZero(i math.Int) math.Int {
+	if i.IsNil() {
+		return math.ZeroInt()
+	}
+	return i
 }
 
 func (k Keeper) closeAlert(ctx context.Context, a types.Alert) error {

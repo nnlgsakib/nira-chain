@@ -22,6 +22,7 @@ func (k Keeper) InitGenesis(ctx context.Context, gs types.GenesisState) error {
 		if err != nil {
 			return err
 		}
+		n.RewardsTotal, n.SlashedTotal = orZero(n.RewardsTotal), orZero(n.SlashedTotal)
 		if err := k.Nodes.Set(ctx, op, n); err != nil {
 			return err
 		}

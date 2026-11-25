@@ -107,6 +107,8 @@ func TestProofAndSettlement(t *testing.T) {
 	paidB := f.bank.bal[string(b.addr)].AmountOf(denom).Sub(bBefore)
 	require.True(t, paidA.Equal(budget.MulRaw(2).QuoRaw(3)), "A paid %s", paidA)
 	require.True(t, paidB.Equal(budget.QuoRaw(3)), "B paid %s", paidB)
+	na, _ := f.keeper.Nodes.Get(f.ctx, a.addr)
+	require.True(t, na.RewardsTotal.Equal(paidA), "G-COMM-3: rewards_total %s != paid %s", na.RewardsTotal, paidA)
 	dust := f.communityPool().Sub(poolBefore)
 	require.True(t, paidA.Add(paidB).Add(dust).Equal(budget), "INV-COMM-1")
 	require.True(t, hasEvent(f.ctx, "epoch_settled"))
@@ -288,7 +290,13 @@ func TestDivergenceAlerts(t *testing.T) {
 	pool := f.communityPool()
 	_, err = f.msg.ResolveAlert(f.ctx, &types.MsgResolveAlert{Authority: f.gov, AlertId: 1, Valid: false})
 	require.NoError(t, err)
-	require.True(t, f.communityPool().Sub(pool).Equal(nira(100)), "rejected deposit → community pool")
+	// G-COMM-1: false alert = provable misconduct → deposit (100) + 10 % of the 1000 NIRA bond (100) to the pool
+	require.True(t, f.communityPool().Sub(pool).Equal(nira(200)), "pool +%s", f.communityPool().Sub(pool))
+	n, _ := f.keeper.Nodes.Get(f.ctx, a.addr)
+	require.True(t, n.Bond.Equal(nira(900)), "bond %s", n.Bond)
+	require.True(t, n.SlashedTotal.Equal(nira(100)))
+	require.True(t, hasEvent(f.ctx, "community_node_slashed"))
+	f.checkInvariants(t)
 	_, err = f.msg.ResolveAlert(f.ctx, &types.MsgResolveAlert{Authority: f.gov, AlertId: 1, Valid: true})
 	require.ErrorIs(t, err, types.ErrAlertNotOpen)
 

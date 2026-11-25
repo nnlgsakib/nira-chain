@@ -100,6 +100,8 @@ for e in (d.get('finalize_block_events') or []):
         if a.get('operator')=='$OP': print(a['amount']); break
 ")
 [ -n "$paid" ] && python3 -c "assert int('$paid') > 0" || fail "no community_reward for $OP at $SETTLE"
+total=$(q node "$OP" | json "d['node']['rewards_total']")
+[ "$total" = "$paid" ] || fail "rewards_total $total != paid $paid (G-COMM-3)"
 ok "epoch $EPOCH settled at height $SETTLE: paid $paid anira for verified work"
 
 # 6. Deregister → UNBONDING → bond refunded after unbonding_blocks

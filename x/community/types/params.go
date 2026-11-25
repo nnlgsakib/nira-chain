@@ -24,18 +24,19 @@ func DefaultParams() Params {
 		// Stores whose entries always carry values: ICS-23 cannot prove non-membership
 		// next to an empty-value leaf (collections KeySets) or in an empty tree.
 		// Measured with tools/proofprobe (CHAIN.md K8).
-		SampleStores:      []string{"acc", "evm", "distribution", "slashing"},
-		MaxProofBytes:     16_384,
-		ProofGasPerByte:   20,
-		MaxOnionLength:    1_000_000,
-		MaxRevealDistance: 4_096,
-		RewardShareBps:    1_500,
-		UnbondingBlocks:   100_800,
-		MaxUnbondPerBlock: 100,
-		AlertDeposit:      nira(100),
-		AlertTtlBlocks:    100_800,
-		MaxOpenAlerts:     256,
-		AlertThresholdBps: 3_334,
+		SampleStores:       []string{"acc", "evm", "distribution", "slashing"},
+		MaxProofBytes:      16_384,
+		ProofGasPerByte:    20,
+		MaxOnionLength:     1_000_000,
+		MaxRevealDistance:  4_096,
+		RewardShareBps:     1_500,
+		UnbondingBlocks:    100_800,
+		MaxUnbondPerBlock:  100,
+		AlertDeposit:       nira(100),
+		AlertTtlBlocks:     100_800,
+		MaxOpenAlerts:      256,
+		AlertThresholdBps:  3_334,
+		FalseAlertSlashBps: 1_000, // 10 % of bond for a governance-rejected (false) alert, G-COMM-1
 	}
 }
 
@@ -76,6 +77,7 @@ func (p Params) Validate() error {
 		inRange("alert_ttl_blocks", p.AlertTtlBlocks, 100, 2_000_000),
 		inRange("max_open_alerts", p.MaxOpenAlerts, 1, 10_000),
 		inRange("alert_threshold_bps", p.AlertThresholdBps, 1, 10_000),
+		inRange("false_alert_slash_bps", p.FalseAlertSlashBps, 0, 5_000),
 	}
 	for _, err := range checks {
 		if err != nil {

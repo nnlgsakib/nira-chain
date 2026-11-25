@@ -31,4 +31,8 @@ message Params {
   uint64 alert_ttl_blocks = 17;
   uint32 max_open_alerts = 18;
   uint32 alert_threshold_bps = 19;
+  // false_alert_slash_bps: share of the reporter's bond slashed (to the
+  // community pool) when governance rejects its divergence alert as false —
+  // the provable misconduct of v1 (G-COMM-1). Bounds [0, 5000].
+  uint32 false_alert_slash_bps = 20;
 }

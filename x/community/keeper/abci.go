@@ -194,6 +194,12 @@ func (k Keeper) settle(ctx context.Context, p types.Params, ep types.Epoch) erro
 				return err
 			}
 			paid = paid.Add(amt)
+			if node, err := k.Nodes.Get(ctx, w.op); err == nil { // G-COMM-3 reward tracking
+				node.RewardsTotal = orZero(node.RewardsTotal).Add(amt)
+				if err := k.Nodes.Set(ctx, w.op, node); err != nil {
+					return err
+				}
+			}
 		}
 		opStr, _ := k.addressCodec.BytesToString(w.op)
 		sdkCtx.EventManager().EmitEvent(sdk.NewEvent("community_reward",

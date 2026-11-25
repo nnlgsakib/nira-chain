@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -21,6 +22,8 @@ type NodeInfo struct {
 	UnitsTotal           uint64
 	UnitsThisEpoch       uint32
 	UnbondCompleteHeight int64
+	RewardsTotal         *big.Int
+	SlashedTotal         *big.Int
 }
 
 type EpochInfo struct {
@@ -63,6 +66,7 @@ func (p Precompile) GetNode(ctx sdk.Context, method *abi.Method, args []interfac
 		Moniker: n.Moniker, Bond: n.Bond.BigInt(), Status: uint8(n.Status), //nolint:gosec
 		RegisteredEpoch: n.RegisteredEpoch, OnionBaseEpoch: n.OnionBaseEpoch, UnitsTotal: n.UnitsTotal,
 		UnitsThisEpoch: res.UnitsThisEpoch, UnbondCompleteHeight: n.UnbondCompleteHeight,
+		RewardsTotal: bigOrZero(n.RewardsTotal), SlashedTotal: bigOrZero(n.SlashedTotal),
 	})
 }
 
@@ -99,4 +103,11 @@ func (p Precompile) GetTasks(ctx sdk.Context, method *abi.Method, args []interfa
 		out[i] = TaskInfo{Index: t.Index, Store: t.Store, Height: t.Height, Key: to32(t.Key)}
 	}
 	return method.Outputs.Pack(out)
+}
+
+func bigOrZero(i math.Int) *big.Int {
+	if i.IsNil() {
+		return new(big.Int)
+	}
+	return i.BigInt()
 }
