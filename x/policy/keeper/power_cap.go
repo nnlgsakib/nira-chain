@@ -152,3 +152,10 @@ func (k Keeper) CheckMinSelfBond(ctx context.Context, valAddr sdk.ValAddress) er
 	}
 	return nil
 }
+
+// ValidatorExists reports whether addr is already a validator (used by the
+// simulation's floor-respecting create-validator operation).
+func (k Keeper) ValidatorExists(ctx context.Context, addr sdk.ValAddress) bool {
+	_, err := k.stakingKeeper.GetValidator(ctx, addr)
+	return err == nil
+}

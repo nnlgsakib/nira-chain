@@ -20,7 +20,7 @@ import (
 func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 
-	config := simcli.NewConfigFromFlags()
+	config := niraSimConfig()
 	config.ChainID = SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "goleveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)

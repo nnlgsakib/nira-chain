@@ -25,12 +25,15 @@ import (
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+	policytypes "nira-chain/x/policy/types"
 )
 
 const (
@@ -68,7 +71,7 @@ func BenchmarkSimulation(b *testing.B) {
 	simcli.FlagCommitValue = true
 	simcli.FlagEnabledValue = true
 
-	config := simcli.NewConfigFromFlags()
+	config := niraSimConfig()
 	config.ChainID = SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
@@ -112,7 +115,7 @@ func BenchmarkSimulation(b *testing.B) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	config := simcli.NewConfigFromFlags()
+	config := niraSimConfig()
 	config.ChainID = SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
@@ -159,7 +162,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	config := simcli.NewConfigFromFlags()
+	config := niraSimConfig()
 	config.ChainID = SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
@@ -279,7 +282,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	config := simcli.NewConfigFromFlags()
+	config := niraSimConfig()
 	config.ChainID = SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
@@ -369,7 +372,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simcli.NewConfigFromFlags()
+	config := niraSimConfig()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = true
@@ -479,10 +482,55 @@ func evmAppStateFn(app *App) simulationtypes.AppStateFn {
 			DenomUnits: []*banktypes.DenomUnit{{Denom: BaseDenom, Exponent: 0}, {Denom: DisplayDenom, Exponent: 18}},
 		})
 		gs[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bank)
+
+		// x/policy: the chain-wide minimum self-bond (G-STAKE-1) also applies to genesis
+		// validators. Use the lowest allowed floor (1 NIRA) and make every simulated
+		// validator declare it (sim validators hold ≥ 1 NIRA with power reduction 1e18).
+		oneNira := sdkmath.NewIntWithDecimal(1, 18)
+		var pol policytypes.GenesisState
+		app.AppCodec().MustUnmarshalJSON(gs[policytypes.ModuleName], &pol)
+		pol.Params.MinSelfBond = oneNira
+		// The SDK's delegate/redelegate simulation ops treat a rejected tx as fatal, and
+		// the power cap legitimately rejects them once stakes are realistic. The cap has
+		// its own randomised (power_cap_test.go) and live (check_validators.sh) tests, so
+		// keep it inactive here: activation above any reachable bonded total.
+		pol.Params.CapActivationBonded = sdkmath.NewIntWithDecimal(1, 40)
+		gs[policytypes.ModuleName] = app.AppCodec().MustMarshalJSON(&pol)
+		var st stakingtypes.GenesisState
+		app.AppCodec().MustUnmarshalJSON(gs[stakingtypes.ModuleName], &st)
+		for i := range st.Validators {
+			if st.Validators[i].MinSelfDelegation.LT(oneNira) {
+				st.Validators[i].MinSelfDelegation = oneNira
+			}
+		}
+		gs[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(&st)
 		out, err := json.Marshal(gs)
 		if err != nil {
 			panic(err)
 		}
 		return out, accs, chainID, genTime
 	}
+}
+
+// niraSimConfig returns the flag-based simulation config with Nira's operation
+// weights. The SDK's MsgCreateValidator operation hard-codes
+// min_self_delegation = 1, which x/policy rejects by design (G-STAKE-1), so its
+// weight is 0. Validator creation under the floor is covered by
+// TestINV_STAKE_SELF_1_MinSelfBond and the Cosmos/EVM e2e suites.
+func niraSimConfig() simulationtypes.Config {
+	config := simcli.NewConfigFromFlags()
+	if config.ParamsFile == "" {
+		f, err := os.CreateTemp("", "nira-sim-params-*.json")
+		if err != nil {
+			panic(err)
+		}
+		// stake_per_account: the SDK default (~1 NIRA = power 1 with 18 decimals) lets any tiny
+		// slash or undelegation drop validators to 0 power and empty the set; use 1 M NIRA.
+		if _, err := f.WriteString(`{"op_weight_msg_create_validator": 0, "stake_per_account": "1000000000000000000000000"}`); err != nil {
+			panic(err)
+		}
+		f.Close()
+		config.ParamsFile = f.Name()
+	}
+	return config
 }

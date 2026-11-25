@@ -159,13 +159,14 @@ var (
 						authtypes.ModuleName,
 						banktypes.ModuleName,
 						distrtypes.ModuleName,
+						// x/policy params must exist before x/staking InitGenesis (for a
+						// non-exported genesis it fires the cap / min-self-bond hooks while
+						// loading validators and delegations) and before genutil runs gentxs.
+						policymoduletypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
 						govtypes.ModuleName,
 						minttypes.ModuleName,
-						// x/policy params must exist before gentxs run: its staking
-						// hooks (voting-power cap, ADR-0004) read them.
-						policymoduletypes.ModuleName,
 						genutiltypes.ModuleName,
 						evidencetypes.ModuleName,
 						authz.ModuleName,
