@@ -8,6 +8,7 @@ set -euo pipefail
 
 BIN=${BIN:-nirad}
 N=${N:-4}
+MAX_VALIDATORS=${MAX_VALIDATORS:-$N}   # < N leaves candidates outside the active set (rotation tests)
 ROOT=${ROOT:-$HOME/.nira-localtest}
 CHAIN_ID=nira_47201-77
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -97,6 +98,9 @@ unbonding_blocks = "15"
 alert_ttl_blocks = "200"
 [params.slashing]
 signed_blocks_window = "100"
+downtime_jail_duration = "60s"
+[params.staking]
+max_validators = $MAX_VALIDATORS
 '''
 open(sys.argv[1], "w").write(toml)
 PY

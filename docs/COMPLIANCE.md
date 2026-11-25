@@ -44,11 +44,11 @@
 | Delegated voting power | ✅ | power = bonded tokens / 10¹⁸; delegations add power (`tests/cosmos-e2e/e2e.sh`, EVM precompile test) |
 | Active validator selection | ✅ | top `max_validators` by power each EndBlock; 4-validator net all bonded (`check_localtest.sh`) |
 | Epoch-based validator management | 🔶 | Decided per-block for safety (ADR-0008): misbehaving validators lose power within 2 blocks. Epochs used for the community layer and rewards |
-| Validator rotation | 🟢 | Ranking changes from stake, jailing and unbonding rotate the set at EndBlock. No forced rotation. Not tested (G-CONS-1) |
+| Validator rotation | ✅ | 16 candidates / 15 slots: delegation rotates a candidate in and the weakest out (`tests/consensus/check_validators.sh`). Was 🟢: Ranking changes from stake, jailing and unbonding rotate the set at EndBlock. No forced rotation. Not tested (G-CONS-1) |
 | Block proposal / voting / finality | ✅ | CometBFT, unmodified (ADR-0002); all 4 validators sign each block |
 | Deterministic execution | ✅ | determinism audit 0 findings; identical block hashes across 4 nodes after recovery |
-| Double-sign protection | 🟢 | x/evidence + x/slashing: 5 % slash, tombstone. Not exercised (G-CONS-1) |
-| Slashing / jailing | 🟢 | double-sign 5 %; downtime 0.01 % + 600 s jail below 5 % signed of 10 000 blocks. Not exercised |
+| Double-sign protection | ✅ | real equivocation evidence → jailed + tombstoned, 5 % of infraction-height stake burned (`check_validators.sh`). Was 🟢: x/evidence + x/slashing: 5 % slash, tombstone. Not exercised (G-CONS-1) |
+| Slashing / jailing | ✅ | double-sign and downtime (offline > 95 % of window → jailed; unjail after jail period) tested live. Was 🟢: double-sign 5 %; downtime 0.01 % + 600 s jail below 5 % signed of 10 000 blocks. Not exercised |
 | Validator unbonding | ✅ | 21-day unbonding; unbonding entries verified (`e2e.sh` #5) |
 | Performance tracking | 🟢 | x/slashing signing info (missed blocks per window): `nirad q slashing signing-info` |
 | Manageable set size / expandable | ✅ | `max_validators` param (100), governance-changeable without a redesign |
@@ -92,7 +92,7 @@
 | Partition handling | 🟡 | Halt-not-fork shown by stopping 2/4; a real network partition is not simulated |
 | Downtime handling | ✅ | 1/4 down stays live (`check_localtest.sh`) |
 | Halt rather than conflict | ✅ | 2/4 down halts; identical hashes after recovery |
-| Double-sign protection / recovery procedures | 🟢 | evidence handling built in; recovery runbook not written |
+| Double-sign protection / recovery procedures | ✅ | evidence path tested; jailed validator unjail path tested. Was 🟢: evidence handling built in; recovery runbook not written |
 | Community nodes can't affect consensus | ✅ | x/community emits no validator updates and hooks never error (INV-COMM-8); chain runs with zero community nodes |
 | No custom consensus changes | ✅ | CometBFT unmodified |
 | Predictable block times / efficient messaging | 🟢 | CometBFT; not benchmarked (G-TEST-4) |
@@ -106,11 +106,11 @@
 | Undelegation, unbonding period | ✅ | `e2e.sh` #5, `evm-e2e` precompile undelegate |
 | Reward accumulation / withdrawal / commission | 🟢 | x/distribution F1, `withdraw-rewards`, commission ≥ 5 %; amounts not asserted (out of scope here) |
 | Delegation tracking | ✅ | REST and precompile `delegation()` cross-checked |
-| Slashing propagation | 🟢 | x/staking slashes delegators pro rata; not exercised |
+| Slashing propagation | ✅ | delegator stake reduced exactly pro rata after double-sign. Was 🟢: x/staking slashes delegators pro rata; not exercised |
 | Validator eligibility | 🟢 | jailed/tombstoned excluded; min commission enforced |
 | Protocol-held funds, no key custody | ✅ | bonded pool module accounts; validators never touch delegator keys |
 | Inspect performance, commission, self-bond, total stake, slashing history | ✅ | `q staking validator`, `q slashing signing-info`, `q distribution slashes` (all present) |
-| Bounded effective power per validator | ✅ | x/policy cap: unit tests INV-STAKE-CAP-1..3 (randomised); live rejection pending ≥ 15 validators (G-CONS-2) |
+| Bounded effective power per validator | ✅ | x/policy cap: unit tests INV-STAKE-CAP-1..3 (randomised) + live rejection on 16 validators via Cosmos tx and EVM precompile |
 | Cap keeps economic accountability | ✅ | power stays = slashable stake (ADR-0004) |
 | Cap can't trap funds | ✅ | undelegation never blocked (INV-STAKE-CAP-2) |
 | Cap covers every path | ✅ | Cosmos tx, authz, redelegation and the EVM precompile all go through `Delegate` hooks (precompile tested live) |

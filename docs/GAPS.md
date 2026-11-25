@@ -71,8 +71,8 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
-| G-CONS-1 | Untested: double-sign evidence and slashing, downtime jail/unjail, validator rotation, network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
-| G-CONS-2 | Live power-cap **rejection** never observed (needs ≥ 15 validators to activate) | T | Q7 | quality-testing (localtest N=16) |
+| G-CONS-1 🟡 | **Tested now** (tests/consensus/check_validators.sh, 16 validators): double-sign evidence → slash + tombstone + delegator propagation, downtime jail/unjail, rotation. Still untested: real network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
+| G-CONS-2 ✅ FIXED (live via Cosmos tx + EVM precompile on 16 validators) | Live power-cap **rejection** never observed (needs ≥ 15 validators to activate) | T | Q7 | quality-testing (localtest N=16) |
 | G-CONS-3 | Weak subjectivity: no trusted-checkpoint publishing or state-sync trust procedure | M | — | ops-launch |
 
 ### Community layer

@@ -297,7 +297,8 @@ class Network:
                 e(f"validator '{m}': self_bond {fmt(b)} < policy.min_self_bond {fmt(min_self)} NIRA")
         maxv = int(self.params.get("staking", {}).get("max_validators", 100))
         if len(self.validators) > maxv:
-            e(f"{len(self.validators)} validators > staking.max_validators {maxv}")
+            warns.append(f"{len(self.validators)} genesis validators > staking.max_validators {maxv}: "
+                         f"the {len(self.validators) - maxv} with the least stake start outside the active set")
 
         cparams = self.params.get("community", {})
         min_bond = int(cparams.get("min_bond", str(1000 * BASE)))

@@ -13,10 +13,10 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 1 | Blockchain source code | 🟡 | Cosmos SDK 0.53 app with x/policy, x/community and EVM. Tokenomics and some ops components still to come |
 | 2 | Native execution | ✅ | `tests/cosmos-e2e/e2e.sh` (send, delegate, undelegate, params) |
 | 3 | BFT consensus | ✅ | CometBFT 0.38, unmodified (ADR-0002). `tests/genesis/check_localtest.sh`: 1/4 down stays live, 2/4 down halts without forking, recovery with identical block hashes. *Network partitions and long-run stability not yet tested* |
-| 4 | Validator management | 🟡 | x/staking active set (max 100), power cap (ADR-0004, unit tests INV-STAKE-CAP-1..3). *Live cap rejection needs ≥ 15 validators; rotation and jailing not e2e tested* |
+| 4 | Validator management | ✅ | active set, rotation, min self-bond, power cap (live), jailing: `make validators-test` |
 | 5 | Non-custodial delegated staking | ✅ | Delegate/undelegate via Cosmos tx and the EVM staking precompile, cross-checked (`tests/cosmos-e2e/e2e.sh`, `tests/evm-e2e/e2e.mjs`) |
 | 6 | Reward distribution | 🟡 | x/distribution (F1) for validators and delegators. Community epoch settlement tested (INV-COMM-1, e2e payouts). *Validator/delegator reward claims not e2e tested; reward split not modelled (Q3)* |
-| 7 | Slashing and unbonding | 🟡 | Unbonding tested (staking and community bonds). Slashing params set. *Double-sign and downtime slashing not yet exercised in a test network* |
+| 7 | Slashing and unbonding | ✅ | Unbonding (staking + community), double-sign slash + tombstone + delegator propagation, downtime jail + unjail (`make validators-test`) |
 | 8 | Native EVM execution | ✅ | cosmos/evm v0.6.0. Deploy, call, logs, revert, EIP-1559 and legacy txs (`tests/evm-e2e/e2e.mjs`) |
 | 9 | Ethereum JSON-RPC | 🟡 | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs. *No full Ethereum JSON-RPC conformance suite run yet* |
 | 10 | Solidity deployment | ✅ | `tests/evm-e2e/Counter.sol` deployed and used through ethers.js |
@@ -71,6 +71,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | Governance e2e | `make e2e-gov` | 2 (param change with EVM-precompile vote; false-alert slashing via proposal) |
 | Upgrade rehearsal | `make upgrade-rehearsal` | 4 (old binary halts at plan height, new binary applies handler, state + EVM preserved) |
 | Multi-validator + BFT | `make localtest && make localtest-check` | 8 |
+| Validator lifecycle (16 validators) | `make validators-test` | 7: rotation, live cap rejection (Cosmos + EVM), double-sign slash/tombstone/propagation, downtime jail + unjail, no fork |
 
 ## Known dependency vulnerabilities (govulncheck, 2026-11-25)
 

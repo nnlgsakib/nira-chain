@@ -110,13 +110,17 @@ localtest: install ## 4-validator network via the full genesis ceremony (ports b
 localtest-check: ## Verify the 4-validator network (allocations, BFT fault tolerance)
 	@tests/genesis/check_localtest.sh
 
+validators-test: install ## 16 validators (15 active): rotation, live cap, double-sign + downtime slashing
+	@N=16 MAX_VALIDATORS=15 scripts/genesis/localtest.sh
+	@sleep 20 && tests/consensus/check_validators.sh; status=$$?; scripts/genesis/localtest.sh stop; exit $$status
+
 localtest-stop: ## Stop the 4-validator network
 	@scripts/genesis/localtest.sh stop
 
 genesis-check: ## Validate a network file: make genesis-check NET=genesis/networks/mainnet.example.toml
 	@python3 scripts/genesis/build_genesis.py check $(or $(NET),genesis/networks/mainnet.example.toml) --out $(BUILDDIR)/genesis
 
-.PHONY: localnet localtest localtest-check localtest-stop genesis-check
+.PHONY: localnet localtest localtest-check localtest-stop validators-test genesis-check
 
 ##################
 ###  Protobuf  ###
