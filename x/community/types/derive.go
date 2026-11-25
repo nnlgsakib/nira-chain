@@ -111,8 +111,8 @@ type TaskSpec struct {
 // DeriveTask returns task i for operator in the epoch starting at startHeight.
 // Returns ok=false if no app-hash history is available yet (startHeight ≤ 1).
 func DeriveTask(seed, operator []byte, i uint32, startHeight int64, window uint32, stores []string) (TaskSpec, bool) {
-	if startHeight <= 1 || len(stores) == 0 {
-		return TaskSpec{}, false
+	if startHeight <= 1 || len(stores) == 0 || window == 0 {
+		return TaskSpec{}, false // window = 0 found by FuzzDeriveTaskAndSelection (division by zero)
 	}
 	w := uint64(window)
 	if avail := uint64(startHeight - 1); avail < w {

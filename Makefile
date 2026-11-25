@@ -67,6 +67,12 @@ test-cover: ## Go unit tests with an HTML coverage report in ./build
 	@go tool cover -html=$(BUILDDIR)/cover.out -o $(BUILDDIR)/cover.html
 	@echo "--> $(BUILDDIR)/cover.html"
 
+FUZZTIME ?= 30s
+fuzz: ## Run every fuzz target for FUZZTIME each (default 30s)
+	@for f in FuzzVerifyStateProof FuzzVerifyReveal FuzzDeriveTaskAndSelection; do \
+	  go test ./x/community/types -run '^$$' -fuzz "^$$f$$" -fuzztime $(FUZZTIME) || exit 1; done
+	@go test ./x/community/keeper -run '^$$' -fuzz '^FuzzSubmitTaskProof$$' -fuzztime $(FUZZTIME)
+
 test-genesis: ## Genesis builder validation tests (python3)
 	@python3 -m unittest discover -s tests/genesis -p 'test_*.py'
 
@@ -95,7 +101,7 @@ upgrade-rehearsal: install ## Software upgrade with a real binary switch (stop o
 	@go build $(BUILD_FLAGS) -tags rehearsal -o $(BUILDDIR)/$(BINARY)-rehearsal ./cmd/$(BINARY)
 	@tests/upgrade/rehearsal.sh
 
-.PHONY: test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e upgrade-rehearsal
+.PHONY: fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e upgrade-rehearsal
 
 ###################
 ###  Networks  ###
