@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -40,14 +41,25 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	evmante "github.com/cosmos/evm/ante"
+	evmmempool "github.com/cosmos/evm/mempool"
+	evmsrvflags "github.com/cosmos/evm/server/flags"
+	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
+	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
+	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
 	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
+	"github.com/spf13/cast"
 
 	"nira-chain/docs"
 	nirachainmodulekeeper "nira-chain/x/nirachain/keeper"
 )
+
+const BaseDenomUnit int64 = 18
 
 const (
 	// Name is the name of the application.
@@ -99,8 +111,17 @@ type App struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 
 	// simulation manager
-	sm              *module.SimulationManager
-	NirachainKeeper nirachainmodulekeeper.Keeper
+	sm                 *module.SimulationManager
+	NirachainKeeper    nirachainmodulekeeper.Keeper
+	clientCtx          client.Context
+	pendingTxListeners []evmante.PendingTxListener
+	FeeGrantKeeper     feegrantkeeper.Keeper
+	FeeMarketKeeper    feemarketkeeper.Keeper
+	EVMKeeper          *evmkeeper.Keeper
+	Erc20Keeper        erc20keeper.Keeper
+
+	// AppConfig returns the default app config.
+	EVMMempool *evmmempool.ExperimentalEVMMempool
 }
 
 func init() {
@@ -112,7 +133,6 @@ func init() {
 	}
 }
 
-// AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appConfig,
@@ -156,7 +176,7 @@ func New(
 				// for instance supplying a custom address codec for not using bech32 addresses.
 				// read the depinject documentation and depinject module wiring for more information
 				// on available options and how to use them.
-			),
+			), depinject.Provide(ProvideMsgEthereumTxCustomGetSigner),
 		)
 	)
 
@@ -180,10 +200,12 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
-		&app.NirachainKeeper,
+		&app.NirachainKeeper, &app.FeeGrantKeeper,
 	); err != nil {
 		panic(err)
 	}
+
+	RegisterEVMCrypto(app.legacyAmino, app.interfaceRegistry)
 
 	// add to default baseapp options
 	// enable optimistic execution
@@ -203,7 +225,15 @@ func New(
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts, nil),
 	}
+	if err := app.registerEVMModules(appOpts); err != nil {
+		panic(err)
+	}
+
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
+	maxGasWanted := cast.ToUint64(appOpts.Get(evmsrvflags.EVMMaxTxGasWanted))
+	app.setAnteHandler(app.txConfig, maxGasWanted)
+
+	app.setEVMMempool()
 
 	app.sm.RegisterStoreDecoders()
 
@@ -305,4 +335,15 @@ func BlockedAddresses() map[string]bool {
 	}
 
 	return result
+}
+func (app *App) GetStoreKeysMap() map[string]*storetypes.KVStoreKey {
+	storeKeysMap := make(map[string]*storetypes.KVStoreKey)
+	for _, storeKey := range app.GetStoreKeys() {
+		kvStoreKey, ok := app.UnsafeFindStoreKey(storeKey.Name()).(*storetypes.KVStoreKey)
+		if ok {
+			storeKeysMap[storeKey.Name()] = kvStoreKey
+		}
+	}
+
+	return storeKeysMap
 }

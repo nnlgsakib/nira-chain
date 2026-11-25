@@ -1,27 +1,89 @@
 version: 1
 validation: sovereign
-default_denom: nira
-accounts: 
-- name: alice
-  coins:
-  - 20000token
-  - 200000000nira
-- name: bob
-  coins:
-  - 10000token
-  - 100000000nira
-client:
-  openapi:
-    path: docs/static/openapi.json
+build:
+  proto:
+    path: proto
+default_denom: anira
+accounts:
+  - name: alice
+    coins:
+      - 20000000000000000000000000anira # 20,000,000 NIRA
+  - name: bob
+    coins:
+      - 10000000000000000000000000anira # 10,000,000 NIRA
+validators:
+  - name: alice
+    bonded: 1000000000000000000000000anira # 1,000,000 NIRA
+    app:
+      evm:
+        evm-chain-id: "47201"
+      json-rpc:
+        enable: true
+        address: 0.0.0.0:8545
+        ws-address: 0.0.0.0:8546
+        api: eth,txpool,net,web3
+        allow-insecure-unlock: false
+      minimum-gas-prices: 0anira
 faucet:
   name: bob
   coins:
-  - 5token
-  - 100000nira
-validators:
-- name: alice
-  bonded: 100000000nira
-- name: validator1
-  bonded: 200000000nira
-- name: validator2
-  bonded: 100000000nira
+    - 100000000000000000000anira # 100 NIRA
+  host: 0.0.0.0:4500
+client:
+  openapi:
+    path: docs/static/openapi.json
+genesis:
+  chain_id: nira_47201-1
+  consensus:
+    params:
+      block:
+        max_gas: "100000000"
+  app_state:
+    bank:
+      denom_metadata:
+        - description: The native staking, fee and governance token of Nira Chain
+          base: anira
+          display: nira
+          name: Nira
+          symbol: NIRA
+          denom_units:
+            - denom: anira
+              exponent: 0
+              aliases: [attonira]
+            - denom: nira
+              exponent: 18
+    staking:
+      params:
+        bond_denom: anira
+        max_validators: 100
+        unbonding_time: 1814400s
+        min_commission_rate: "0.050000000000000000"
+    slashing:
+      params:
+        signed_blocks_window: "10000"
+        min_signed_per_window: "0.050000000000000000"
+        downtime_jail_duration: 600s
+        slash_fraction_double_sign: "0.050000000000000000"
+        slash_fraction_downtime: "0.000100000000000000"
+    mint:
+      params:
+        mint_denom: anira
+    gov:
+      params:
+        min_deposit:
+          - denom: anira
+            amount: "10000000000000000000000" # 10,000 NIRA
+        expedited_min_deposit:
+          - denom: anira
+            amount: "50000000000000000000000"
+    evm:
+      params:
+        evm_denom: anira
+        active_static_precompiles:
+          - "0x0000000000000000000000000000000000000100"
+          - "0x0000000000000000000000000000000000000400"
+          - "0x0000000000000000000000000000000000000800"
+          - "0x0000000000000000000000000000000000000801"
+          - "0x0000000000000000000000000000000000000804"
+          - "0x0000000000000000000000000000000000000805"
+          - "0x0000000000000000000000000000000000000806"

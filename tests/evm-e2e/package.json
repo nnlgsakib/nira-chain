@@ -1,0 +1,7 @@
+{
+  "name": "nira-evm-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node e2e.mjs" },
+  "dependencies": { "ethers": "6.13.4", "solc": "0.8.28" }
+}
