@@ -159,6 +159,9 @@ for sec, en in (("[api]", True), ("[json-rpc]", True)):
         tail = re.sub(r'^metrics-address = ".*"', f'metrics-address = "127.0.0.1:{p(6065)}"', tail, count=1, flags=re.M)
     app = head + sep + tail
 app = app.replace("allow-insecure-unlock = true", "allow-insecure-unlock = false")
+if i == 0:  # node 0 serves state-sync snapshots (G-OPS-2)
+    app = re.sub(r'^snapshot-interval = .*', 'snapshot-interval = 20', app, flags=re.M)
+    app = re.sub(r'^snapshot-keep-recent = .*', 'snapshot-keep-recent = 2', app, flags=re.M)
 open(f"{h}/config/app.toml", "w").write(app)
 PY
   nohup $BIN start --home "$H" >"$H/node.log" 2>&1 &

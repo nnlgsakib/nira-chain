@@ -120,13 +120,17 @@ validators-test: install ## 16 validators (15 active): rotation, live cap, doubl
 	@N=16 MAX_VALIDATORS=15 scripts/genesis/localtest.sh
 	@sleep 20 && tests/consensus/check_validators.sh; status=$$?; scripts/genesis/localtest.sh stop; exit $$status
 
+sync-test: install ## State sync (verified snapshot) + archive vs pruned node on a 4-validator net
+	@scripts/genesis/localtest.sh
+	@tests/sync/check_sync.sh; status=$$?; scripts/genesis/localtest.sh stop; exit $$status
+
 localtest-stop: ## Stop the 4-validator network
 	@scripts/genesis/localtest.sh stop
 
 genesis-check: ## Validate a network file: make genesis-check NET=genesis/networks/mainnet.example.toml
 	@python3 scripts/genesis/build_genesis.py check $(or $(NET),genesis/networks/mainnet.example.toml) --out $(BUILDDIR)/genesis
 
-.PHONY: localnet localtest localtest-check localtest-stop validators-test genesis-check
+.PHONY: localnet localtest localtest-check localtest-stop validators-test sync-test genesis-check
 
 ##################
 ###  Protobuf  ###

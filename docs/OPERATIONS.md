@@ -53,7 +53,7 @@ sha256sum ~/.nira/config/genesis.json        # must equal the published genesis.
 nirad start
 ```
 
-**State sync** (join without replaying from genesis): CometBFT state sync is supported by the SDK. It needs nodes serving snapshots (`[state-sync] snapshot-interval` in app.toml) and a trusted height and hash in `config.toml [statesync]`. *Not yet tested on Nira* (see docs/STATUS.md).
+**State sync** (join without replaying from genesis): CometBFT state sync is supported by the SDK. It needs nodes serving snapshots (`[state-sync] snapshot-interval` in app.toml, e.g. 1000 on mainnet; the test network uses 20), and in `config.toml [statesync]`: `enable = true`, two or more `rpc_servers`, and a `trust_height` / `trust_hash` taken from a block you trust (obtain it from at least two independent sources). Tested by `make sync-test`.
 
 ## Becoming a Core Validator (after launch)
 

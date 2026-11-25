@@ -93,7 +93,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-TEST-4 | **No performance or load tests** (R-N1 block time, R-N4 TPS, mixed native/EVM, community proof load) | T | | quality-testing |
 | G-TEST-5 ✅ FIXED (tests/cosmos-e2e/governance.sh, upgrade rehearsal) | No governance e2e: param-change proposal, `MsgResolveAlert`, software-upgrade rehearsal | T | | quality-testing + ops-upgrades |
 | G-OPS-1 ✅ FIXED (app/upgrades.go, tests/upgrade/rehearsal.sh) | **No upgrade-handler framework** (`app/upgrades/`); the first software upgrade has nothing to plug into | T | `grep SetUpgradeHandler` finds nothing | ops-upgrades |
-| G-OPS-2 | State-sync snapshots and archive node not configured or tested | T | | ops-infrastructure |
+| G-OPS-2 ✅ FIXED (tests/sync/check_sync.sh) | State-sync snapshots and archive node not configured or tested | T | | ops-infrastructure |
 | G-OPS-3 | No monitoring dashboards or alerts | T | | ops-infrastructure |
 | G-OPS-4 | Release pipeline (Ignite action) never run; no signed checksums; reproducibility not verified | M | `.github/workflows/release.yml` | ops-launch |
 | G-OPS-5 | Register EVM chain ID 47201 in ethereum-lists/chains | T | free as of 2026-11-25 | ops-launch |

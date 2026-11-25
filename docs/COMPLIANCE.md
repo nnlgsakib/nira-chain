@@ -76,8 +76,8 @@
 | Requirement | Verdict | Evidence |
 |---|---|---|
 | Full nodes validate independently | ✅ | default node mode |
-| Archive nodes | 🟢 | `pruning = "nothing"`; not tested (G-OPS-2) |
-| Join via verifiable snapshot | 🟢 | CometBFT state sync verifies snapshots against light-client headers; not configured or tested (G-OPS-2) |
+| Archive nodes | ✅ | archive node serves height-2 state; pruned node refuses (`tests/sync/check_sync.sh`) |
+| Join via verifiable snapshot | ✅ | fresh node state-synced from a light-client-verified snapshot (earliest block > 1, same app hash) |
 | No dependence on centralised RPC | 🟡 | P2P sync needs no RPC; state sync needs ≥ 2 RPC servers for light-client checks, and the trusted height/hash procedure isn't defined (G-CONS-3) |
 
 ## §3 Consensus and finality
@@ -184,7 +184,7 @@
 | Connection limits, resource management | 🟢 | `max_num_inbound/outbound_peers`, mempool size config |
 | Large network without all-to-all | 🟢 | gossip overlay; not measured |
 | Recovery after long offline | 🟢 | block sync / state sync; not tested |
-| Snapshot creation, verification | 🟢 | SDK snapshots; not configured (G-OPS-2) |
+| Snapshot creation, verification | ✅ | node 0 serves snapshots; restore verified end to end |
 | Pruning, archive, indexing, historical queries | 🟢 | pruning modes; CometBFT kv indexer; historical queries at any retained height (community proofs depend on this, and are tested) |
 | Defined storage per node class | 🟡 | documented in OPERATIONS.md; not measured |
 | Data availability layer | ❌ | v2 (Q4) |
