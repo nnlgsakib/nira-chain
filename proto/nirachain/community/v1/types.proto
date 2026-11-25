@@ -1,0 +1,60 @@
+syntax = "proto3";
+package nirachain.community.v1;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "nira-chain/x/community/types";
+
+enum NodeStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+  NODE_STATUS_UNSPECIFIED = 0;
+  NODE_STATUS_ACTIVE = 1;
+  NODE_STATUS_UNBONDING = 2;
+}
+
+// Node is a registered community node (spec §4).
+message Node {
+  string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string moniker = 2;
+  string bond = 3 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  NodeStatus status = 4;
+  uint64 registered_epoch = 5;
+  uint64 onion_base_epoch = 6;
+  bytes onion_anchor = 7;
+  uint64 onion_anchor_epoch = 8;
+  uint32 onion_length = 9;
+  uint64 units_total = 10;
+  int64 unbond_complete_height = 11;
+}
+
+// Epoch is the current community epoch (spec §4).
+message Epoch {
+  uint64 number = 1;
+  int64 start_height = 2;
+  bytes seed = 3;
+  string eligible_bond = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  string budget = 5 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  uint32 proofs = 6;
+}
+
+enum AlertStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+  ALERT_STATUS_UNSPECIFIED = 0;
+  ALERT_STATUS_OPEN = 1;
+  ALERT_STATUS_ACCEPTED = 2;
+  ALERT_STATUS_REJECTED = 3;
+  ALERT_STATUS_EXPIRED = 4;
+}
+
+// Alert is a bonded, advisory divergence report (spec §6.5).
+message Alert {
+  uint64 id = 1;
+  string reporter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  int64 height = 3;
+  bytes claimed_app_hash = 4;
+  string deposit = 5 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  AlertStatus status = 6;
+  int64 expires_height = 7;
+}

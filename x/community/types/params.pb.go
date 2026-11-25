@@ -4,14 +4,15 @@
 package types
 
 import (
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
+	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,8 +26,27 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the parameters for the module.
+// Params of the community participation layer. See docs/spec/community.md §7.
 type Params struct {
+	BondDenom         string                `protobuf:"bytes,1,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty"`
+	MinBond           cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=min_bond,json=minBond,proto3,customtype=cosmossdk.io/math.Int" json:"min_bond"`
+	EpochBlocks       uint64                `protobuf:"varint,3,opt,name=epoch_blocks,json=epochBlocks,proto3" json:"epoch_blocks,omitempty"`
+	TargetCommittee   uint32                `protobuf:"varint,4,opt,name=target_committee,json=targetCommittee,proto3" json:"target_committee,omitempty"`
+	TasksPerSelection uint32                `protobuf:"varint,5,opt,name=tasks_per_selection,json=tasksPerSelection,proto3" json:"tasks_per_selection,omitempty"`
+	MaxProofsPerEpoch uint32                `protobuf:"varint,6,opt,name=max_proofs_per_epoch,json=maxProofsPerEpoch,proto3" json:"max_proofs_per_epoch,omitempty"`
+	ApphashWindow     uint32                `protobuf:"varint,7,opt,name=apphash_window,json=apphashWindow,proto3" json:"apphash_window,omitempty"`
+	SampleStores      []string              `protobuf:"bytes,8,rep,name=sample_stores,json=sampleStores,proto3" json:"sample_stores,omitempty"`
+	MaxProofBytes     uint32                `protobuf:"varint,9,opt,name=max_proof_bytes,json=maxProofBytes,proto3" json:"max_proof_bytes,omitempty"`
+	ProofGasPerByte   uint64                `protobuf:"varint,10,opt,name=proof_gas_per_byte,json=proofGasPerByte,proto3" json:"proof_gas_per_byte,omitempty"`
+	MaxOnionLength    uint32                `protobuf:"varint,11,opt,name=max_onion_length,json=maxOnionLength,proto3" json:"max_onion_length,omitempty"`
+	MaxRevealDistance uint32                `protobuf:"varint,12,opt,name=max_reveal_distance,json=maxRevealDistance,proto3" json:"max_reveal_distance,omitempty"`
+	RewardShareBps    uint32                `protobuf:"varint,13,opt,name=reward_share_bps,json=rewardShareBps,proto3" json:"reward_share_bps,omitempty"`
+	UnbondingBlocks   uint64                `protobuf:"varint,14,opt,name=unbonding_blocks,json=unbondingBlocks,proto3" json:"unbonding_blocks,omitempty"`
+	MaxUnbondPerBlock uint32                `protobuf:"varint,15,opt,name=max_unbond_per_block,json=maxUnbondPerBlock,proto3" json:"max_unbond_per_block,omitempty"`
+	AlertDeposit      cosmossdk_io_math.Int `protobuf:"bytes,16,opt,name=alert_deposit,json=alertDeposit,proto3,customtype=cosmossdk.io/math.Int" json:"alert_deposit"`
+	AlertTtlBlocks    uint64                `protobuf:"varint,17,opt,name=alert_ttl_blocks,json=alertTtlBlocks,proto3" json:"alert_ttl_blocks,omitempty"`
+	MaxOpenAlerts     uint32                `protobuf:"varint,18,opt,name=max_open_alerts,json=maxOpenAlerts,proto3" json:"max_open_alerts,omitempty"`
+	AlertThresholdBps uint32                `protobuf:"varint,19,opt,name=alert_threshold_bps,json=alertThresholdBps,proto3" json:"alert_threshold_bps,omitempty"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -62,6 +82,125 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
+func (m *Params) GetBondDenom() string {
+	if m != nil {
+		return m.BondDenom
+	}
+	return ""
+}
+
+func (m *Params) GetEpochBlocks() uint64 {
+	if m != nil {
+		return m.EpochBlocks
+	}
+	return 0
+}
+
+func (m *Params) GetTargetCommittee() uint32 {
+	if m != nil {
+		return m.TargetCommittee
+	}
+	return 0
+}
+
+func (m *Params) GetTasksPerSelection() uint32 {
+	if m != nil {
+		return m.TasksPerSelection
+	}
+	return 0
+}
+
+func (m *Params) GetMaxProofsPerEpoch() uint32 {
+	if m != nil {
+		return m.MaxProofsPerEpoch
+	}
+	return 0
+}
+
+func (m *Params) GetApphashWindow() uint32 {
+	if m != nil {
+		return m.ApphashWindow
+	}
+	return 0
+}
+
+func (m *Params) GetSampleStores() []string {
+	if m != nil {
+		return m.SampleStores
+	}
+	return nil
+}
+
+func (m *Params) GetMaxProofBytes() uint32 {
+	if m != nil {
+		return m.MaxProofBytes
+	}
+	return 0
+}
+
+func (m *Params) GetProofGasPerByte() uint64 {
+	if m != nil {
+		return m.ProofGasPerByte
+	}
+	return 0
+}
+
+func (m *Params) GetMaxOnionLength() uint32 {
+	if m != nil {
+		return m.MaxOnionLength
+	}
+	return 0
+}
+
+func (m *Params) GetMaxRevealDistance() uint32 {
+	if m != nil {
+		return m.MaxRevealDistance
+	}
+	return 0
+}
+
+func (m *Params) GetRewardShareBps() uint32 {
+	if m != nil {
+		return m.RewardShareBps
+	}
+	return 0
+}
+
+func (m *Params) GetUnbondingBlocks() uint64 {
+	if m != nil {
+		return m.UnbondingBlocks
+	}
+	return 0
+}
+
+func (m *Params) GetMaxUnbondPerBlock() uint32 {
+	if m != nil {
+		return m.MaxUnbondPerBlock
+	}
+	return 0
+}
+
+func (m *Params) GetAlertTtlBlocks() uint64 {
+	if m != nil {
+		return m.AlertTtlBlocks
+	}
+	return 0
+}
+
+func (m *Params) GetMaxOpenAlerts() uint32 {
+	if m != nil {
+		return m.MaxOpenAlerts
+	}
+	return 0
+}
+
+func (m *Params) GetAlertThresholdBps() uint32 {
+	if m != nil {
+		return m.AlertThresholdBps
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Params)(nil), "nirachain.community.v1.Params")
 }
@@ -71,18 +210,49 @@ func init() {
 }
 
 var fileDescriptor_e2607af43d475a50 = []byte{
-	// 165 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xce, 0xcb, 0x2c, 0x4a,
-	0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x4f, 0xce, 0xcf, 0xcd, 0x2d, 0xcd, 0xcb, 0x2c, 0xa9, 0xd4,
-	0x2f, 0x33, 0xd4, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0x12, 0x83, 0x2b, 0xd2, 0x83, 0x2b, 0xd2, 0x2b, 0x33, 0x94, 0x12, 0x4c, 0xcc, 0xcd, 0xcc, 0xcb,
-	0xd7, 0x07, 0x93, 0x10, 0xa5, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x60, 0xa6, 0x3e, 0x88, 0x05,
-	0x11, 0x55, 0xd2, 0xe7, 0x62, 0x0b, 0x00, 0x1b, 0x68, 0xa5, 0xfa, 0x62, 0x81, 0x3c, 0x63, 0xd7,
-	0xf3, 0x0d, 0x5a, 0x32, 0x08, 0x8b, 0x2b, 0x90, 0xac, 0x86, 0x28, 0x73, 0x32, 0x3b, 0xf1, 0x48,
-	0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0,
-	0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xb0, 0x3e, 0x5d, 0x4c, 0x8d, 0x25, 0x95, 0x05,
-	0xa9, 0xc5, 0x49, 0x6c, 0x60, 0xfb, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x5d, 0xcb, 0x0a,
-	0x9c, 0xd7, 0x00, 0x00, 0x00,
+	// 662 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0xcf, 0x4e, 0x14, 0x31,
+	0x1c, 0xc7, 0x77, 0x04, 0x81, 0x2d, 0xfb, 0x07, 0x0a, 0x9a, 0x4a, 0x74, 0x59, 0x25, 0x98, 0x15,
+	0xc3, 0x8e, 0xc4, 0xc4, 0x83, 0x37, 0x47, 0x8c, 0x21, 0x9a, 0xb0, 0x59, 0x24, 0x26, 0x5e, 0x9a,
+	0xee, 0x4c, 0xdd, 0x69, 0x98, 0x69, 0x9b, 0xb6, 0xc0, 0xf2, 0x0a, 0x9e, 0x7c, 0x04, 0x0f, 0x1e,
+	0x3c, 0x72, 0xf0, 0x21, 0x38, 0x12, 0x4f, 0xc6, 0x03, 0x31, 0xec, 0x01, 0x1f, 0xc3, 0xb4, 0x9d,
+	0x1d, 0x4d, 0xbc, 0x79, 0xd9, 0xec, 0x7c, 0xbe, 0xbf, 0x7e, 0x7f, 0xff, 0x66, 0x0a, 0xd6, 0x38,
+	0x53, 0x24, 0x4e, 0x09, 0xe3, 0x61, 0x2c, 0xf2, 0xfc, 0x90, 0x33, 0x73, 0x12, 0x1e, 0x6d, 0x85,
+	0x92, 0x28, 0x92, 0xeb, 0xae, 0x54, 0xc2, 0x08, 0x78, 0xb3, 0x0c, 0xea, 0x96, 0x41, 0xdd, 0xa3,
+	0xad, 0x95, 0x45, 0x92, 0x33, 0x2e, 0x42, 0xf7, 0xeb, 0x43, 0x57, 0x6e, 0xc5, 0x42, 0xe7, 0x42,
+	0x63, 0xf7, 0x14, 0xfa, 0x87, 0x42, 0x5a, 0x1e, 0x8a, 0xa1, 0xf0, 0xdc, 0xfe, 0xf3, 0xf4, 0xde,
+	0xe7, 0x59, 0x30, 0xd3, 0x73, 0xc9, 0xe0, 0x1d, 0x00, 0x06, 0x82, 0x27, 0x38, 0xa1, 0x5c, 0xe4,
+	0x28, 0x68, 0x07, 0x9d, 0x6a, 0xbf, 0x6a, 0xc9, 0xb6, 0x05, 0xf0, 0x15, 0x98, 0xcb, 0x19, 0xc7,
+	0x16, 0xa0, 0x6b, 0x56, 0x8c, 0x1e, 0x9d, 0x5d, 0xac, 0x56, 0x7e, 0x5c, 0xac, 0xde, 0xf0, 0x79,
+	0x74, 0x72, 0xd0, 0x65, 0x22, 0xcc, 0x89, 0x49, 0xbb, 0x3b, 0xdc, 0x7c, 0xfb, 0xba, 0x09, 0x8a,
+	0x02, 0x76, 0xb8, 0xf9, 0x72, 0x75, 0xba, 0x11, 0xf4, 0x67, 0x73, 0xc6, 0x23, 0xc1, 0x13, 0x78,
+	0x17, 0xd4, 0xa8, 0x14, 0x71, 0x8a, 0x07, 0x99, 0x88, 0x0f, 0x34, 0x9a, 0x6a, 0x07, 0x9d, 0xe9,
+	0xfe, 0xbc, 0x63, 0x91, 0x43, 0xf0, 0x01, 0x58, 0x30, 0x44, 0x0d, 0xa9, 0xc1, 0xb6, 0x69, 0x66,
+	0x0c, 0xa5, 0x68, 0xba, 0x1d, 0x74, 0xea, 0xfd, 0xa6, 0xe7, 0xcf, 0x27, 0x18, 0x76, 0xc1, 0x92,
+	0x21, 0xfa, 0x40, 0x63, 0x49, 0x15, 0xd6, 0x34, 0xa3, 0xb1, 0x61, 0x82, 0xa3, 0xeb, 0x2e, 0x7a,
+	0xd1, 0x49, 0x3d, 0xaa, 0xf6, 0x26, 0x02, 0x0c, 0xc1, 0x72, 0x4e, 0x46, 0x76, 0x48, 0xe2, 0xbd,
+	0x3f, 0xe4, 0x12, 0xa3, 0x19, 0x7f, 0x20, 0x27, 0xa3, 0x9e, 0x93, 0x7a, 0x54, 0xbd, 0xb0, 0x02,
+	0x5c, 0x07, 0x0d, 0x22, 0x65, 0x4a, 0x74, 0x8a, 0x8f, 0x19, 0x4f, 0xc4, 0x31, 0x9a, 0x75, 0xa1,
+	0xf5, 0x82, 0xbe, 0x75, 0x10, 0xae, 0x81, 0xba, 0x26, 0xb9, 0xcc, 0x28, 0xd6, 0x46, 0x28, 0xaa,
+	0xd1, 0x5c, 0x7b, 0xaa, 0x53, 0xed, 0xd7, 0x3c, 0xdc, 0x73, 0x0c, 0xde, 0x07, 0xcd, 0x32, 0x39,
+	0x1e, 0x9c, 0x18, 0xaa, 0x51, 0xd5, 0x9b, 0x4d, 0xf2, 0x46, 0x16, 0xc2, 0x87, 0x00, 0xfa, 0x98,
+	0x21, 0xf1, 0x35, 0xda, 0x58, 0x04, 0xdc, 0xa0, 0x9a, 0x4e, 0x79, 0x49, 0x6c, 0x85, 0x36, 0x1a,
+	0x76, 0xc0, 0x82, 0x35, 0x15, 0x9c, 0x09, 0x8e, 0x33, 0xca, 0x87, 0x26, 0x45, 0xf3, 0xce, 0xb5,
+	0x91, 0x93, 0xd1, 0xae, 0xc5, 0xaf, 0x1d, 0xb5, 0xb3, 0xb2, 0x91, 0x8a, 0x1e, 0x51, 0x92, 0xe1,
+	0x84, 0x69, 0x43, 0x78, 0x4c, 0x51, 0xad, 0x6c, 0xbd, 0xef, 0x94, 0xed, 0x42, 0xb0, 0xce, 0x8a,
+	0x1e, 0x13, 0x95, 0x60, 0x9d, 0x12, 0x45, 0xf1, 0x40, 0x6a, 0x54, 0xf7, 0xce, 0x9e, 0xef, 0x59,
+	0x1c, 0x49, 0xb7, 0xb0, 0x43, 0x6e, 0x5f, 0x0f, 0xc6, 0x87, 0x93, 0xbd, 0x36, 0x7c, 0xb9, 0x25,
+	0x2f, 0x76, 0x5b, 0x2c, 0xc0, 0x63, 0xdf, 0x9c, 0x15, 0x50, 0xb3, 0xac, 0x62, 0xdf, 0x49, 0xb6,
+	0x3d, 0x2b, 0xc0, 0x7d, 0x50, 0x27, 0x19, 0x55, 0x06, 0x27, 0x54, 0x0a, 0xcd, 0x0c, 0x5a, 0xf8,
+	0xcf, 0x37, 0xb0, 0xe6, 0x6c, 0xb6, 0xbd, 0x8b, 0x6d, 0xce, 0xdb, 0x1a, 0x93, 0x4d, 0x4a, 0x5e,
+	0x74, 0x25, 0x37, 0x1c, 0x7f, 0x63, 0xb2, 0xa2, 0xe2, 0x62, 0x6b, 0x42, 0x52, 0x8e, 0x9d, 0xa4,
+	0x11, 0x2c, 0xb7, 0xb6, 0x2b, 0x29, 0x7f, 0xe6, 0xa0, 0x1d, 0x6f, 0xe1, 0x98, 0x2a, 0xaa, 0x53,
+	0x91, 0x25, 0x6e, 0x62, 0x4b, 0xbe, 0x31, 0x6f, 0x3a, 0x51, 0x22, 0xa9, 0x9f, 0xae, 0xff, 0xfa,
+	0xb4, 0x1a, 0x7c, 0xb8, 0x3a, 0xdd, 0xb8, 0xfd, 0xe7, 0x26, 0x18, 0xfd, 0x75, 0x17, 0xf8, 0x6f,
+	0x33, 0x7a, 0x72, 0x76, 0xd9, 0x0a, 0xce, 0x2f, 0x5b, 0xc1, 0xcf, 0xcb, 0x56, 0xf0, 0x71, 0xdc,
+	0xaa, 0x9c, 0x8f, 0x5b, 0x95, 0xef, 0xe3, 0x56, 0xe5, 0x9d, 0x3b, 0xb7, 0xf9, 0xef, 0x41, 0x73,
+	0x22, 0xa9, 0x1e, 0xcc, 0xb8, 0xaf, 0xfc, 0xf1, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0xaa, 0x8c,
+	0x2b, 0x6c, 0x68, 0x04, 0x00, 0x00,
 }
 
 func (this *Params) Equal(that interface{}) bool {
@@ -102,6 +272,68 @@ func (this *Params) Equal(that interface{}) bool {
 	if that1 == nil {
 		return this == nil
 	} else if this == nil {
+		return false
+	}
+	if this.BondDenom != that1.BondDenom {
+		return false
+	}
+	if !this.MinBond.Equal(that1.MinBond) {
+		return false
+	}
+	if this.EpochBlocks != that1.EpochBlocks {
+		return false
+	}
+	if this.TargetCommittee != that1.TargetCommittee {
+		return false
+	}
+	if this.TasksPerSelection != that1.TasksPerSelection {
+		return false
+	}
+	if this.MaxProofsPerEpoch != that1.MaxProofsPerEpoch {
+		return false
+	}
+	if this.ApphashWindow != that1.ApphashWindow {
+		return false
+	}
+	if len(this.SampleStores) != len(that1.SampleStores) {
+		return false
+	}
+	for i := range this.SampleStores {
+		if this.SampleStores[i] != that1.SampleStores[i] {
+			return false
+		}
+	}
+	if this.MaxProofBytes != that1.MaxProofBytes {
+		return false
+	}
+	if this.ProofGasPerByte != that1.ProofGasPerByte {
+		return false
+	}
+	if this.MaxOnionLength != that1.MaxOnionLength {
+		return false
+	}
+	if this.MaxRevealDistance != that1.MaxRevealDistance {
+		return false
+	}
+	if this.RewardShareBps != that1.RewardShareBps {
+		return false
+	}
+	if this.UnbondingBlocks != that1.UnbondingBlocks {
+		return false
+	}
+	if this.MaxUnbondPerBlock != that1.MaxUnbondPerBlock {
+		return false
+	}
+	if !this.AlertDeposit.Equal(that1.AlertDeposit) {
+		return false
+	}
+	if this.AlertTtlBlocks != that1.AlertTtlBlocks {
+		return false
+	}
+	if this.MaxOpenAlerts != that1.MaxOpenAlerts {
+		return false
+	}
+	if this.AlertThresholdBps != that1.AlertThresholdBps {
 		return false
 	}
 	return true
@@ -126,6 +358,125 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.AlertThresholdBps != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.AlertThresholdBps))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x98
+	}
+	if m.MaxOpenAlerts != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxOpenAlerts))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x90
+	}
+	if m.AlertTtlBlocks != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.AlertTtlBlocks))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x88
+	}
+	{
+		size := m.AlertDeposit.Size()
+		i -= size
+		if _, err := m.AlertDeposit.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintParams(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1
+	i--
+	dAtA[i] = 0x82
+	if m.MaxUnbondPerBlock != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxUnbondPerBlock))
+		i--
+		dAtA[i] = 0x78
+	}
+	if m.UnbondingBlocks != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.UnbondingBlocks))
+		i--
+		dAtA[i] = 0x70
+	}
+	if m.RewardShareBps != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.RewardShareBps))
+		i--
+		dAtA[i] = 0x68
+	}
+	if m.MaxRevealDistance != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxRevealDistance))
+		i--
+		dAtA[i] = 0x60
+	}
+	if m.MaxOnionLength != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxOnionLength))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.ProofGasPerByte != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.ProofGasPerByte))
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.MaxProofBytes != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxProofBytes))
+		i--
+		dAtA[i] = 0x48
+	}
+	if len(m.SampleStores) > 0 {
+		for iNdEx := len(m.SampleStores) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.SampleStores[iNdEx])
+			copy(dAtA[i:], m.SampleStores[iNdEx])
+			i = encodeVarintParams(dAtA, i, uint64(len(m.SampleStores[iNdEx])))
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if m.ApphashWindow != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.ApphashWindow))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.MaxProofsPerEpoch != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxProofsPerEpoch))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.TasksPerSelection != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.TasksPerSelection))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.TargetCommittee != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.TargetCommittee))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.EpochBlocks != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.EpochBlocks))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size := m.MinBond.Size()
+		i -= size
+		if _, err := m.MinBond.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintParams(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.BondDenom) > 0 {
+		i -= len(m.BondDenom)
+		copy(dAtA[i:], m.BondDenom)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.BondDenom)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -146,6 +497,65 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.BondDenom)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
+	l = m.MinBond.Size()
+	n += 1 + l + sovParams(uint64(l))
+	if m.EpochBlocks != 0 {
+		n += 1 + sovParams(uint64(m.EpochBlocks))
+	}
+	if m.TargetCommittee != 0 {
+		n += 1 + sovParams(uint64(m.TargetCommittee))
+	}
+	if m.TasksPerSelection != 0 {
+		n += 1 + sovParams(uint64(m.TasksPerSelection))
+	}
+	if m.MaxProofsPerEpoch != 0 {
+		n += 1 + sovParams(uint64(m.MaxProofsPerEpoch))
+	}
+	if m.ApphashWindow != 0 {
+		n += 1 + sovParams(uint64(m.ApphashWindow))
+	}
+	if len(m.SampleStores) > 0 {
+		for _, s := range m.SampleStores {
+			l = len(s)
+			n += 1 + l + sovParams(uint64(l))
+		}
+	}
+	if m.MaxProofBytes != 0 {
+		n += 1 + sovParams(uint64(m.MaxProofBytes))
+	}
+	if m.ProofGasPerByte != 0 {
+		n += 1 + sovParams(uint64(m.ProofGasPerByte))
+	}
+	if m.MaxOnionLength != 0 {
+		n += 1 + sovParams(uint64(m.MaxOnionLength))
+	}
+	if m.MaxRevealDistance != 0 {
+		n += 1 + sovParams(uint64(m.MaxRevealDistance))
+	}
+	if m.RewardShareBps != 0 {
+		n += 1 + sovParams(uint64(m.RewardShareBps))
+	}
+	if m.UnbondingBlocks != 0 {
+		n += 1 + sovParams(uint64(m.UnbondingBlocks))
+	}
+	if m.MaxUnbondPerBlock != 0 {
+		n += 1 + sovParams(uint64(m.MaxUnbondPerBlock))
+	}
+	l = m.AlertDeposit.Size()
+	n += 2 + l + sovParams(uint64(l))
+	if m.AlertTtlBlocks != 0 {
+		n += 2 + sovParams(uint64(m.AlertTtlBlocks))
+	}
+	if m.MaxOpenAlerts != 0 {
+		n += 2 + sovParams(uint64(m.MaxOpenAlerts))
+	}
+	if m.AlertThresholdBps != 0 {
+		n += 2 + sovParams(uint64(m.AlertThresholdBps))
+	}
 	return n
 }
 
@@ -184,6 +594,423 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BondDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BondDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinBond", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinBond.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochBlocks", wireType)
+			}
+			m.EpochBlocks = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EpochBlocks |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TargetCommittee", wireType)
+			}
+			m.TargetCommittee = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TargetCommittee |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TasksPerSelection", wireType)
+			}
+			m.TasksPerSelection = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TasksPerSelection |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxProofsPerEpoch", wireType)
+			}
+			m.MaxProofsPerEpoch = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxProofsPerEpoch |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApphashWindow", wireType)
+			}
+			m.ApphashWindow = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApphashWindow |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SampleStores", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SampleStores = append(m.SampleStores, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxProofBytes", wireType)
+			}
+			m.MaxProofBytes = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxProofBytes |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofGasPerByte", wireType)
+			}
+			m.ProofGasPerByte = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProofGasPerByte |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxOnionLength", wireType)
+			}
+			m.MaxOnionLength = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxOnionLength |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxRevealDistance", wireType)
+			}
+			m.MaxRevealDistance = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxRevealDistance |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardShareBps", wireType)
+			}
+			m.RewardShareBps = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RewardShareBps |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingBlocks", wireType)
+			}
+			m.UnbondingBlocks = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UnbondingBlocks |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxUnbondPerBlock", wireType)
+			}
+			m.MaxUnbondPerBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxUnbondPerBlock |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AlertDeposit", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AlertDeposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AlertTtlBlocks", wireType)
+			}
+			m.AlertTtlBlocks = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AlertTtlBlocks |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxOpenAlerts", wireType)
+			}
+			m.MaxOpenAlerts = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxOpenAlerts |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AlertThresholdBps", wireType)
+			}
+			m.AlertThresholdBps = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AlertThresholdBps |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])

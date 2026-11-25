@@ -93,7 +93,8 @@ var (
 		{Account: evmmoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}}, {Account: erc20moduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: feemarketmoduletypes.ModuleName},
 		// blocked account addresses
-		{Account: communitymoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}}}
+		// x/community only escrows and moves existing coins: no mint/burn/staking permissions.
+		{Account: communitymoduletypes.ModuleName}}
 	blockAccAddrs = []string{
 		authtypes.FeeCollectorName,
 		distrtypes.ModuleName,
@@ -123,6 +124,9 @@ var (
 					// NOTE: staking module is required if HistoricalEntries param > 0
 					BeginBlockers: []string{
 						minttypes.ModuleName,
+						// x/community takes its reward share of fees + inflation from the fee
+						// collector after mint and before distribution (spec §8).
+						communitymoduletypes.ModuleName,
 						distrtypes.ModuleName,
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
@@ -132,7 +136,7 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName, communitymoduletypes.ModuleName},
+						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName},
 					EndBlockers: []string{
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
