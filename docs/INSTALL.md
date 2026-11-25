@@ -69,6 +69,7 @@ Run `make help` for the full list.
 | `make e2e` | All Cosmos and EVM e2e suites against a running localnet |
 | `make localtest` / `localtest-check` / `localtest-stop` | 4-validator network through the full genesis ceremony, its checks, and stopping it |
 | `make genesis-check NET=genesis/networks/<net>.toml` | Validate a network file and print the allocation report |
+| `make release` / `scripts/verify-reproducible.sh` | Release tarball + SHA256SUMS; check bit-for-bit reproducibility from two clean clones |
 | `make lint`, `make govet`, `make govulncheck` | Static checks and the dependency vulnerability scan |
 | `make proto-gen` | Regenerate Go code from `proto/` (needs Ignite CLI) |
 
