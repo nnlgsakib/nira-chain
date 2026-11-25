@@ -1,0 +1,15 @@
+# Local monitoring stack: docker compose -f deploy/monitoring/docker-compose.yml up -d
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.2
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports: ["127.0.0.1:9091:9090"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    ports: ["127.0.0.1:9093:9093"]
+  grafana:
+    image: grafana/grafana:11.1.4
+    ports: ["127.0.0.1:3000:3000"]

@@ -1,0 +1,28 @@
+# Prometheus for Nira nodes (G-OPS-3). Each node exposes:
+#   CometBFT metrics  : [instrumentation] prometheus = true → 127.0.0.1:26660/metrics
+#   App telemetry     : app.toml [telemetry] enabled = true, prometheus-retention-time > 0
+#                       → REST :1317/metrics?format=prometheus
+# Scrape over a private network / SSH tunnel only; never expose these ports publicly.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+scrape_configs:
+  - job_name: cometbft
+    static_configs:
+      - targets: ["host.docker.internal:26660"]   # one entry per node
+        labels: { role: validator, node: core-0 }
+  - job_name: nira-app
+    metrics_path: /metrics
+    params: { format: [prometheus] }
+    static_configs:
+      - targets: ["host.docker.internal:1317"]
+        labels: { role: rpc, node: rpc-0 }

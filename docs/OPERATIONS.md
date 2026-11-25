@@ -93,6 +93,11 @@ nirad tx community deregister-node --from cnode            # bond returns after 
 
 Rehearse every release on a test network first: `make upgrade-rehearsal` performs exactly this flow with a `-tags rehearsal` binary, and asserts that the halt height, handler height, state and EVM are preserved.
 
+## Monitoring and alerting
+
+- **Metrics:** set `[instrumentation] prometheus = true` (the role profiles do, bound to 127.0.0.1:26660) and app telemetry in `app.toml [telemetry]`. `deploy/monitoring/` contains a Prometheus scrape config, alert rules (chain halted, block time, missed blocks, byzantine validators, low peers, syncing, mempool near full) and a docker-compose stack (Prometheus, Alertmanager, Grafana). The YAML is syntax-checked, but `promtool` wasn't run.
+- **On-chain security monitor:** `scripts/monitor.py --rpc … --rest …` emits one JSON line per alert: halt, slashing, jailing, voting-power shifts or concentration, new governance proposals, upgrade plans, `comm_hook_error`, community slashing, divergence threshold, supply jumps. Pipe it to your alert channel. Verified live on a localnet (proposal, upgrade plan and halt detected).
+
 ## Example systemd unit
 
 ```ini
