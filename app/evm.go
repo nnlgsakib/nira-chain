@@ -157,7 +157,7 @@ func (app *App) setEVMMempool() {
 			BlockGasLimit: 100_000_000,
 		}
 
-		evmMempool := evmmempool.NewExperimentalEVMMempool(app.CreateQueryContext, app.Logger(), app.EVMKeeper, app.FeeMarketKeeper, app.txConfig, app.clientCtx, mempoolConfig, 4096)
+		evmMempool := evmmempool.NewExperimentalEVMMempool(app.CreateQueryContext, newMempoolLogger(app.Logger()), app.EVMKeeper, app.FeeMarketKeeper, app.txConfig, app.clientCtx, mempoolConfig, 4096)
 		app.EVMMempool = evmMempool
 
 		app.SetMempool(evmMempool)
