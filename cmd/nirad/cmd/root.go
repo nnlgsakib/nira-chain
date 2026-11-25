@@ -21,7 +21,7 @@ import (
 	"nira-chain/app"
 )
 
-// NewRootCmd creates a new root command for nira-chaind. It is called once in the main function.
+// NewRootCmd creates a new root command for nirad. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
 		autoCliOpts        autocli.AppOptions

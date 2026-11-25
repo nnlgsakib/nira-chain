@@ -102,7 +102,7 @@ balance = "1010000"
 self_bond = "1000000"
 
 # --------------------------------------------------------- initial Community Nodes
-# Operators run `nira-chaind tx community onion-init` locally and send ONLY the tip.
+# Operators run `nirad tx community onion-init` locally and send ONLY the tip.
 # Bond is escrowed in x/community at genesis; balance is liquid for fees.
 
 [[community_node]]

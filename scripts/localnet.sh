@@ -4,8 +4,8 @@
 # Ethereum transactions (R-F11). NEVER use these keys on a public network.
 set -euo pipefail
 
-BIN=${BIN:-nira-chaind}
-HOME_DIR=${HOME_DIR:-$HOME/.nira-chain}
+BIN=${BIN:-nirad}
+HOME_DIR=${HOME_DIR:-$HOME/.nira}
 CHAIN_ID=${CHAIN_ID:-nira_47201-1}
 DENOM=anira
 KR="--keyring-backend test --home $HOME_DIR"

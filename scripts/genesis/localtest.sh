@@ -6,7 +6,7 @@
 #   scripts/genesis/localtest.sh stop     stop all nodes
 set -euo pipefail
 
-BIN=${BIN:-nira-chaind}
+BIN=${BIN:-nirad}
 N=${N:-4}
 ROOT=${ROOT:-$HOME/.nira-localtest}
 CHAIN_ID=nira_47201-77

@@ -106,7 +106,7 @@ Detail: `docs/spec/architecture.md`
 Network definition (supply, allocations, vesting, initial validators and community nodes, all economic params): `genesis/networks/<net>.toml` → `scripts/genesis/build_genesis.py check|pregenesis|finalize`. Runbook: `genesis/README.md`.
 
 ## How to test (both interfaces)
-`scripts/localnet.sh && nira-chaind start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nira-chaind keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
+`scripts/localnet.sh && nirad start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nirad keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
 
 ## Production readiness
 Not started. See docs/readiness.md (to be written by ops-production-readiness).

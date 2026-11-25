@@ -4,8 +4,8 @@
 # (onion-init → register-node → prove) and cross-checks escrow through the EVM.
 set -euo pipefail
 
-BIN=${BIN:-nira-chaind}
-HOME_DIR=${HOME_DIR:-$HOME/.nira-chain}
+BIN=${BIN:-nirad}
+HOME_DIR=${HOME_DIR:-$HOME/.nira}
 CHAIN_ID=${CHAIN_ID:-nira_47201-1}
 REST=${REST:-http://127.0.0.1:1317}
 CMT=${CMT:-http://127.0.0.1:26657}

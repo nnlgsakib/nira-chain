@@ -3,7 +3,7 @@
 # file, on both interfaces, then exercises BFT fault tolerance.
 set -euo pipefail
 
-BIN=${BIN:-nira-chaind}
+BIN=${BIN:-nirad}
 ROOT=${ROOT:-$HOME/.nira-localtest}
 NET=$ROOT/build/localtest.toml
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

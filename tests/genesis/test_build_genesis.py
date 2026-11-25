@@ -75,7 +75,7 @@ class TestBuilder(unittest.TestCase):
         self.assertEqual(b.convert_params({"x": "2 NIRA", "y": ["3 NIRA"]}), {"x": str(2 * 10**18), "y": [str(3 * 10**18)]})
 
     def test_module_address_matches_sdk(self):
-        # verified against `nira-chaind q auth module-account community`
+        # verified against `nirad q auth module-account community`
         self.assertEqual(b.acc(b.module_address("community")), "nira17d2wax0zhjrrecvaszuyxdf5wcu5a0p4hn5wfr")
 
 

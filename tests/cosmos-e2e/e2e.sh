@@ -6,8 +6,8 @@
 # Usage: tests/cosmos-e2e/e2e.sh   (env: BIN, HOME_DIR, RPC, REST, EVM_RPC)
 set -euo pipefail
 
-BIN=${BIN:-nira-chaind}
-HOME_DIR=${HOME_DIR:-$HOME/.nira-chain}
+BIN=${BIN:-nirad}
+HOME_DIR=${HOME_DIR:-$HOME/.nira}
 CHAIN_ID=${CHAIN_ID:-nira_47201-1}
 REST=${REST:-http://127.0.0.1:1317}
 EVM_RPC=${EVM_RPC:-http://127.0.0.1:8545}

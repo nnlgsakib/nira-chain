@@ -36,7 +36,7 @@ python3 scripts/genesis/build_genesis.py check genesis/networks/mainnet.toml
 python3 scripts/genesis/build_genesis.py pregenesis genesis/networks/mainnet.toml --out build/genesis
 
 # 3. Each validator, on their own machine, with the pregenesis as config/genesis.json:
-nira-chaind genesis gentx <key> <self_bond>anira --chain-id nira_47201-1 --moniker core-1 \
+nirad genesis gentx <key> <self_bond>anira --chain-id nira_47201-1 --moniker core-1 \
   --commission-rate 0.10 --commission-max-rate 0.20 --commission-max-change-rate 0.01 \
   --output-document core-1.json
 #    … and sends core-1.json to the coordinator (public data, no secrets)
@@ -47,7 +47,7 @@ python3 scripts/genesis/build_genesis.py finalize genesis/networks/mainnet.toml 
 # 5. Publish build/genesis/genesis.json + genesis.sha256; every operator checks the hash before starting
 ```
 
-Community node operators send their onion tip: `nira-chaind tx community onion-init` prints it, and the secret stays in `<home>/community/onion.json`.
+Community node operators send their onion tip: `nirad tx community onion-init` prints it, and the secret stays in `<home>/community/onion.json`.
 
 ## What the builder refuses
 

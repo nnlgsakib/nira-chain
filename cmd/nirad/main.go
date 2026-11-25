@@ -8,7 +8,7 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
 	"nira-chain/app"
-	"nira-chain/cmd/nira-chaind/cmd"
+	"nira-chain/cmd/nirad/cmd"
 )
 
 func main() {

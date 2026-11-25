@@ -64,7 +64,7 @@ const BaseDenomUnit int64 = 18
 
 const (
 	// Name is the name of the application.
-	Name = "nira-chain"
+	Name = "nira"
 	// AccountAddressPrefix is the prefix for accounts addresses.
 	AccountAddressPrefix = "nira"
 	// ChainCoinType is the coin type of the chain.

@@ -9,7 +9,7 @@ all module parameters. Change the file, rebuild, and review the report.
 Commands
   check      validate the network file and print the allocation report
   pregenesis build the genesis WITHOUT gentxs (published to validators so they
-             can run `nira-chaind genesis gentx` against it)
+             can run `nirad genesis gentx` against it)
   finalize   rebuild the pregenesis deterministically, verify and collect the
              validators' gentxs, validate, write genesis.json + sha256 + report
 
@@ -499,7 +499,7 @@ def main():
     ap.add_argument("network", type=Path, help="genesis/networks/<network>.toml")
     ap.add_argument("--out", type=Path, default=Path("build/genesis"), help="output directory")
     ap.add_argument("--gentx-dir", type=Path, help="directory of validators' gentx JSON files (finalize)")
-    ap.add_argument("--binary", default=shutil.which("nira-chaind") or "nira-chaind")
+    ap.add_argument("--binary", default=shutil.which("nirad") or "nirad")
     a = ap.parse_args()
 
     net = Network(a.network)
@@ -526,7 +526,7 @@ def main():
             run([a.binary, "genesis", "validate", "--home", str(home)])
             shutil.copy(gpath, a.out / "pregenesis.json")
             (a.out / "report.md").write_text(net.report(warns=warns))
-            print(f"wrote {a.out / 'pregenesis.json'} — validators run: nira-chaind genesis gentx <key> <self_bond>anira "
+            print(f"wrote {a.out / 'pregenesis.json'} — validators run: nirad genesis gentx <key> <self_bond>anira "
                   f"--chain-id {net.chain_id} (with this file as their config/genesis.json)")
             return
         if not a.gentx_dir:
