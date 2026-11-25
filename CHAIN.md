@@ -116,7 +116,7 @@ Network definition (supply, allocations, vesting, initial validators and communi
 `scripts/localnet.sh && nirad start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nirad keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
 
 ## Docs
-[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [gap analysis](docs/GAPS.md) · [requirement compliance](docs/COMPLIANCE.md) · [genesis](genesis/README.md)
+[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [gap analysis](docs/GAPS.md) · [requirement compliance](docs/COMPLIANCE.md) · [threat model](docs/security/threat-model.md) · [benchmarks](docs/benchmarks/README.md) · [genesis](genesis/README.md)
 
 ## Production readiness
 Not started. See docs/readiness.md (to be written by ops-production-readiness).

@@ -28,7 +28,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 16 | Snapshot synchronisation | ✅ | `make sync-test`: state sync from a light-client-verified snapshot |
 | 17 | Governance | ✅ | x/gov; module authorities = gov; e2e: param-change proposal (vote via CLI and EVM gov precompile), ResolveAlert slashing, software-upgrade rehearsal with binary switch |
 | 18 | Monitoring / observability | 🟡 | Prometheus endpoints available (`prometheus = true`); typed module events. *No dashboards or alerts* |
-| 19 | Security testing | 🟡 | Adversarial unit tests (forged proofs, grinding, copying, duplicate pay, hook failure isolation); determinism audit (0 findings); govulncheck. *No threat model document, no fuzzing, no external audit* |
+| 19 | Security testing | 🟡 | Threat model (20 threats, evidence per threat), key inventory, fuzzing (`make fuzz`), adversarial unit + e2e tests (forged/copied/duplicate proofs, grinding, precompile atomicity, double sign), govulncheck. *No external audit, no runbooks yet* |
 | 20 | Performance benchmarks | 🟡 | Baseline in `docs/benchmarks/` (native 707, EVM 2 037, mixed 1 030 TPS on 1 validator; 673 / 494 TPS mixed at 4 / 16 co-located validators; proof verification 9 µs). *Multi-host, soak and community-at-scale not measured* |
 | 21 | Automated test infrastructure | 🟡 | `make test`, `make e2e`, `make localtest-check`. CI runs `make test` on PRs. *e2e not in CI yet* |
 | 22 | Reproducible build | 🟡 | `-trimpath`, `go mod verify`, pinned deps, Makefile. *Bit-for-bit reproducibility not verified; release workflow (Ignite) not exercised* |
