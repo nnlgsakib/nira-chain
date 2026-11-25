@@ -8,10 +8,17 @@ import assert from "node:assert/strict";
 const RPC = process.env.RPC ?? "http://127.0.0.1:8545";
 const REST = process.env.COSMOS_REST ?? "http://127.0.0.1:1317";
 const EXPECTED_CHAIN_ID = BigInt(process.env.CHAIN_ID ?? 47201);
-const provider = new ethers.JsonRpcProvider(RPC);
+const provider = new ethers.JsonRpcProvider(RPC, undefined, { cacheTimeout: -1 }); // no response caching: nonce/balance reads must be fresh
 const wallet = new ethers.Wallet(process.env.KEY, provider);
 let passed = 0;
-const check = async (name, fn) => { await fn(); passed++; console.log(`ok  ${name}`); };
+const CHECK_TIMEOUT_MS = Number(process.env.CHECK_TIMEOUT_MS ?? 30000);
+const check = async (name, fn) => {
+  process.stdout.write(`..  ${name}\r`);
+  let timer;
+  const timeout = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error(`TIMEOUT after ${CHECK_TIMEOUT_MS} ms: ${name}`)), CHECK_TIMEOUT_MS); });
+  try { await Promise.race([fn(), timeout]); } finally { clearTimeout(timer); }
+  passed++; console.log(`ok  ${name}`);
+};
 
 const src = readFileSync(new URL("./Counter.sol", import.meta.url), "utf8");
 const out = JSON.parse(solc.compile(JSON.stringify({
@@ -90,4 +97,23 @@ await check("staking precompile readable from EVM", async () => {
   assert.equal(bal.denom, "anira");
 });
 
+await check("delegate + undelegate via staking precompile (power-cap hook path, ADR-0004)", async () => {
+  const vals = await (await fetch(`${REST}/cosmos/staking/v1beta1/validators`)).json();
+  const valoper = vals.validators[0].operator_address;
+  const st = new ethers.Contract("0x0000000000000000000000000000000000000800", [
+    "function delegate(address,string,uint256) returns (bool)",
+    "function undelegate(address,string,uint256) returns (int64)",
+    "function delegation(address,string) view returns (uint256 shares, (string denom, uint256 amount) balance)",
+  ], wallet);
+  const amt = ethers.parseEther("1000");
+  const [, before] = await st.delegation(wallet.address, valoper);
+  assert.equal((await (await st.delegate(wallet.address, valoper, amt, { gasLimit: 500000 })).wait()).status, 1);
+  const [, mid] = await st.delegation(wallet.address, valoper);
+  assert.equal(mid.amount - before.amount, amt);
+  assert.equal((await (await st.undelegate(wallet.address, valoper, amt, { gasLimit: 500000 })).wait()).status, 1);
+  const [, after] = await st.delegation(wallet.address, valoper);
+  assert.equal(after.amount, before.amount);
+});
+
 console.log(`\n${passed} checks passed`);
+process.exit(0);
