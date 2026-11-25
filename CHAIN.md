@@ -6,7 +6,7 @@
 - Mode: production
 - Phase: build (design and stack ADRs accepted; component specs partial, see Components)
 - Last updated: 2026-11-25 by stack-cosmos-ignite
-- Next step: tokenomics spec + simulation (protocol-tokenomics, Q3), then threat model (quality-security) and multi-validator testnet (quality-testing, Q7)
+- Next step: tokenomics spec + simulation (protocol-tokenomics, Q3) using genesis/networks values, then threat model (quality-security)
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.
@@ -62,7 +62,7 @@ Detail: `docs/spec/architecture.md`
 ## Components
 | Component | protocol-* skill | Spec | Status | Evidence |
 |---|---|---|---|---|
-| CONS | protocol-consensus | architecture.md §1,6 | designed | ADR-0002 |
+| CONS | protocol-consensus | architecture.md §1,6 | tested (4-validator net) | tests/genesis/check_localtest.sh: 1/4 down live, 2/4 down halts, recovery with identical hashes |
 | STAKE | protocol-staking-validators | ADR-0004 (spec pending) | tested (unit + localnet) | x/nirachain/keeper/power_cap_test.go (INV-STAKE-CAP-1..3, randomised 2000 ops); tests/cosmos-e2e (MsgDelegate/Undelegate), tests/evm-e2e (staking precompile delegate/undelegate). Gap: live cap *rejection* needs a ≥10-validator net |
 | EXEC | protocol-state-execution | ADR-0005 | tested (localnet) | tests/evm-e2e/e2e.mjs — 9/9 pass: deploy, logs/filters, receipts, revert, EIP-1559 + legacy tx, bank==EVM balance, staking precompile |
 | TOKEN | protocol-tokenomics | missing | designed | |
@@ -82,9 +82,9 @@ Detail: `docs/spec/architecture.md`
 | ADR-0006 | x/community reachable from Cosmos and EVM (precompile 0x…0900) | accepted |
 
 ## Open questions
-- [ ] Q7 Multi-validator localnet (≥ 10 validators) for live power-cap rejection and consensus failure tests (quality-testing)
+- [ ] Q7 Live power-cap *rejection* needs ≥ 15 validators (cap activation); 4-validator ceremony + BFT fault tests done (tests/genesis/check_localtest.sh)
 - [ ] Q6 Dev bootstrap uses scripts/localnet.sh (eth_secp256k1 keys); `ignite chain serve` creates plain secp256k1 keys that can't sign EVM txs — don't use it for EVM testing
-- [ ] Q1 Token supply, genesis allocation and vesting (blocking for mainnet, not build; product decision — user)
+- [ ] Q1 Token supply, genesis allocation and vesting — now data-driven: edit genesis/networks/<net>.toml (template: mainnet.example.toml, all values proposed). Decision still needed from the user before mainnet
 - [ ] Q2 EVM chain ID for mainnet/testnet (blocking for testnet; default proposed in EVM wiring)
 - [ ] Q3 Reward split 50/25/15/10 from the idea: validators vs delegators is set by commission in the F1 model, not by protocol. Needs a tokenomics spec (protocol-tokenomics)
 - [ ] Q4 v2 community task types (history serving, DA sampling) — design-spec
@@ -98,9 +98,12 @@ Detail: `docs/spec/architecture.md`
 | K3 | One operator runs several validators to bypass the cap | medium | high | Monitoring, operator disclosure, delegator UI | protocol-staking-validators |
 | K4 | > 1/3 stake on one cloud provider | medium | high | Diversity monitoring, validator docs | ops-infrastructure |
 | K5 | cosmos/evm wiring bugs (precompile + staking hook interaction) | medium | high | Found + fixed: transient stores are invisible inside EVM precompiles (hooks must use KV stores). Both-interface e2e suites run per change | quality-testing |
-| K6 | Base fee decays to ~0 on empty blocks and feemarket min_gas_price = 0 → near-free spam | high | medium | Set feemarket min_gas_price and node minimum-gas-prices before testnet | protocol-state-execution |
+| K6 | Base fee decays to ~0 on empty blocks and feemarket min_gas_price = 0 → near-free spam | high | medium | Network template sets params.feemarket.min_gas_price = 10 gwei (proposed); operators must set minimum-gas-prices (genesis/README.md) | protocol-state-execution |
 | K8 | ICS-23 can't prove non-membership next to empty-value leaves (collections KeySets) or in empty stores; sample stores must avoid them | medium | medium | Defaults acc/evm/distribution/slashing (200/200 verified live); tools/proofprobe check before changing; SDK upgrades may add KeySets to these stores → re-probe per upgrade | protocol-verifiable-participation |
 | K7 | EVM mempool accepts eth_sendRawTransaction, then silently drops txs that fail CheckTx (client waits forever) | medium | medium | Surface CheckTx errors to RPC callers; e2e per-check timeouts added | stack-cosmos-evm |
+
+## Genesis
+Network definition (supply, allocations, vesting, initial validators and community nodes, all economic params): `genesis/networks/<net>.toml` → `scripts/genesis/build_genesis.py check|pregenesis|finalize`. Runbook: `genesis/README.md`.
 
 ## How to test (both interfaces)
 `scripts/localnet.sh && nira-chaind start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nira-chaind keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
