@@ -5,8 +5,8 @@
 ## Status
 - Mode: production
 - Phase: build (design and stack ADRs accepted; component specs partial, see Components)
-- Last updated: 2026-11-25 by blockchain-dev / design-protocol
-- Next step: wire native EVM (stack-cosmos-evm) → implement power cap (x/nirachain) → implement x/community (design-spec + stack-cosmos-ignite)
+- Last updated: 2026-11-25 by stack-cosmos-evm
+- Next step: implement power cap (x/nirachain, ADR-0004) → implement x/community (design-spec + stack-cosmos-ignite)
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.
@@ -46,7 +46,7 @@ Detail: `docs/spec/architecture.md`
 - Trust assumptions: < 1/3 Byzantine power (safety), > 2/3 online (liveness, else halt), weak subjectivity within unbonding period
 
 ## Stack
-- Framework + versions: Cosmos SDK v0.53.6, CometBFT v0.38.21, ibc-go v10.4.0, cosmos/evm (version per Ignite EVM app), Go 1.26
+- Framework + versions: Cosmos SDK v0.53.6, CometBFT v0.38.21, ibc-go v10.4.0, cosmos/evm v0.6.0 (go-ethereum → cosmos/go-ethereum v1.16.2-cosmos-1), Go 1.26, EVM chain ID 47201 (proposed, Q2)
 - Adapter skill: stack-cosmos-ignite + stack-cosmos-evm
 - Decision: ADR-0005
 
@@ -64,7 +64,7 @@ Detail: `docs/spec/architecture.md`
 |---|---|---|---|---|
 | CONS | protocol-consensus | architecture.md §1,6 | designed | ADR-0002 |
 | STAKE | protocol-staking-validators | ADR-0004 (spec pending) | designed | |
-| EXEC | protocol-state-execution | ADR-0005 | designed | |
+| EXEC | protocol-state-execution | ADR-0005 | tested (localnet) | tests/evm-e2e/e2e.mjs — 9/9 pass: deploy, logs/filters, receipts, revert, EIP-1559 + legacy tx, bank==EVM balance, staking precompile |
 | TOKEN | protocol-tokenomics | missing | designed | |
 | COMM | protocol-verifiable-participation | ADR-0003 (spec pending) | designed | |
 | RAND | protocol-randomness | ADR-0003 | designed | |
@@ -81,6 +81,7 @@ Detail: `docs/spec/architecture.md`
 | ADR-0005 | Stack: Cosmos SDK + cosmos/evm via Ignite | accepted |
 
 ## Open questions
+- [ ] Q6 Dev bootstrap uses scripts/localnet.sh (eth_secp256k1 keys); `ignite chain serve` creates plain secp256k1 keys that can't sign EVM txs — don't use it for EVM testing
 - [ ] Q1 Token supply, genesis allocation and vesting (blocking for mainnet, not build; product decision — user)
 - [ ] Q2 EVM chain ID for mainnet/testnet (blocking for testnet; default proposed in EVM wiring)
 - [ ] Q3 Reward split 50/25/15/10 from the idea: validators vs delegators is set by commission in the F1 model, not by protocol. Needs a tokenomics spec (protocol-tokenomics)
