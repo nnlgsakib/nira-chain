@@ -98,19 +98,19 @@ ubd=$(rest "/cosmos/staking/v1beta1/delegators/$DEV2/unbonding_delegations" | js
 [ "$ubd" -ge 1 ] || fail "no unbonding entry"
 ok "Cosmos MsgUndelegate → unbonding entry; REST and precompile agree"
 
-# 6. x/nirachain power-cap params queryable via Cosmos CLI and REST
-bps=$($BIN q nirachain params --output json --home "$HOME_DIR" | json "d['params']['max_validator_power_bps']")
+# 6. x/policy power-cap params queryable via Cosmos CLI and REST
+bps=$($BIN q policy params --output json --home "$HOME_DIR" | json "d['params']['max_validator_power_bps']")
 [ "$bps" = "1000" ] || fail "max_validator_power_bps = $bps"
-rbps=$(rest /nira-chain/nirachain/v1/params | json "d['params']['max_validator_power_bps']")
+rbps=$(rest /nira/policy/v1/params | json "d['params']['max_validator_power_bps']")
 [ "$rbps" = "1000" ] || fail "REST max_validator_power_bps = $rbps"
-ok "x/nirachain params via CLI and REST (cap 1000 bps)"
+ok "x/policy params via CLI and REST (cap 1000 bps)"
 
 # 7. Invalid params update via Cosmos tx is rejected (non-gov signer)
-if $BIN tx nirachain update-params --from dev2 --chain-id "$CHAIN_ID" "${KR[@]}" -y --gas-prices "$(gas_price)" \
+if $BIN tx policy update-params --from dev2 --chain-id "$CHAIN_ID" "${KR[@]}" -y --gas-prices "$(gas_price)" \
     --output json >/dev/null 2>&1; then
   : # CLI may not expose it (gov-only); either way state must be unchanged
 fi
-[ "$($BIN q nirachain params --output json --home "$HOME_DIR" | json "d['params']['max_validator_power_bps']")" = "1000" ] \
+[ "$($BIN q policy params --output json --home "$HOME_DIR" | json "d['params']['max_validator_power_bps']")" = "1000" ] \
   || fail "params changed by non-gov signer"
 ok "params unchanged by non-governance signer"
 

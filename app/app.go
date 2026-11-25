@@ -57,7 +57,7 @@ import (
 
 	"nira-chain/docs"
 	communitymodulekeeper "nira-chain/x/community/keeper"
-	nirachainmodulekeeper "nira-chain/x/nirachain/keeper"
+	policymodulekeeper "nira-chain/x/policy/keeper"
 )
 
 const BaseDenomUnit int64 = 18
@@ -113,7 +113,7 @@ type App struct {
 
 	// simulation manager
 	sm                 *module.SimulationManager
-	NirachainKeeper    nirachainmodulekeeper.Keeper
+	PolicyKeeper       policymodulekeeper.Keeper
 	clientCtx          client.Context
 	pendingTxListeners []evmante.PendingTxListener
 	FeeGrantKeeper     feegrantkeeper.Keeper
@@ -202,7 +202,7 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
-		&app.NirachainKeeper, &app.FeeGrantKeeper,
+		&app.PolicyKeeper, &app.FeeGrantKeeper,
 		&app.CommunityKeeper,
 	); err != nil {
 		panic(err)

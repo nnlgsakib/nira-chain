@@ -3,8 +3,8 @@ package app
 import (
 	_ "nira-chain/x/community/module"
 	communitymoduletypes "nira-chain/x/community/types"
-	_ "nira-chain/x/nirachain/module"
-	nirachainmoduletypes "nira-chain/x/nirachain/types"
+	_ "nira-chain/x/policy/module"
+	policymoduletypes "nira-chain/x/policy/types"
 	"time"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -136,14 +136,14 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName},
+						policymoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName},
 					EndBlockers: []string{
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
 						// chain modules
-						nirachainmoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName, communitymoduletypes.ModuleName},
+						policymoduletypes.ModuleName, erc20moduletypes.ModuleName, feemarketmoduletypes.ModuleName, evmmoduletypes.ModuleName, communitymoduletypes.ModuleName},
 					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -163,9 +163,9 @@ var (
 						slashingtypes.ModuleName,
 						govtypes.ModuleName,
 						minttypes.ModuleName,
-						// x/nirachain params must exist before gentxs run: its staking
+						// x/policy params must exist before gentxs run: its staking
 						// hooks (voting-power cap, ADR-0004) read them.
-						nirachainmoduletypes.ModuleName,
+						policymoduletypes.ModuleName,
 						genutiltypes.ModuleName,
 						evidencetypes.ModuleName,
 						authz.ModuleName,
@@ -277,8 +277,8 @@ var (
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
 			{
-				Name:   nirachainmoduletypes.ModuleName,
-				Config: appconfig.WrapAny(&nirachainmoduletypes.Module{}),
+				Name:   policymoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&policymoduletypes.Module{}),
 			}, {
 				Name:   communitymoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&communitymoduletypes.Module{}),

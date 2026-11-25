@@ -53,7 +53,7 @@ Detail: `docs/spec/architecture.md`
 | Component | Surface | Location | ADR |
 |---|---|---|---|
 | CONS | CometBFT engine | config, genesis consensus params | ADR-0002 |
-| STAKE | native x/staking, x/slashing; cap hook | app/, x/nirachain | ADR-0004 |
+| STAKE | native x/staking, x/slashing; cap hook | app/, x/policy | ADR-0004 |
 | EXEC | x/vm, x/feemarket, x/erc20, precompiles | app/ | ADR-0005 |
 | TOKEN | x/mint, x/distribution, community budget | app/, x/community | — |
 | COMM | native module | x/community | ADR-0003 |
@@ -63,7 +63,7 @@ Detail: `docs/spec/architecture.md`
 | Component | protocol-* skill | Spec | Status | Evidence |
 |---|---|---|---|---|
 | CONS | protocol-consensus | architecture.md §1,6 | tested (4-validator net) | tests/genesis/check_localtest.sh: 1/4 down live, 2/4 down halts, recovery with identical hashes |
-| STAKE | protocol-staking-validators | ADR-0004 (spec pending) | tested (unit + localnet) | x/nirachain/keeper/power_cap_test.go (INV-STAKE-CAP-1..3, randomised 2000 ops); tests/cosmos-e2e (MsgDelegate/Undelegate), tests/evm-e2e (staking precompile delegate/undelegate). Gap: live cap *rejection* needs a ≥10-validator net |
+| STAKE | protocol-staking-validators | ADR-0004 (spec pending) | tested (unit + localnet) | x/policy/keeper/power_cap_test.go (INV-STAKE-CAP-1..3, randomised 2000 ops); tests/cosmos-e2e (MsgDelegate/Undelegate), tests/evm-e2e (staking precompile delegate/undelegate). Gap: live cap *rejection* needs a ≥10-validator net |
 | EXEC | protocol-state-execution | ADR-0005 | tested (localnet) | tests/evm-e2e/e2e.mjs — 9/9 pass: deploy, logs/filters, receipts, revert, EIP-1559 + legacy tx, bank==EVM balance, staking precompile |
 | TOKEN | protocol-tokenomics | missing | designed | |
 | COMM | protocol-verifiable-participation | docs/spec/community.md v0.2 | tested (unit + localnet, Cosmos and EVM) | x/community/keeper/community_test.go (real IAVL proofs, all C-checks, INV-COMM-1..10 randomised); tests/cosmos-e2e/community.sh 6/6 (CLI client); tests/evm-e2e/community.mjs 9/9 via precompile 0x…0900 with Cosmos REST cross-checks |

@@ -1,0 +1,76 @@
+syntax = "proto3";
+package nira.community.v1;
+
+import "amino/amino.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "nira/community/v1/params.proto";
+import "nira/community/v1/types.proto";
+
+option go_package = "nira-chain/x/community/types";
+
+// Query defines the community gRPC query service.
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/nira/community/v1/params";
+  }
+  rpc Node(QueryNodeRequest) returns (QueryNodeResponse) {
+    option (google.api.http).get = "/nira/community/v1/nodes/{operator}";
+  }
+  rpc Nodes(QueryNodesRequest) returns (QueryNodesResponse) {
+    option (google.api.http).get = "/nira/community/v1/nodes";
+  }
+  rpc CurrentEpoch(QueryCurrentEpochRequest) returns (QueryCurrentEpochResponse) {
+    option (google.api.http).get = "/nira/community/v1/epoch";
+  }
+  // Tasks derives the task assignment (store, height, key) for an operator in
+  // the current epoch — the same derivation the chain uses to check proofs.
+  rpc Tasks(QueryTasksRequest) returns (QueryTasksResponse) {
+    option (google.api.http).get = "/nira/community/v1/tasks/{operator}";
+  }
+  rpc Alert(QueryAlertRequest) returns (QueryAlertResponse) {
+    option (google.api.http).get = "/nira/community/v1/alerts/{id}";
+  }
+}
+
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message QueryNodeRequest { string operator = 1; }
+message QueryNodeResponse {
+  Node node = 1 [(gogoproto.nullable) = false];
+  uint32 units_this_epoch = 2;
+}
+
+message QueryNodesRequest { cosmos.base.query.v1beta1.PageRequest pagination = 1; }
+message QueryNodesResponse {
+  repeated Node nodes = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryCurrentEpochRequest {}
+message QueryCurrentEpochResponse {
+  Epoch epoch = 1 [(gogoproto.nullable) = false];
+  int64 next_epoch_height = 2;
+  string total_active_bond = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message Task {
+  uint32 index = 1;
+  string store = 2;
+  int64 height = 3;
+  bytes key = 4;
+}
+message QueryTasksRequest { string operator = 1; }
+message QueryTasksResponse {
+  uint64 epoch = 1;
+  repeated Task tasks = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryAlertRequest { uint64 id = 1; }
+message QueryAlertResponse {
+  Alert alert = 1 [(gogoproto.nullable) = false];
+}

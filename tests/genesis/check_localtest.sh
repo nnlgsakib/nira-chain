@@ -59,7 +59,7 @@ ok "community pool ≥ protocol reserve allocation ($want anira)"
 
 # 5. Genesis community node is active (REST + EVM precompile) and can work
 G=$(toml "d['community_node'][0]['operator']")
-st=$(rest "/nira-chain/community/v1/nodes/$G" | json "d['node']['status']")
+st=$(rest "/nira/community/v1/nodes/$G" | json "d['node']['status']")
 [ "$st" = "NODE_STATUS_ACTIVE" ] || fail "genesis node status $st"
 evmstatus=$(cd "$REPO/tests/evm-e2e" && node --input-type=module -e "
 import { ethers } from 'ethers'; import { readFileSync } from 'node:fs';
@@ -67,7 +67,7 @@ const abi = JSON.parse(readFileSync('../../precompiles/community/abi.json')).abi
 const c = new ethers.Contract('0x0000000000000000000000000000000000000900', abi, new ethers.JsonRpcProvider('http://127.0.0.1:8545'));
 const n = await c.getNode('$(hexaddr "$G")'); console.log(n.status.toString(), n.bond.toString());")
 [ "$evmstatus" = "1 $(base 1000)" ] || fail "precompile getNode: $evmstatus"
-while [ "$(rest /nira-chain/community/v1/epoch | json "int(d['epoch']['number'])")" -lt 2 ]; do sleep 2; done
+while [ "$(rest /nira/community/v1/epoch | json "int(d['epoch']['number'])")" -lt 2 ]; do sleep 2; done
 sleep 2
 out=$($BIN tx community prove --from gnode "${KR[@]}" --chain-id "$(toml "d['chain']['chain_id']")" \
   --gas auto --gas-adjustment 1.5 --gas-prices 2000000000anira -y --output json 2>&1) || fail "prove: $out"
@@ -79,7 +79,7 @@ for _ in $(seq 1 15); do
 done
 [ "$(echo "$res" | json "d['code']")" = "0" ] || fail "prove tx: $(echo "$res" | json "d['raw_log']")"
 # cumulative counter: robust to the epoch rolling over right after the proof
-units=$(rest "/nira-chain/community/v1/nodes/$G" | json "int(d['node']['units_total'])")
+units=$(rest "/nira/community/v1/nodes/$G" | json "int(d['node']['units_total'])")
 [ "$units" -ge 2 ] || fail "units_total $units"
 ok "genesis community node ACTIVE (REST + precompile) and proved 2 tasks on the 4-validator network"
 

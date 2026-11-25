@@ -51,7 +51,7 @@ await check("registerNode via precompile (bond escrow, NodeRegistered event)", a
 
 let node;
 await check("Cosmos REST sees the EVM-registered node; precompile view agrees", async () => {
-  const r = await rest(`/nira-chain/community/v1/nodes/${bech}`);
+  const r = await rest(`/nira/community/v1/nodes/${bech}`);
   assert.equal(r.node.status, "NODE_STATUS_ACTIVE");
   assert.equal(r.node.bond, ethers.parseEther("1000").toString());
   node = await C.getNode(wallet.address);
@@ -65,11 +65,11 @@ await check("wait for eligibility; currentEpoch/getTasks agree with Cosmos REST"
   for (;;) { ep = await C.currentEpoch(); if (ep.number >= node.onionBaseEpoch) break; await sleep(2000); }
   await sleep(2000);
   ep = await C.currentEpoch();
-  const re = await rest(`/nira-chain/community/v1/epoch`);
+  const re = await rest(`/nira/community/v1/epoch`);
   assert.equal(ep.number.toString(), re.epoch.number);
   assert.equal(ethers.hexlify(ep.seed), "0x" + Buffer.from(re.epoch.seed, "base64").toString("hex"));
   const tasks = await C.getTasks(wallet.address);
-  const rt = await rest(`/nira-chain/community/v1/tasks/${bech}`);
+  const rt = await rest(`/nira/community/v1/tasks/${bech}`);
   assert.equal(tasks.length, rt.tasks.length);
   tasks.forEach((t, i) => {
     assert.equal(t.store, rt.tasks[i].store);
@@ -92,7 +92,7 @@ const proofFor = async t => {
 
 let reveal, provenEpoch;
 await check("selection computed locally from the onion matches the chain rule", async () => {
-  const params = (await rest(`/nira-chain/community/v1/params`)).params;
+  const params = (await rest(`/nira/community/v1/params`)).params;
   reveal = layer(ep.number, node.onionBaseEpoch);
   const ticket = BigInt("0x" + sha(Buffer.from("nira/comm/ticket"), ethers.getBytes(ep.seed), reveal, ethers.getBytes(wallet.address)).toString("hex"));
   const selected = ticket * ep.eligibleBond < (1n << 256n) * BigInt(params.target_committee) * node.bond;
@@ -115,7 +115,7 @@ await check("submitTaskProof x2 via precompile with real ICS-23 proofs; Cosmos s
     assert.ok(rc.logs.some(l => { try { return C.interface.parseLog(l)?.name === "TaskProven"; } catch { return false; } }));
   }
   provenEpoch = ep.number;
-  const r = await rest(`/nira-chain/community/v1/nodes/${bech}`);
+  const r = await rest(`/nira/community/v1/nodes/${bech}`);
   assert.equal(r.units_this_epoch, tasks.length);
   assert.equal((await C.getNode(wallet.address)).unitsThisEpoch, BigInt(tasks.length));
 });
@@ -141,7 +141,7 @@ await check("epoch settlement pays the EVM operator (community_reward event)", a
 await check("deregisterNode via precompile → UNBONDING on Cosmos side", async () => {
   const rc = await (await C.deregisterNode(gasOpts)).wait();
   assert.equal(rc.status, 1);
-  const r = await rest(`/nira-chain/community/v1/nodes/${bech}`);
+  const r = await rest(`/nira/community/v1/nodes/${bech}`);
   assert.equal(r.node.status, "NODE_STATUS_UNBONDING");
   assert.equal((await C.getNode(wallet.address)).status, 2n);
 });

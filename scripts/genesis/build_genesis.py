@@ -287,7 +287,7 @@ class Network:
             share = Decimal(b) / Decimal(total_bonded) if total_bonded else Decimal(0)
             if len(bonds) > 1 and share >= max_share:
                 e(f"validator '{m}' holds {share:.2%} of genesis voting power (≥ {max_share:.2%}): one operator could halt or fork the chain")
-        cap_bps = int(self.params.get("nirachain", {}).get("max_validator_power_bps", 1000))
+        cap_bps = int(self.params.get("policy", {}).get("max_validator_power_bps", 1000))
         for m, b in bonds:
             if total_bonded and Decimal(b) / Decimal(total_bonded) * 10000 > cap_bps:
                 warns.append(f"validator '{m}' starts above the {cap_bps} bps cap: it cannot receive new delegations once the cap activates")

@@ -53,7 +53,7 @@ hash=$($BIN tx community register-node e2e-node 1000000000000000000000anira "$TI
 tx_ok "$hash" >/dev/null
 status=$(q node "$OP" | json "d['node']['status']")
 [ "$status" = "NODE_STATUS_ACTIVE" ] || fail "status $status"
-bond=$(rest "/nira-chain/community/v1/nodes/$OP" | json "d['node']['bond']")
+bond=$(rest "/nira/community/v1/nodes/$OP" | json "d['node']['bond']")
 [ "$bond" = "1000000000000000000000" ] || fail "REST bond $bond"
 ok "onion-init + register-node via CLI; node ACTIVE via CLI and REST"
 

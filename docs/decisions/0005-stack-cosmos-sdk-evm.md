@@ -1,6 +1,6 @@
 # ADR-0005: Stack — Cosmos SDK 0.53 + CometBFT + cosmos/evm (Ignite)
 
-- Status: accepted
+- Status: accepted (module `x/nirachain` renamed to `x/policy` by ADR-0007)
 - Date: 2026-11-25
 - Written by: design-stack-selection (abbreviated: the user's constraint R-C1 fixes the base)
 - Related: R-C1, R-F9–R-F12, ADR-0002

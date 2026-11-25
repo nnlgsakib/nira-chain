@@ -1,0 +1,34 @@
+syntax = "proto3";
+package nira.policy.v1;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "nira-chain/x/policy/types";
+
+// Params defines the chain-policy parameters (ADR-0004).
+message Params {
+  option (amino.name) = "nira/policy/Params";
+  option (gogoproto.equal) = true;
+
+  // max_validator_power_bps is the maximum share of total bonded stake (in
+  // basis points) that a single validator may reach through new delegations.
+  // P-STAKE-max_validator_power_bps, bounds [300, 3333].
+  uint32 max_validator_power_bps = 1;
+
+  // cap_activation_bonded: the cap is enforced only when total bonded stake
+  // (after the delegation) is at least this amount (base denom).
+  // P-STAKE-cap_activation_bonded.
+  string cap_activation_bonded = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  // cap_activation_min_validators: the cap is enforced only when at least
+  // this many validators are bonded, so that the cap can always be satisfied.
+  // P-STAKE-cap_activation_min_validators, bounds [ceil(10000/bps), 1000].
+  uint32 cap_activation_min_validators = 3;
+}

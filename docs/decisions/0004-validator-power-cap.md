@@ -1,6 +1,6 @@
 # ADR-0004: Per-validator voting-power cap enforced at delegation time
 
-- Status: accepted
+- Status: accepted (module `x/nirachain` renamed to `x/policy` by ADR-0007)
 - Date: 2026-11-25
 - Written by: design-protocol (protocol-staking-validators)
 - Related: R-F3, R-F4, T7, K3

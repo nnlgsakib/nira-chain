@@ -159,7 +159,7 @@ veto_threshold = "0.334000000000000000"
 [params.feemarket]
 min_gas_price = "10000000000.000000000000000000"   # 10 gwei floor: closes risk K6 (near-free spam)
 
-[params.nirachain]                        # ADR-0004 voting-power cap
+[params.policy]                        # ADR-0004 voting-power cap
 max_validator_power_bps = 1000
 cap_activation_bonded = "5000000 NIRA"
 cap_activation_min_validators = 15

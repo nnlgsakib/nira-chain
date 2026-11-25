@@ -11,9 +11,9 @@ All values are (proposed) unless stated. Governance changes every parameter thro
 | P-STAKE-slash_downtime | STAKE | 0.01 % | 0–1 % | x/slashing params |
 | P-STAKE-signed_blocks_window | STAKE | 10 000 | ≥ 1 000 | x/slashing params |
 | P-STAKE-min_signed_per_window | STAKE | 5 % | 1–90 % | x/slashing params |
-| P-STAKE-max_validator_power_bps | STAKE | 1000 | 300–3333 | x/nirachain params |
-| P-STAKE-cap_activation_bonded | STAKE | 5 000 000 NIRA | ≥ 0 | x/nirachain params |
-| P-STAKE-cap_activation_min_validators | STAKE | 15 | ceil(10000/bps)–1000 | x/nirachain params |
+| P-STAKE-max_validator_power_bps | STAKE | 1000 | 300–3333 | x/policy params |
+| P-STAKE-cap_activation_bonded | STAKE | 5 000 000 NIRA | ≥ 0 | x/policy params |
+| P-STAKE-cap_activation_min_validators | STAKE | 15 | ceil(10000/bps)–1000 | x/policy params |
 | P-EXEC-block_max_gas | EXEC | 100 000 000 | finite | consensus params |
 | P-EXEC-evm_chain_id | EXEC | 47201 | fixed forever | app constant (Q2) |
 | P-GOV-min_deposit | GOV | 10 000 NIRA | — | x/gov params |
