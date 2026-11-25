@@ -6,7 +6,7 @@
 - Mode: production
 - Phase: build (design and stack ADRs accepted; component specs partial, see Components)
 - Last updated: 2026-11-25 by stack-cosmos-ignite
-- Next step: tokenomics spec + simulation (protocol-tokenomics, Q3) using genesis/networks values, then threat model (quality-security)
+- Next step: owner decisions (Q1/Q3/Q8–Q10) in parallel with threat model (quality-security, G-SEC-2) → precompile atomicity test (G-SEC-4) → upgrade framework (ops-upgrades, G-OPS-1). See docs/GAPS.md
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.
@@ -82,10 +82,14 @@ Detail: `docs/spec/architecture.md`
 | ADR-0006 | x/community reachable from Cosmos and EVM (precompile 0x…0900) | accepted |
 
 ## Open questions
+Full gap analysis: docs/GAPS.md (IDs G-*).
+- [ ] Q8 Epoch-based validator set changes vs per-block (G-DES-1) — owner decision
+- [ ] Q9 Performance/slashing-history-aware validator selection vs stake-only (G-DES-2) — owner decision
+- [ ] Q10 Community bond slashing / provable misconduct beyond alert deposits (G-COMM-1)
 - [ ] Q7 Live power-cap *rejection* needs ≥ 15 validators (cap activation); 4-validator ceremony + BFT fault tests done (tests/genesis/check_localtest.sh)
 - [ ] Q6 Dev bootstrap uses scripts/localnet.sh (eth_secp256k1 keys); `ignite chain serve` creates plain secp256k1 keys that can't sign EVM txs — don't use it for EVM testing
 - [ ] Q1 Token supply, genesis allocation and vesting — now data-driven: edit genesis/networks/<net>.toml (template: mainnet.example.toml, all values proposed). Decision still needed from the user before mainnet
-- [ ] Q2 EVM chain ID for mainnet/testnet (blocking for testnet; default proposed in EVM wiring)
+- [x] Q2 EVM chain ID 47201: unused in chainid.network registry (checked 2026-11-25); register it before testnet (G-OPS-5)
 - [ ] Q3 Reward split 50/25/15/10 from the idea: validators vs delegators is set by commission in the F1 model, not by protocol. Needs a tokenomics spec (protocol-tokenomics)
 - [ ] Q4 v2 community task types (history serving, DA sampling) — design-spec
 - [ ] Q5 Formal model of x/community settlement (quality-formal-verification)
@@ -110,7 +114,7 @@ Network definition (supply, allocations, vesting, initial validators and communi
 `scripts/localnet.sh && nirad start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nirad keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
 
 ## Docs
-[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [genesis](genesis/README.md)
+[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [gap analysis](docs/GAPS.md) · [genesis](genesis/README.md)
 
 ## Production readiness
 Not started. See docs/readiness.md (to be written by ops-production-readiness).

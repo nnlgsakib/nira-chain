@@ -1,7 +1,7 @@
 # Architecture — Nira Chain
 
 - Version: 0.1 (2026-11-25)
-- Status: draft (ADR-0001…ADR-0005 accepted for build start)
+- Status: draft (ADR-0001…ADR-0007 accepted). v0.2: community details aligned with docs/spec/community.md
 
 ## 1. Overview
 
@@ -19,7 +19,7 @@ Why this class: we need our own validator roles, a native community role, native
 |---|---|---|---|---|---|---|---|
 | Core Validator | Proposes, votes and finalises blocks; executes all txs | 4 → 100 active (P-STAKE-max_validators, governable) | Permissionless; top-N by bonded power with min self-bond | 8+ cores, 32 GB, NVMe 2 TB, 1 Gbps, 99.9 % uptime, sentry topology | Self-bond ≥ P-STAKE-min_self_bond plus delegations | Block rewards + fees, weighted by stake; commission | Slash 5 % + tombstone on double sign; 0.01 % + jail on downtime |
 | Delegator | Delegates stake to validators (non-custodial, protocol-held) | unbounded | Permissionless | any wallet | Delegated stake (slashable with the validator) | Share of the validator's rewards minus commission | Proportional slash with the validator |
-| Community Node | Runs a pruned full node, answers assigned state-proof tasks, relays txs/blocks | 0 → 10 000+ | Permissionless; registers with bond ≥ P-COMM-min_bond | 4 cores, 8 GB, 500 GB SSD, 25 Mbps; may go offline | Community bond (unbonding period applies) | Verified task proofs only, from the community budget | Missed tasks: no reward, assignment weight decays, auto-pause after N misses. Provable fraud: slashing |
+| Community Node | Runs a pruned full node, answers assigned state-proof tasks, relays txs/blocks | 0 → 10 000+ | Permissionless; registers with bond ≥ P-COMM-min_bond | 4 cores, 8 GB, 500 GB SSD, 25 Mbps; may go offline | Community bond (unbonding period applies) | Verified task proofs only, from the community budget | Missed tasks: no reward (selection is secret, so misses are unobservable and never penalised). Invalid divergence alerts: deposit burned by governance. Bond is never slashed in v1 (gap G-COMM-1) |
 | Full Node | Independently validates every block | unbounded | Permissionless | as Community Node | none | none (public good, may also be a Community Node) | n/a |
 | Archive Node | Keeps all history, serves historical queries | operators' choice | Permissionless | 16 GB+, multi-TB | none (v2: history-serving tasks) | n/a in v1 | n/a |
 | Governance participants | Propose / vote | stakers | stake-weighted | wallet | proposal deposit | n/a | Deposit burned on vetoed spam proposals |
@@ -79,14 +79,14 @@ Submission (Ethereum RLP tx via JSON-RPC or Cosmos tx via gRPC) → CheckTx (sig
 
 ### Block / epoch
 Every block: mint + fee collection → distribution (validator/delegator via F1 lazy accounting) → community module stores `(height-1 → app hash)` in a bounded ring (P-COMM-apphash_window) → evidence/slashing → EndBlock validator updates.
-Every community epoch (P-COMM-epoch_blocks): close previous epoch (pay community budget pro-rata to verified proofs, bump miss counters), derive new seed, open new assignments.
+Every community epoch (P-COMM-epoch_blocks): close previous epoch (pay community budget pro-rata to verified proofs, remainder to the community pool), derive new seed, open new assignments.
 
 ### Community task (ADR-0003)
 1. **Register**: node posts bond and the tip `C_0 = H^K(s)` of a private hash onion.
 2. **Self-select**: for epoch e, the node reveals the next onion layer `r_e` (verifiable: `H(r_e) = previous layer`) and is assigned iff `H(seed_e ‖ r_e ‖ addr) < threshold × bond_weight`. Nobody can predict another node's selection; the node cannot grind because `r_e` is fixed at registration.
 3. **Task**: for a selected node, the task is a random state key `k = H(seed_e ‖ addr ‖ i)` under a store prefix, at a random recent height `h` within the window.
 4. **Proof**: node submits an ICS-23 Merkle proof (membership or non-membership) of `k` against `AppHash(h)` held on-chain.
-5. **Settle**: valid proof → recorded as a verified unit of work. Epoch end → community budget split pro-rata. No proof → no reward + miss counter.
+5. **Settle**: valid proof → recorded as a verified unit of work. Epoch end → community budget split pro-rata. No proof → no reward (nothing else: offline home nodes are not penalised).
 6. **Divergence alert**: a node whose locally computed app hash for h differs from the committed one submits a bonded alert. Alerts never affect finality; a threshold of bonded alerts emits an on-chain `divergence` event for operators and governance.
 
 ## 6. Failure scenarios

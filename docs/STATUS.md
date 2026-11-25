@@ -83,6 +83,8 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 
 ## Remaining work (prioritised)
 
+Detailed, evidence-based list with IDs: [GAPS.md](GAPS.md).
+
 1. **Economics** (Q1/Q3): tokenomics spec and simulation of the values in `genesis/networks/*.toml` (inflation band, 15 % community share, fee floor, validator/delegator returns). The final allocation is a decision for the project owner.
 2. **Threat model** (quality-security): all the master prompt's §11 threats with prevention, detection and recovery. Then fuzzing of the proof decoder and precompile ABI, and an external audit of x/community, x/policy and the precompile.
 3. **Consensus/staking tests**: ≥ 15-validator network (live cap rejection), double-sign and downtime slashing, validator rotation, partition simulation, long-running soak.
