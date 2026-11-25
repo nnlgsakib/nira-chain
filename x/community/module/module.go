@@ -1,6 +1,10 @@
 package community
 
 import (
+	"github.com/spf13/cobra"
+
+	"nira-chain/x/community/client/cli"
+
 	"context"
 	"encoding/json"
 	"fmt"
@@ -141,3 +145,7 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return am.keeper.EndBlock(ctx)
 }
+
+// GetTxCmd returns the custom community commands (onion-init, prove, run);
+// AutoCLI enhances it with the generated message commands.
+func (AppModule) GetTxCmd() *cobra.Command { return cli.GetTxCmd() }

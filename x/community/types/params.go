@@ -21,7 +21,10 @@ func DefaultParams() Params {
 		TasksPerSelection: 2,
 		MaxProofsPerEpoch: 1024,
 		ApphashWindow:     100,
-		SampleStores:      []string{"acc", "bank", "staking", "evm"},
+		// Stores whose entries always carry values: ICS-23 cannot prove non-membership
+		// next to an empty-value leaf (collections KeySets) or in an empty tree.
+		// Measured with tools/proofprobe (CHAIN.md K8).
+		SampleStores:      []string{"acc", "evm", "distribution", "slashing"},
 		MaxProofBytes:     16_384,
 		ProofGasPerByte:   20,
 		MaxOnionLength:    1_000_000,
