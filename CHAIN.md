@@ -99,6 +99,7 @@ Detail: `docs/spec/architecture.md`
 | K4 | > 1/3 stake on one cloud provider | medium | high | Diversity monitoring, validator docs | ops-infrastructure |
 | K5 | cosmos/evm wiring bugs (precompile + staking hook interaction) | medium | high | Found + fixed: transient stores are invisible inside EVM precompiles (hooks must use KV stores). Both-interface e2e suites run per change | quality-testing |
 | K6 | Base fee decays to ~0 on empty blocks and feemarket min_gas_price = 0 → near-free spam | high | medium | Network template sets params.feemarket.min_gas_price = 10 gwei (proposed); operators must set minimum-gas-prices (genesis/README.md) | protocol-state-execution |
+| K9 | 4 reachable dependency advisories without an upstream fix (gorilla/websocket, x/crypto/openpgp, pion/dtls v2; cosmos/evm GO-2025-3684 is a false positive) | low | medium | Tracked in docs/STATUS.md; rescan with `make govulncheck` on every dependency change | quality-security |
 | K8 | ICS-23 can't prove non-membership next to empty-value leaves (collections KeySets) or in empty stores; sample stores must avoid them | medium | medium | Defaults acc/evm/distribution/slashing (200/200 verified live); tools/proofprobe check before changing; SDK upgrades may add KeySets to these stores → re-probe per upgrade | protocol-verifiable-participation |
 | K7 | EVM mempool accepts eth_sendRawTransaction, then silently drops txs that fail CheckTx (client waits forever) | medium | medium | Surface CheckTx errors to RPC callers; e2e per-check timeouts added | stack-cosmos-evm |
 
@@ -107,6 +108,9 @@ Network definition (supply, allocations, vesting, initial validators and communi
 
 ## How to test (both interfaces)
 `scripts/localnet.sh && nirad start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nirad keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
+
+## Docs
+[readme](readme.md) · [install](docs/INSTALL.md) · [operations](docs/OPERATIONS.md) · [status & remaining work](docs/STATUS.md) · [genesis](genesis/README.md)
 
 ## Production readiness
 Not started. See docs/readiness.md (to be written by ops-production-readiness).

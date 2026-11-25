@@ -1,62 +1,95 @@
 # Nira Chain
 
-A sovereign Proof-of-Stake L1:
-- **Core Validators** finalise blocks with Tendermint BFT (single-block finality).
-- A **native EVM** shares one state with the Cosmos modules: one account and one balance on both interfaces.
-- **Permissionless Community Nodes** earn only for cryptographically verified work: random state-possession proofs checked on-chain against committed app hashes. They are never on the finality path.
+**A sovereign Proof-of-Stake Layer 1 where professional validators secure consensus, Ethereum contracts run natively, and ordinary computers earn rewards for verifiable work.**
 
-Project state, requirements, decisions and risks: [`CHAIN.md`](CHAIN.md). Architecture: [`docs/spec/architecture.md`](docs/spec/architecture.md).
+> **Status: in development.** Runs as local and multi-validator test networks. Not audited and not production ready. See [docs/STATUS.md](docs/STATUS.md).
 
-## Build
+## What it is
 
-Requires Go 1.26+ and a C compiler (cgo, for go-ethereum's secp256k1).
+| Layer | What | Built on |
+|---|---|---|
+| **Consensus** | Core Validators run Tendermint BFT: single-block finality, halts instead of forking, top-N stake-weighted active set | CometBFT 0.38 (unmodified) |
+| **Staking** | Non-custodial delegation, unbonding, slashing; a **per-validator voting-power cap** so no validator grows unbounded on delegations | Cosmos SDK x/staking + Nira `x/policy` |
+| **Execution** | One state machine: native modules **and a native EVM** share accounts, balances and blocks. One key works in MetaMask and the Cosmos CLI | Cosmos SDK 0.53 + cosmos/evm 0.6 |
+| **Community Nodes** | Permissionless, bonded nodes are picked at random each epoch and submit **Merkle proofs of chain state**, verified on-chain. Paid only for verified work; never needed for finality | Nira `x/community` + EVM precompile `0x…0900` |
+| **Governance** | On-chain proposals control parameters, treasury (community pool) and upgrades; no admin keys | Cosmos SDK x/gov |
+
+Design documents: [architecture](docs/spec/architecture.md) · [community layer spec](docs/spec/community.md) · [decisions (ADRs)](docs/decisions/) · [project state, risks, open questions](CHAIN.md) · [original vision](docs/idea.md)
+
+## Quick start
 
 ```bash
-make install        # installs `nirad`
-nirad version
+# prerequisites: Go 1.26.7+, gcc/clang, make, python3 (Node.js 18+ for EVM tests). Details: docs/INSTALL.md
+git clone https://github.com/nnlgsakib/nira-chain.git && cd nira-chain
+make install                 # builds and installs `nirad`
+make localnet                # 1-validator dev chain in ~/.nira
+nirad start
 ```
 
-| Item | Value |
+Then:
+- **MetaMask:** network RPC `http://127.0.0.1:8545`, chain ID `47201`, symbol `NIRA`. Dev key: `nirad keys unsafe-export-eth-key dev1 --keyring-backend test` (test key, never use with real funds).
+- **Cosmos CLI:** `nirad q bank balances $(nirad keys show dev1 -a --keyring-backend test)`
+- **Explore:** `nirad q community epoch`, `nirad q policy params`, `curl localhost:1317/nira/community/v1/nodes`
+
+## Chain facts
+
+| | |
 |---|---|
 | Binary / home | `nirad` / `~/.nira` |
-| Token | `anira` (18 decimals), display `NIRA` |
-| EVM chain ID | 47201 (constant) |
-| Addresses | `nira1…` bech32, or `0x…`: the same eth_secp256k1 key and the same 20 bytes |
-| APIs | Ethereum JSON-RPC `:8545`; Cosmos REST `:1317` (`/cosmos/...` standard modules, `/nira/...` Nira modules); gRPC `:9090` |
-| Nira modules | `x/community` (REST `/nira/community/v1`, EVM precompile `0x…0900`), `x/policy` (validator power cap, REST `/nira/policy/v1`) |
+| Token | `NIRA`, 18 decimals; base unit `anira` (1 NIRA = 10¹⁸ anira) |
+| EVM chain ID | `47201` (fixed) |
+| Accounts | eth_secp256k1. The same 20 bytes as `nira1…` (bech32) or `0x…`. HD path m/44'/60' |
+| Ethereum JSON-RPC | `:8545` (HTTP), `:8546` (WS) |
+| Cosmos APIs | REST `:1317`, gRPC `:9090`, CometBFT RPC `:26657`. Standard modules under `/cosmos/...`, Nira modules under `/nira/community/v1`, `/nira/policy/v1` |
+| Precompiles | staking `0x…0800`, distribution `0x…0801`, bank `0x…0804`, gov `0x…0805`, slashing `0x…0806`, **community `0x…0900`** ([ICommunity.sol](precompiles/community/ICommunity.sol)) |
 
-## Run a local chain
+## Documentation
 
-```bash
-scripts/localnet.sh && nirad start                 # 1 validator, dev keys dev1/dev2, 20-block community epochs
-scripts/genesis/localtest.sh                       # 4 validators via the full genesis ceremony
+| Doc | For |
+|---|---|
+| [docs/INSTALL.md](docs/INSTALL.md) | Prerequisites per OS, build, make targets, troubleshooting |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Running validators, full/archive/RPC nodes and community nodes; ports; systemd; security |
+| [genesis/README.md](genesis/README.md) | Defining the economy and initial operators; the genesis ceremony |
+| [docs/STATUS.md](docs/STATUS.md) | Completed work, test evidence, known vulnerabilities, remaining work |
+| [CHAIN.md](CHAIN.md) | Requirements, components, decisions, open questions, risks |
+
+## Repository layout
+
+```
+app/                 app wiring (modules, EVM, ante handlers, precompile registration)
+cmd/nirad/           node and CLI binary
+x/community/         community participation layer (keeper, client CLI, types)
+x/policy/            chain policy: validator voting-power cap (staking hooks)
+precompiles/community/  EVM precompile + Solidity interface for x/community
+proto/nira/          protobuf APIs of the Nira modules
+genesis/             network definition files (economy, initial operators) + ceremony runbook
+scripts/             localnet, genesis builder, 4-validator ceremony
+tests/               Cosmos e2e (bash), EVM e2e (ethers.js), genesis tests
+tools/proofprobe/    diagnostic: which stores yield verifiable state proofs
+docs/                spec, ADRs, install/operations/status
 ```
 
-MetaMask: RPC `http://127.0.0.1:8545`, chain ID `47201`, symbol `NIRA`. Dev key: `nirad keys unsafe-export-eth-key dev1 --keyring-backend test`.
-
-## Run a community node
+## Testing
 
 ```bash
-nirad tx community onion-init                          # local secret; prints the onion tip
-nirad tx community register-node my-node 1000000000000000000000anira <tip> 100000 --from <key>
-nirad tx community run --from <key>                    # proves assigned tasks every epoch; safe to stop/restart
+make test                         # go vet + unit/invariant tests + genesis builder tests
+make localnet && nirad start      # then, in another terminal:
+make e2e-deps && make e2e         # Cosmos + EVM end-to-end (32 checks, with cross-interface checks)
+make localtest && make localtest-check && make localtest-stop   # 4 validators + BFT fault tolerance
 ```
 
-The node must keep at least `apphash_window + epoch_blocks` recent state versions (the default pruning does). From Solidity or an Ethereum wallet, use `precompiles/community/ICommunity.sol`.
+## Where it stands
 
-## Tests
+**Done and tested:**
+- native EVM with Ethereum JSON-RPC,
+- non-custodial staking from both the Cosmos and EVM sides,
+- the validator voting-power cap,
+- the community layer end to end (registration, random selection, real state proofs, rewards, unbonding, alerts) from both interfaces,
+- a declarative genesis builder and ceremony,
+- a 4-validator network that keeps running with 1/4 down and halts without forking with 2/4 down.
 
-```bash
-go test ./x/... ./app/...                                       # unit + invariants (real IAVL proofs)
-python3 -m unittest discover -s tests/genesis -p 'test_*.py'    # genesis builder rules
-tests/cosmos-e2e/e2e.sh && tests/cosmos-e2e/community.sh        # Cosmos interface (on a running localnet)
-KEY=$(echo y | nirad keys unsafe-export-eth-key dev1 --keyring-backend test)
-(cd tests/evm-e2e && npm i && KEY=$KEY node e2e.mjs && KEY=$KEY node community.mjs)   # EVM interface
-tests/genesis/check_localtest.sh                                # 4-validator network + BFT fault tolerance
-```
+**Next:** economic simulation, threat model and audit preparation, slashing/rotation/partition tests at ≥ 15 validators, governance and upgrade rehearsals, performance benchmarks, state sync. Full list: [docs/STATUS.md](docs/STATUS.md#remaining-work-prioritised).
 
-## Genesis and launch
+## License
 
-The economy (supply, allocations, vesting), the initial Core Validators, the initial Community Nodes and all parameters are defined in `genesis/networks/<network>.toml`. Build the genesis with `scripts/genesis/build_genesis.py`; the runbook is in [`genesis/README.md`](genesis/README.md).
-
-**Status:** in development. Not audited. Not production ready (see CHAIN.md → Risks and Open questions).
+No license file has been chosen yet. Add one before publishing or accepting contributions.
