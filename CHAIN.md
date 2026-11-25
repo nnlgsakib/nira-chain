@@ -6,7 +6,7 @@
 - Mode: production
 - Phase: build (design and stack ADRs accepted; component specs partial, see Components)
 - Last updated: 2026-11-25 by stack-cosmos-ignite
-- Next step: x/community EVM precompile 0x…0900 (ADR-0006) + EVM e2e, then tokenomics spec (Q3)
+- Next step: tokenomics spec + simulation (protocol-tokenomics, Q3), then threat model (quality-security) and multi-validator testnet (quality-testing, Q7)
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.
@@ -66,7 +66,7 @@ Detail: `docs/spec/architecture.md`
 | STAKE | protocol-staking-validators | ADR-0004 (spec pending) | tested (unit + localnet) | x/nirachain/keeper/power_cap_test.go (INV-STAKE-CAP-1..3, randomised 2000 ops); tests/cosmos-e2e (MsgDelegate/Undelegate), tests/evm-e2e (staking precompile delegate/undelegate). Gap: live cap *rejection* needs a ≥10-validator net |
 | EXEC | protocol-state-execution | ADR-0005 | tested (localnet) | tests/evm-e2e/e2e.mjs — 9/9 pass: deploy, logs/filters, receipts, revert, EIP-1559 + legacy tx, bank==EVM balance, staking precompile |
 | TOKEN | protocol-tokenomics | missing | designed | |
-| COMM | protocol-verifiable-participation | docs/spec/community.md v0.2 | tested (unit + localnet, Cosmos side) | x/community/keeper/community_test.go (real IAVL proofs, all C-checks, INV-COMM-1..10 randomised); tests/cosmos-e2e/community.sh 6/6 on localnet (real proofs, settlement paid). EVM precompile (ADR-0006) pending |
+| COMM | protocol-verifiable-participation | docs/spec/community.md v0.2 | tested (unit + localnet, Cosmos and EVM) | x/community/keeper/community_test.go (real IAVL proofs, all C-checks, INV-COMM-1..10 randomised); tests/cosmos-e2e/community.sh 6/6 (CLI client); tests/evm-e2e/community.mjs 9/9 via precompile 0x…0900 with Cosmos REST cross-checks |
 | RAND | protocol-randomness | community.md §5 | tested | x/community/types/derive_test.go (spec vectors, INV-COMM-9) |
 | GOV | protocol-governance | missing | designed | |
 | NET | — (no skill) | missing | todo | |
@@ -103,7 +103,7 @@ Detail: `docs/spec/architecture.md`
 | K7 | EVM mempool accepts eth_sendRawTransaction, then silently drops txs that fail CheckTx (client waits forever) | medium | medium | Surface CheckTx errors to RPC callers; e2e per-check timeouts added | stack-cosmos-evm |
 
 ## How to test (both interfaces)
-`scripts/localnet.sh && nira-chaind start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh` and `KEY=$(echo y | nira-chaind keys unsafe-export-eth-key dev1 --keyring-backend test) node tests/evm-e2e/e2e.mjs`; unit: `go test ./x/... ./app/...`
+`scripts/localnet.sh && nira-chaind start` then `tests/cosmos-e2e/e2e.sh`, `tests/cosmos-e2e/community.sh`, and with `KEY=$(echo y | nira-chaind keys unsafe-export-eth-key dev1 --keyring-backend test)`: `node tests/evm-e2e/e2e.mjs`, `node tests/evm-e2e/community.mjs`; unit: `go test ./x/... ./app/...`
 
 ## Production readiness
 Not started. See docs/readiness.md (to be written by ops-production-readiness).
