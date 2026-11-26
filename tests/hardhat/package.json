@@ -1,0 +1,10 @@
+{
+  "name": "nira-hardhat-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "hardhat test mocha --network nira" },
+  "devDependencies": {
+    "hardhat": "3.22.0",
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "4.0.0"
+  }
+}

@@ -96,6 +96,7 @@ test: govet test-unit test-genesis ## vet + unit + genesis builder tests
 
 e2e-deps: ## Install Node.js deps for the EVM e2e suites
 	@cd tests/evm-e2e && npm ci --silent
+	@cd tests/hardhat && npm ci --silent
 
 e2e-cosmos: ## Cosmos-interface e2e (needs a running localnet)
 	@tests/cosmos-e2e/e2e.sh
@@ -103,7 +104,7 @@ e2e-cosmos: ## Cosmos-interface e2e (needs a running localnet)
 
 e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
 	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1); \
-	  cd tests/evm-e2e && KEY=$$KEY node e2e.mjs && KEY=$$KEY node community.mjs && KEY=$$KEY node atomicity.mjs && KEY=$$KEY node rewards.mjs
+	  cd tests/evm-e2e && KEY=$$KEY node e2e.mjs && KEY=$$KEY node community.mjs && KEY=$$KEY node atomicity.mjs && KEY=$$KEY node rewards.mjs && KEY=$$KEY node rpc-conformance.mjs
 
 e2e-gov: ## Governance e2e: param change (CLI + EVM vote), false-alert slashing (running localnet)
 	@tests/cosmos-e2e/governance.sh
@@ -119,7 +120,11 @@ bench-load: ## Throughput baseline (native, evm, mixed) against a running networ
 e2e-foundry: ## Foundry (forge/cast) e2e against a running localnet (needs foundryup)
 	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1) tests/foundry/run.sh
 
-e2e: e2e-cosmos e2e-evm e2e-gov e2e-foundry ## All e2e suites against a running localnet
+e2e-hardhat: ## Hardhat 3 (mocha + ethers) e2e against a running localnet (needs `make e2e-deps`)
+	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1); \
+	  cd tests/hardhat && KEY=$$KEY npx hardhat test mocha --network nira
+
+e2e: e2e-cosmos e2e-evm e2e-gov e2e-foundry e2e-hardhat ## All e2e suites against a running localnet
 
 export-import: install ## Genesis export → reset → import with state checks (stop other nodes first)
 	@tests/upgrade/export_import.sh
@@ -128,7 +133,7 @@ upgrade-rehearsal: install ## Software upgrade with a real binary switch (stop o
 	@go build $(BUILD_FLAGS) -tags rehearsal -o $(BUILDDIR)/$(BINARY)-rehearsal ./cmd/$(BINARY)
 	@tests/upgrade/rehearsal.sh
 
-.PHONY: fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e-foundry e2e upgrade-rehearsal export-import bench-load
+.PHONY: e2e-hardhat fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e-foundry e2e upgrade-rehearsal export-import bench-load
 
 ###################
 ###  Networks  ###

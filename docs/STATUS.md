@@ -18,7 +18,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 6 | Reward distribution | 🟡 | x/distribution (F1) and community epoch settlement. `tests/evm-e2e/rewards.mjs`: one block's issuance accounted to 1e-18 anira (community budget, community tax, commission, delegators pro rata), REST = distribution precompile, withdrawals via Cosmos tx and precompile with exact balance deltas. *Final reward split awaits the economics decision (Q3)* |
 | 7 | Slashing and unbonding | ✅ | Unbonding (staking + community), double-sign slash + tombstone + delegator propagation, downtime jail + unjail (`make validators-test`) |
 | 8 | Native EVM execution | ✅ | cosmos/evm v0.6.0. Deploy, call, logs, revert, EIP-1559 and legacy txs (`tests/evm-e2e/e2e.mjs`) |
-| 9 | Ethereum JSON-RPC | 🟡 | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs, newFilter/newBlockFilter/newPendingTransactionFilter/getFilterChanges/uninstallFilter, feeHistory, syncing, net_version/listening, web3_clientVersion, txpool_status, eth_subscribe(newHeads). *No full Ethereum JSON-RPC conformance suite run yet* |
+| 9 | Ethereum JSON-RPC | ✅ | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs, newFilter/newBlockFilter/newPendingTransactionFilter/getFilterChanges/uninstallFilter, feeHistory, syncing, net_version/listening, web3_clientVersion, txpool_status, eth_subscribe(newHeads). Conformance checks (`tests/evm-e2e/rpc-conformance.mjs`): execution-apis encodings, required block/tx/receipt fields, error codes; Hardhat 3 suite. *The official execution-apis fixture suite is not run (needs its own fixture chain)* |
 | 10 | Solidity deployment | ✅ | `tests/evm-e2e/Counter.sol` deployed and used through ethers.js |
 | 11 | Community Node software | 🟡 | CLI client: `onion-init`, `register-node`, `prove`, `run`, `status`, `deregister-node`; 6 nodes ran unattended in Docker within 2 CPU / 2 GB. *No GUI/installer; Windows/macOS untested* |
 | 12 | Independent verification | 🟡 | Random state-access proofs (ICS-23) verified on-chain; advisory divergence alerts with bond slashing on false alerts. *No block re-execution checks; storage/DA tasks decided out of scope (ADR-0009)* |
@@ -56,7 +56,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | | Not a consensus dependency | ✅ hooks never error (INV-COMM-8); chain runs with zero community nodes |
 | | Ordinary computers can run nodes | 🟡 Linux only; ran within 2 CPU / 2 GB in Docker; Windows/macOS untested |
 | EVM | Deploy, execute, txs, RPC, gas, receipts, logs, state consistency | ✅ (bank balance == EVM balance on both paths) |
-| | Common developer tools | 🟡 ethers.js + Foundry automated; MetaMask/Hardhat not automated |
+| | Common developer tools | ✅ ethers.js, Foundry, Hardhat 3 automated + JSON-RPC conformance checks; MetaMask manual |
 | Performance | Benchmarks, mixed load, scaling, sync, long-run | ⬜ |
 | Security | Threat model, attack tests, economic simulation, independent review | ✅ threat model + attack tests; ⬜ economic simulation, external review |
 
