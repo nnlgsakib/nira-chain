@@ -41,7 +41,7 @@ Then:
 | Accounts | eth_secp256k1. The same 20 bytes as `nira1…` (bech32) or `0x…`. HD path m/44'/60' |
 | Ethereum JSON-RPC | `:8545` (HTTP), `:8546` (WS) |
 | Cosmos APIs | REST `:1317`, gRPC `:9090`, CometBFT RPC `:26657`. Standard modules under `/cosmos/...`, Nira modules under `/nira/community/v1`, `/nira/policy/v1` |
-| Precompiles | staking `0x…0800`, distribution `0x…0801`, bank `0x…0804`, gov `0x…0805`, slashing `0x…0806`, **community `0x…0900`** ([ICommunity.sol](precompiles/community/ICommunity.sol)) |
+| Precompiles | staking `0x…0800`, distribution `0x…0801`, bank `0x…0804`, gov `0x…0805`, slashing `0x…0806`, **community `0x…0900`** ([ICommunity.sol](precompiles/community/ICommunity.sol)). Note: the distribution precompile's `DecCoin.amount` is already truncated to whole `anira` even though `precision` reads 18 (cosmos/evm v0.6.0), so don't divide it by 10^precision |
 
 ## Documentation
 

@@ -15,7 +15,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 3 | BFT consensus | ✅ | CometBFT 0.38, unmodified (ADR-0002). `tests/genesis/check_localtest.sh`: 1/4 down stays live, 2/4 down halts without forking, recovery with identical block hashes. *Network partitions and long-run stability not yet tested* |
 | 4 | Validator management | ✅ | active set, rotation, min self-bond, power cap (live), jailing: `make validators-test` |
 | 5 | Non-custodial delegated staking | ✅ | Delegate/undelegate via Cosmos tx and the EVM staking precompile, cross-checked (`tests/cosmos-e2e/e2e.sh`, `tests/evm-e2e/e2e.mjs`) |
-| 6 | Reward distribution | 🟡 | x/distribution (F1) for validators and delegators. Community epoch settlement tested (INV-COMM-1, e2e payouts). *Validator/delegator reward claims not e2e tested; reward split not modelled (Q3)* |
+| 6 | Reward distribution | 🟡 | x/distribution (F1) and community epoch settlement. `tests/evm-e2e/rewards.mjs`: one block's issuance accounted to 1e-18 anira (community budget, community tax, commission, delegators pro rata), REST = distribution precompile, withdrawals via Cosmos tx and precompile with exact balance deltas. *Final reward split awaits the economics decision (Q3)* |
 | 7 | Slashing and unbonding | ✅ | Unbonding (staking + community), double-sign slash + tombstone + delegator propagation, downtime jail + unjail (`make validators-test`) |
 | 8 | Native EVM execution | ✅ | cosmos/evm v0.6.0. Deploy, call, logs, revert, EIP-1559 and legacy txs (`tests/evm-e2e/e2e.mjs`) |
 | 9 | Ethereum JSON-RPC | 🟡 | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs, newFilter/newBlockFilter/newPendingTransactionFilter/getFilterChanges/uninstallFilter, feeHistory, syncing, net_version/listening, web3_clientVersion, txpool_status, eth_subscribe(newHeads). *No full Ethereum JSON-RPC conformance suite run yet* |
@@ -48,7 +48,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | | Partitions don't violate safety | ✅ real Docker network partitions: 6|2 continues, 5|3 halts, heal without fork |
 | | Failures within fault tolerance | ✅ 1/4 down stays live |
 | Staking | Self-bond, delegate, non-custodial, unbond | ✅ |
-| | Rewards and commission correct | 🟡 not asserted numerically |
+| | Rewards and commission correct | ✅ exact per-block accounting + withdrawals on both interfaces (`rewards.mjs`, 7 checks) |
 | | Slashing works | ⬜ |
 | | Concentration protections | ✅ unit (randomised) + live rejection on 16 validators (Cosmos + EVM) |
 | Community | Join without permission; disconnect/reconnect | ✅ (offline = no penalty; onion rotation) |
