@@ -92,4 +92,4 @@ make localtest && make localtest-check && make localtest-stop   # 4 validators +
 
 ## License
 
-No license file has been chosen yet. Add one before publishing or accepting contributions.
+Apache License 2.0: see [LICENSE](LICENSE) and [NOTICE](NOTICE). Dependencies keep their own licenses (Cosmos SDK, CometBFT and cosmos/evm Apache-2.0; ibc-go MIT; go-ethereum library code LGPL-3.0).

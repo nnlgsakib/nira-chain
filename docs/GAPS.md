@@ -97,7 +97,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-OPS-3 ✅ (promtool-validated rules, Grafana dashboard, `testnet.py monitor` verifies all 8 rules healthy on 16 live nodes, every referenced metric has data, stopping a validator shows 12.5 % missing power; found + fixed a rule on a non-existent metric) | No monitoring dashboards or alerts | T | | ops-infrastructure |
 | G-OPS-4 🟡 (make release + SHA256SUMS, bit-identical across clean clones; tag-only release workflow builds amd64+arm64, signs SHA256SUMS keylessly with cosign, drafts the GitHub release — not yet exercised: needs a first v* tag) | Release pipeline (Ignite action) never run; no signed checksums; reproducibility not verified | M | `.github/workflows/release.yml` | ops-launch |
 | G-OPS-5 | Register EVM chain ID 47201 in ethereum-lists/chains | T | free as of 2026-11-25 | ops-launch |
-| G-OPS-6 | No LICENSE file | T | — | owner decision |
+| G-OPS-6 ✅ FIXED (Apache-2.0: LICENSE + NOTICE) | No LICENSE file | — | — | owner decision |
 
 ## Recommended order
 

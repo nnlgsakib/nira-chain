@@ -6,7 +6,7 @@
 - Mode: production
 - Phase: quality (build complete for CONS/STAKE/EXEC/COMM/GOV; threat model v0.1; testnets under fault, sync, upgrade and load tests). Ops gate still open: external audit, multi-host testnet, runbooks
 - Last updated: 2026-11-26 by blockchain-dev (remaining-tasks round: K7 closed, monitoring verified, community status + genesis export, checkpoints, runbooks, Foundry, release workflow, remote signing)
-- Next step: owner decisions (economics Q1/Q3, license, chain-ID registration G-OPS-5); then first v* tag to exercise the release workflow; external audit
+- Next step: owner decisions (economics Q1/Q3, chain-ID registration G-OPS-5); then first v* tag to exercise the release workflow; external audit
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.

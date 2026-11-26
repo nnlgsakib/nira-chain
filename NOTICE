@@ -1,0 +1,13 @@
+Nira Chain
+Copyright 2026 The Nira Chain Authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It is built on, and redistributes, components that are themselves licensed
+under the Apache License 2.0 or compatible licenses, including:
+  - Cosmos SDK (github.com/cosmos/cosmos-sdk), Apache-2.0
+  - CometBFT (github.com/cometbft/cometbft), Apache-2.0
+  - Cosmos EVM (github.com/cosmos/evm), Apache-2.0
+  - go-ethereum (github.com/ethereum/go-ethereum, cosmos fork), LGPL-3.0 (library code)
+  - ibc-go (github.com/cosmos/ibc-go), MIT
+See each dependency's own license in the Go module cache or its repository.
