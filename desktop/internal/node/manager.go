@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,7 +44,26 @@ type Manager struct {
 	worker   *proc
 	pass     string // keyring passphrase while unlocked; never written to disk
 	logs     *ring
+	exits    map[string]ExitInfo // last exit of each process ("node", "work")
 }
+
+// ExitInfo says why a process stopped: its error and its last output lines.
+type ExitInfo struct {
+	At    time.Time `json:"at"`
+	Error string    `json:"error"`
+	Tail  []string  `json:"tail"`
+}
+
+// LastExit returns how the given process ("node" or "work") last stopped.
+func (m *Manager) LastExit(tag string) (ExitInfo, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.exits[tag]
+	return e, ok
+}
+
+// LogPath is the file both processes' output is appended to (for support).
+func (m *Manager) LogPath() string { return filepath.Join(m.Dir, "nira-node.log") }
 
 // NewManager loads settings from dir and locates nirad (next to the app
 // executable first, then PATH).
@@ -51,7 +71,7 @@ func NewManager(dir string) (*Manager, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
-	m := &Manager{Dir: dir, logs: newRing(400)}
+	m := &Manager{Dir: dir, logs: newRing(400), exits: map[string]ExitInfo{}}
 	if b, err := os.ReadFile(filepath.Join(dir, "settings.json")); err == nil {
 		_ = json.Unmarshal(b, &m.settings)
 	}
@@ -211,24 +231,63 @@ func (m *Manager) spawn(tag, stdin string, args ...string) (*proc, error) {
 	}
 	r, w := io.Pipe()
 	cmd.Stdout, cmd.Stderr = w, w
+	logf := m.openLog()
 	if err := cmd.Start(); err != nil {
+		if logf != nil {
+			logf.Close()
+		}
 		return nil, err
 	}
+	m.logs.add(tag, "started: nirad "+strings.Join(args, " "))
 	p := &proc{cmd: cmd, done: make(chan struct{})}
+	scanned := make(chan []string)
 	go func() {
+		var tail []string
 		sc := bufio.NewScanner(r)
 		sc.Buffer(make([]byte, 64*1024), 1024*1024)
 		for sc.Scan() {
-			m.logs.add(tag, sc.Text())
+			line := sc.Text()
+			m.logs.add(tag, line)
+			if logf != nil {
+				fmt.Fprintf(logf, "%s [%s] %s\n", time.Now().Format(time.RFC3339), tag, line)
+			}
+			if tail = append(tail, line); len(tail) > 12 {
+				tail = tail[1:]
+			}
 		}
+		scanned <- tail
 	}()
 	go func() {
 		p.err = cmd.Wait()
 		w.Close()
-		m.logs.add(tag, fmt.Sprintf("process exited: %v", p.err))
+		tail := <-scanned
+		msg := "exited normally"
+		if p.err != nil {
+			msg = p.err.Error()
+		}
+		m.logs.add(tag, "process exited: "+msg)
+		if logf != nil {
+			fmt.Fprintf(logf, "%s [%s] process exited: %s\n", time.Now().Format(time.RFC3339), tag, msg)
+			logf.Close()
+		}
+		m.mu.Lock()
+		m.exits[tag] = ExitInfo{At: time.Now(), Error: msg, Tail: tail}
+		m.mu.Unlock()
 		close(p.done)
 	}()
 	return p, nil
+}
+
+// openLog opens the support log for appending, starting it over past 20 MB.
+func (m *Manager) openLog() *os.File {
+	if fi, err := os.Stat(m.LogPath()); err == nil && fi.Size() > 20<<20 {
+		_ = os.Remove(m.LogPath())
+	}
+	f, err := os.OpenFile(m.LogPath(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+	if err != nil {
+		return nil
+	}
+	return f
 }
 
 // StartNode starts `nirad start` for the selected network.
@@ -237,6 +296,9 @@ func (m *Manager) StartNode() error {
 	defer m.mu.Unlock()
 	if m.node.running() {
 		return nil
+	}
+	if err := portsFree(); err != nil {
+		return err
 	}
 	p, err := m.spawn("node", "", "start", "--home", filepath.Join(m.Dir, "homes", m.settings.Network))
 	if err != nil {
@@ -348,5 +410,32 @@ func (r *ring) last(n int) []LogLine {
 	if n > len(r.lines) {
 		n = len(r.lines)
 	}
-	return append([]LogLine(nil), r.lines[len(r.lines)-n:]...)
+	return append(make([]LogLine, 0, n), r.lines[len(r.lines)-n:]...) // never nil: the UI expects a list
+}
+
+// portsFree checks that the node's ports can be opened before starting it, so a
+// clash (another program, or a range Windows reserves for Hyper-V/WSL) is
+// reported by name instead of the node exiting a moment after it starts.
+func portsFree() error {
+	for _, p := range []struct {
+		name string
+		addr string
+	}{
+		{"peer (P2P)", fmt.Sprintf("0.0.0.0:%d", PortP2P)},
+		{"RPC", fmt.Sprintf("127.0.0.1:%d", PortRPC)},
+		{"REST API", fmt.Sprintf("127.0.0.1:%d", PortREST)},
+		{"gRPC", fmt.Sprintf("127.0.0.1:%d", PortGRPC)},
+		{"metrics", fmt.Sprintf("127.0.0.1:%d", PortPrometheus)},
+	} {
+		l, err := net.Listen("tcp", p.addr)
+		if err != nil {
+			hint := "another program is using it"
+			if runtime.GOOS == "windows" {
+				hint = "another program is using it, or Windows reserves it (check: netsh interface ipv4 show excludedportrange protocol=tcp)"
+			}
+			return fmt.Errorf("the node's %s port %s can't be opened: %s (%v)", p.name, p.addr, hint, err)
+		}
+		_ = l.Close()
+	}
+	return nil
 }

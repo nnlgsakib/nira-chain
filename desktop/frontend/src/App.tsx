@@ -8,6 +8,7 @@ import { Settings } from "./screens/Settings";
 import { Setup } from "./screens/Setup";
 import { Unlock } from "./screens/Unlock";
 import { Install } from "./screens/Install";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 type Tab = "overview" | "logs" | "settings";
 const TABS: { id: Tab; label: string; icon: typeof Activity }[] = [
@@ -87,9 +88,11 @@ export default function App() {
       </nav>
       <main className="min-w-0 flex-1 overflow-y-auto p-8">
         <div className="mx-auto h-full max-w-[1180px] animate-fade" key={tab}>
-          {tab === "overview" && <Overview status={status} refresh={refresh} />}
-          {tab === "logs" && <Logs />}
-          {tab === "settings" && <Settings theme={theme} setTheme={setTheme} onLock={refresh} />}
+          <ErrorBoundary resetKey={tab}>
+            {tab === "overview" && <Overview status={status} refresh={refresh} />}
+            {tab === "logs" && <Logs />}
+            {tab === "settings" && <Settings theme={theme} setTheme={setTheme} onLock={refresh} />}
+          </ErrorBoundary>
         </div>
       </main>
     </div>

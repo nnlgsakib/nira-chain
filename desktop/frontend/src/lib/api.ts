@@ -46,9 +46,14 @@ export type Status = {
   min_bond: string;
   unbond_complete_height: string;
   has_onion: boolean;
+  node_exit?: ExitInfo;
+  work_exit?: ExitInfo;
+  log_path: string;
   disk_bytes: number;
   error?: string;
 };
+
+export type ExitInfo = { at: string; error: string; tail: string[] | null };
 
 export type InstallInfo = {
   installed: boolean;

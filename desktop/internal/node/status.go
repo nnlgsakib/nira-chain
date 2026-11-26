@@ -42,9 +42,13 @@ type Status struct {
 	MinBond      string `json:"min_bond"`
 	UnbondAt     string `json:"unbond_complete_height"`
 
-	HasOnion  bool   `json:"has_onion"` // this computer holds the node's onion secret
-	DiskBytes int64  `json:"disk_bytes"`
-	Error     string `json:"error,omitempty"`
+	HasOnion  bool  `json:"has_onion"` // this computer holds the node's onion secret
+	DiskBytes int64 `json:"disk_bytes"`
+	// NodeExit says why the node last stopped (shown while it is not running).
+	NodeExit *ExitInfo `json:"node_exit,omitempty"`
+	WorkExit *ExitInfo `json:"work_exit,omitempty"`
+	LogPath  string    `json:"log_path"`
+	Error    string    `json:"error,omitempty"`
 }
 
 // Status collects the current state. It never fails: unreachable parts are
@@ -56,6 +60,13 @@ func (m *Manager) Status(ctx context.Context) Status {
 		UpdatedAt: time.Now(), Network: s.Network, ChainID: n.ChainID, Initialized: m.Initialized(),
 		HasKey: s.Operator != "", Locked: m.Locked(), NiradFound: m.Nirad != "",
 		NodeRunning: m.NodeRunning(), WorkerRunning: m.WorkerRunning(), Operator: s.Operator,
+	}
+	st.LogPath = m.LogPath()
+	if e, ok := m.LastExit("node"); ok && !st.NodeRunning {
+		st.NodeExit = &e
+	}
+	if e, ok := m.LastExit("work"); ok && !st.WorkerRunning {
+		st.WorkExit = &e
 	}
 	if !st.Initialized {
 		return st

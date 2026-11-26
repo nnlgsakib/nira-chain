@@ -10,7 +10,7 @@ export function Logs() {
 
   useEffect(() => {
     let live = true;
-    const tick = () => api.Logs(300).then((l) => live && setLines(l)).catch(() => {});
+    const tick = () => api.Logs(300).then((l) => live && setLines(l ?? [])).catch(() => {});
     tick();
     const id = setInterval(tick, 2000);
     return () => {

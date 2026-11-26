@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Copy, KeyRound, Pause, Play, Power, Square, Wallet } from "lucide-react";
-import { api, errText, type Status } from "../lib/api";
+import { api, errText, type ExitInfo, type Status } from "../lib/api";
 import { ago, bytes, nira } from "../lib/format";
 import { Button, Callout, Card, Dot, Field, Section, Stat } from "../components/ui";
 
@@ -100,6 +100,10 @@ export function Overview({ status, refresh }: { status: Status; refresh: () => v
         </div>
       </Card>
       {error && <Callout tone="danger">{error}</Callout>}
+      {phase === "stopped" && status.node_exit && <ExitNote title="The node stopped" exit={status.node_exit} logPath={status.log_path} />}
+      {status.node_running && !status.worker_running && status.work_exit && status.node_status === "ACTIVE" && (
+        <ExitNote title="The work loop stopped" exit={status.work_exit} logPath={status.log_path} />
+      )}
 
       {/* register */}
       {(phase === "unfunded" || phase === "unregistered") && (
@@ -187,6 +191,24 @@ export function Overview({ status, refresh }: { status: Status; refresh: () => v
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Why a process stopped: its error and last output lines, plus where the full log is. */
+function ExitNote({ title, exit, logPath }: { title: string; exit: ExitInfo; logPath: string }) {
+  const tail = (exit.tail ?? []).slice(-6);
+  return (
+    <div role="alert" className="flex flex-col gap-3 rounded-[22px] bg-down/10 p-5">
+      <p className="text-[14px] font-bold text-down">
+        {title}: <span className="selectable font-mono font-medium">{exit.error}</span>
+      </p>
+      {tail.length > 0 && (
+        <pre className="selectable max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-[16px] bg-canvas/60 p-3 font-mono text-[12px] text-mute">{tail.join("\n")}</pre>
+      )}
+      <p className="text-[12px] text-faint">
+        Full log: <span className="selectable font-mono">{logPath}</span>
+      </p>
     </div>
   );
 }

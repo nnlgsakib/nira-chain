@@ -1,7 +1,10 @@
 package node
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -77,5 +80,42 @@ func TestImportPrivateKey(t *testing.T) {
 	}
 	if _, err := m.ImportPrivateKey("zz12", "password-123"); err == nil {
 		t.Fatal("malformed key accepted")
+	}
+}
+
+// A node that dies right away must leave its reason and last lines behind
+// (status shows them) and the support log; the log list is never nil.
+func TestNodeExitIsReported(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script stand-in")
+	}
+	dir := t.TempDir()
+	fake := filepath.Join(dir, "fake-nirad")
+	if err := os.WriteFile(fake, []byte("#!/bin/sh\necho 'ERR failed to load config: bad port'\nexit 3\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m, err := NewManager(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l := m.Logs(10); l == nil {
+		t.Fatal("Logs returned nil before any output")
+	}
+	m.Nirad = fake
+	_ = m.SaveSettings(Settings{Network: "local"})
+	if err := m.StartNode(); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for m.NodeRunning() && time.Now().Before(deadline) {
+		time.Sleep(50 * time.Millisecond)
+	}
+	e, ok := m.LastExit("node")
+	if !ok || !strings.Contains(e.Error, "exit status 3") || len(e.Tail) == 0 || !strings.Contains(e.Tail[len(e.Tail)-1], "bad port") {
+		t.Fatalf("exit info %+v %v", e, ok)
+	}
+	b, _ := os.ReadFile(m.LogPath())
+	if !strings.Contains(string(b), "bad port") || !strings.Contains(string(b), "process exited") {
+		t.Fatalf("support log:\n%s", b)
 	}
 }

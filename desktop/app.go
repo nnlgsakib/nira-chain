@@ -304,5 +304,5 @@ func (a *App) Logs(n int) []node.LogLine {
 	if m, err := a.mgr(); err == nil {
 		return m.Logs(n)
 	}
-	return nil
+	return []node.LogLine{} // never null: the Activity screen expects a list
 }
