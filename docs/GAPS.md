@@ -94,7 +94,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-TEST-5 ✅ FIXED (tests/cosmos-e2e/governance.sh, upgrade rehearsal) | No governance e2e: param-change proposal, `MsgResolveAlert`, software-upgrade rehearsal | T | | quality-testing + ops-upgrades |
 | G-OPS-1 ✅ FIXED (app/upgrades.go, tests/upgrade/rehearsal.sh) | **No upgrade-handler framework** (`app/upgrades/`); the first software upgrade has nothing to plug into | T | `grep SetUpgradeHandler` finds nothing | ops-upgrades |
 | G-OPS-2 ✅ FIXED (tests/sync/check_sync.sh) | State-sync snapshots and archive node not configured or tested | T | | ops-infrastructure |
-| G-OPS-3 🟡 (deploy/monitoring + scripts/monitor.py, monitor verified live; Grafana dashboards and promtool validation pending) | No monitoring dashboards or alerts | T | | ops-infrastructure |
+| G-OPS-3 ✅ (promtool-validated rules, Grafana dashboard, `testnet.py monitor` verifies all 8 rules healthy on 16 live nodes, every referenced metric has data, stopping a validator shows 12.5 % missing power; found + fixed a rule on a non-existent metric) | No monitoring dashboards or alerts | T | | ops-infrastructure |
 | G-OPS-4 🟡 (make release + SHA256SUMS; bit-identical across two clean clones via scripts/verify-reproducible.sh; signing + CI publishing pending) | Release pipeline (Ignite action) never run; no signed checksums; reproducibility not verified | M | `.github/workflows/release.yml` | ops-launch |
 | G-OPS-5 | Register EVM chain ID 47201 in ethereum-lists/chains | T | free as of 2026-11-25 | ops-launch |
 | G-OPS-6 | No LICENSE file | T | — | owner decision |

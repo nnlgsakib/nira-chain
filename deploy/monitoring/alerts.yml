@@ -14,11 +14,17 @@ groups:
         labels: { severity: warning }
         annotations:
           summary: "Mean block time > 4 s (target R-N1 p95 ≤ 4 s)"
-      - alert: ValidatorMissingBlocks
-        expr: increase(cometbft_consensus_validator_missed_blocks[10m]) > 50
+      - alert: ValidatorsMissingVotes
+        expr: cometbft_consensus_missing_validators_power / cometbft_consensus_validators_power > 0.1
+        for: 5m
         labels: { severity: warning }
         annotations:
-          summary: "Validator {{ $labels.validator_address }} missed > 50 blocks in 10 m (downtime jail at < 5 % signed)"
+          summary: "> 10 % of voting power missing from commits for 5 m (at 1/3 the chain halts)"
+      - alert: OwnValidatorNotSigning
+        expr: cometbft_consensus_height - cometbft_consensus_validator_last_signed_height > 50
+        labels: { severity: critical }
+        annotations:
+          summary: "This node's validator has not signed for > 50 blocks (downtime jail when signed < 5 % of the window)"
       - alert: ByzantineValidatorsSeen
         expr: cometbft_consensus_byzantine_validators > 0
         labels: { severity: critical }

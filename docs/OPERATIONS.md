@@ -113,7 +113,7 @@ Rehearse every release on a test network first: `make upgrade-rehearsal` perform
 
 ## Monitoring and alerting
 
-- **Metrics:** set `[instrumentation] prometheus = true` (the role profiles do, bound to 127.0.0.1:26660) and app telemetry in `app.toml [telemetry]`. `deploy/monitoring/` contains a Prometheus scrape config, alert rules (chain halted, block time, missed blocks, byzantine validators, low peers, syncing, mempool near full) and a docker-compose stack (Prometheus, Alertmanager, Grafana). The YAML is syntax-checked, but `promtool` wasn't run.
+- **Metrics:** set `[instrumentation] prometheus = true` (the role profiles do, bound to 127.0.0.1:26660) and app telemetry in `app.toml [telemetry]`. `deploy/monitoring/` contains a Prometheus scrape config, alert rules (chain halted, block time, missed blocks, byzantine validators, low peers, syncing, mempool near full) and a docker-compose stack (Prometheus, Alertmanager, Grafana). The rules pass `promtool`. `python3 deploy/testnet/testnet.py monitor` starts Prometheus and Grafana (`http://127.0.0.1:3000`, dashboard *Nira → network overview*) against the Docker testnet and verifies that every rule is healthy and every metric it uses has live data.
 - **On-chain security monitor:** `scripts/monitor.py --rpc … --rest …` emits one JSON line per alert: halt, slashing, jailing, voting-power shifts or concentration, new governance proposals, upgrade plans, `comm_hook_error`, community slashing, divergence threshold, supply jumps. Pipe it to your alert channel. Verified live on a localnet (proposal, upgrade plan and halt detected).
 
 ## Example systemd unit

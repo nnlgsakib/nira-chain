@@ -15,6 +15,7 @@ import json
 import subprocess
 import sys
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -120,10 +121,62 @@ def cmd_up(a):
 
 
 def cmd_down(_):
+    sh("docker", "compose", "-p", "nira-mon", "-f", str(MON / "docker-compose.testnet.yml"), "down", check=False)
     if COMPOSE.exists():
         compose("down", "--remove-orphans", "-t", "5", check=False)
     sh("docker", "volume", "rm", "-f", VOLUME, check=False)
     print("testnet removed")
+
+
+MON = REPO / "deploy" / "monitoring"
+
+
+def prom(query):
+    q = urllib.parse.urlencode({"query": query})
+    with urllib.request.urlopen(f"http://127.0.0.1:9091/api/v1/query?{q}", timeout=10) as r:
+        return json.load(r)["data"]["result"]
+
+
+def cmd_monitor(a):
+    """Start Prometheus + Grafana on the testnet network and verify every alert rule."""
+    m = meta()
+    nodes = m["validators"] + ["sentry0", "rpc0"] + m["community"]
+    (MON / "targets.json").write_text(json.dumps([{"targets": [f"{n}:26660" for n in nodes]}]))
+    sh("docker", "compose", "-p", "nira-mon", "-f", str(MON / "docker-compose.testnet.yml"), "up", "-d", capture=False)
+    def all_up():
+        try:
+            return sum(1 for r in prom("up") if r["value"][1] == "1") == len(nodes)
+        except Exception:
+            return False
+    wait(all_up, 120, "not every node target is up in Prometheus")
+    ok(f"Prometheus scrapes all {len(nodes)} nodes")
+    with urllib.request.urlopen("http://127.0.0.1:9091/api/v1/rules", timeout=10) as r:
+        rules = [x for g in json.load(r)["data"]["groups"] for x in g["rules"]]
+    bad = [x["name"] for x in rules if x.get("health") != "ok"]
+    if bad:
+        fail(f"rules unhealthy: {bad}")
+    # every metric referenced by an alert must exist (a typo makes a rule silently never fire)
+    import re
+    metrics = sorted({n for x in rules for n in re.findall(r"cometbft_[a-z0-9_]+", x["query"])})
+    missing = [mt for mt in metrics if not prom(mt)]
+    if missing:
+        fail(f"alert rules reference metrics with no data: {missing}")
+    ok(f"{len(rules)} alert rules loaded and healthy; all {len(metrics)} referenced metrics have data")
+    time.sleep(20)  # let a few scrapes accumulate for rate()
+    if not prom("rate(cometbft_consensus_block_interval_seconds_sum[1m]) / rate(cometbft_consensus_block_interval_seconds_count[1m])"):
+        fail("block-interval rate has no data")
+    # induce: stop one validator → missing voting power becomes visible
+    v = m["validators"][1]
+    sh("docker", "stop", "-t", "2", f"{PROJECT}-{v}")
+    try:
+        wait(lambda: any(float(r["value"][1]) > 0 for r in prom(
+            "cometbft_consensus_missing_validators_power / cometbft_consensus_validators_power")), 60,
+             "missing voting power not visible after stopping a validator")
+        share = max(float(r["value"][1]) for r in prom("cometbft_consensus_missing_validators_power / cometbft_consensus_validators_power"))
+        ok(f"stopping {v} shows {share:.1%} missing voting power (rule ValidatorsMissingVotes fires above 10 % for 5 m)")
+    finally:
+        sh("docker", "start", f"{PROJECT}-{v}")
+    print("    Grafana: http://127.0.0.1:3000  (dashboard Nira → network overview)")
 
 
 def cmd_status(_):
@@ -304,11 +357,12 @@ def main():
     up.add_argument("--community", type=int, default=6)
     sub.add_parser("down")
     sub.add_parser("status")
+    sub.add_parser("monitor")
     t = sub.add_parser("test")
     t.add_argument("scenario", nargs="?", default="all", choices=["health", "sentry", "community", "partition", "soak", "all"])
     t.add_argument("--soak-minutes", type=float, default=10)
     a = ap.parse_args()
-    {"build": cmd_build, "up": cmd_up, "down": cmd_down, "status": cmd_status, "test": cmd_test}[a.cmd](a)
+    {"build": cmd_build, "up": cmd_up, "down": cmd_down, "status": cmd_status, "test": cmd_test, "monitor": cmd_monitor}[a.cmd](a)
 
 
 if __name__ == "__main__":
