@@ -98,11 +98,15 @@ func RunCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			interval, _ := cmd.Flags().GetDuration(flagInterval)
+			// The client context (and its keyring) is built once: a password-protected
+			// keyring (file, os) asks for its password each time it is opened, so
+			// rebuilding it per iteration made the loop fail on its second pass when
+			// the password was given once on stdin (the desktop app does that).
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
 			for {
-				clientCtx, err := client.GetClientTxContext(cmd)
-				if err != nil {
-					return err
-				}
 				n, err := proveOnce(cmd, clientCtx)
 				if err != nil {
 					fmt.Fprintf(cmd.ErrOrStderr(), "prove: %v\n", err)

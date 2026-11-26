@@ -84,7 +84,7 @@ func TestInstallNirad(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
-	script := []byte("#!/bin/sh\necho v0.1.0\n")
+	script := []byte("#!/bin/sh\necho v0.1.1\n")
 	archive := tarGz("nirad", script)
 	sum := sha256.Sum256(archive)
 	tamper := false
@@ -112,7 +112,7 @@ func TestInstallNirad(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if in.NiradPath != filepath.Join(data, "bin", "nirad") || in.NiradVersion != "v0.1.0" {
+	if in.NiradPath != filepath.Join(data, "bin", "nirad") || in.NiradVersion != "v0.1.1" {
 		t.Fatalf("install record %+v", in)
 	}
 	got, ok := LoadInstall()

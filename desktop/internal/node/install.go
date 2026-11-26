@@ -24,7 +24,7 @@ import (
 
 // NiradVersion is the nirad release this app installs. It is pinned (not
 // "latest") so an app version always runs the node version it was tested with.
-const NiradVersion = "v0.1.0"
+const NiradVersion = "v0.1.1"
 
 // ReleaseBase is where release archives and SHA256SUMS are downloaded from.
 // NIRA_RELEASE_BASE overrides it (a mirror, or a local server in tests).

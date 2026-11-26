@@ -101,6 +101,7 @@ e2e-deps: ## Install Node.js deps for the EVM e2e suites
 e2e-cosmos: ## Cosmos-interface e2e (needs a running localnet)
 	@tests/cosmos-e2e/e2e.sh
 	@tests/cosmos-e2e/community.sh
+	@tests/community/run_loop_keyring.sh
 
 e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
 	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1); \
