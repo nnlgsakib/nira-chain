@@ -63,7 +63,7 @@ Format per threat: **Attack · Subsystem · Prevention · Detection · Recovery 
 - **Subsystem:** sync, light clients.
 - **Prevention:**
   - *Implemented:* unbonding 21 days, longer than the evidence max age (2 days / 100 000 blocks); state sync requires a trusted height and hash and ≥ 2 RPC servers for light-client verification.
-  - *Proposed:* published trusted checkpoints from ≥ 2 independent sources (ops-launch, G-CONS-3).
+  - *Implemented:* `scripts/trusted-checkpoint.py` takes a checkpoint only when ≥ 2 independent servers agree on the block hash and validator set (refuses a forging server, tested); procedure in `runbooks.md` RB-6.
 - **Detection:** a light client checking against multiple providers sees conflicting headers (CometBFT light-client attack detection).
 - **Recovery:** social. Operators use the checkpoint from independent sources.
 - **Evidence:** `tests/sync/check_sync.sh` (state sync from a light-client-verified snapshot). The weak-subjectivity procedure is PROPOSED.
@@ -217,7 +217,7 @@ Format per threat: **Attack · Subsystem · Prevention · Detection · Recovery 
 | Open (accepted risks) | K1 proof outsourcing, K2 seed bias, K3 sybil validators, K4 infrastructure concentration, K6 fee floor (config), TM-20 economics |
 
 ## 5. Next security work
-1. `docs/security/runbooks.md`: halt / fork / key-compromise / bad-upgrade runbooks, with SEAL 911 contact.
+1. ~~Runbooks~~ done: `docs/security/runbooks.md` (RB-1…RB-8).
 2. Sentry and P2P hardening spec (G-SPEC-4) to close TM-07 and TM-10.
 3. On-chain monitors and alerts: equivocation, voting-power moves, supply, governance proposals, `comm_hook_error` (G-OPS-3).
 4. External audit of x/community, x/policy, the precompile and the genesis builder (G-SEC-8), then a bug bounty before value arrives.

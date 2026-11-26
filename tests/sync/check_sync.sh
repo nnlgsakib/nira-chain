@@ -61,21 +61,9 @@ while [ "$(height_of 26657)" -lt 45 ]; do sleep 2; done
 
 # 1. State sync from a light-client-verified snapshot
 new_node statesync 10 default
-TH=$(( $(height_of 26657) - 10 ))
-TRUST=$(rpc 26657 "/block?height=$TH" | json "d['result']['block_id']['hash']")
-python3 - "$ROOT/statesync" "$TH" "$TRUST" <<'PY'
-import re, sys
-h, th, hash_ = sys.argv[1:]
-cfg = open(f"{h}/config/config.toml").read()
-sec = cfg.split("[statesync]", 1)
-body = sec[1]
-body = re.sub(r'^enable = .*', 'enable = true', body, count=1, flags=re.M)
-body = re.sub(r'^rpc_servers = .*', 'rpc_servers = "http://127.0.0.1:26657,http://127.0.0.1:26757"', body, count=1, flags=re.M)
-body = re.sub(r'^trust_height = .*', f'trust_height = {th}', body, count=1, flags=re.M)
-body = re.sub(r'^trust_hash = .*', f'trust_hash = "{hash_}"', body, count=1, flags=re.M)
-body = re.sub(r'^trust_period = .*', 'trust_period = "168h0m0s"', body, count=1, flags=re.M)
-open(f"{h}/config/config.toml", "w").write(sec[0] + "[statesync]" + body)
-PY
+# trust height/hash agreed by independent servers, written by the checkpoint tool (G-CONS-3)
+python3 "$(dirname "$0")/../../scripts/trusted-checkpoint.py" --rpc http://127.0.0.1:26657 --rpc http://127.0.0.1:26757 \
+  --rpc http://127.0.0.1:26857 --offset 10 --write "$ROOT/statesync/config/config.toml" >/dev/null || fail "checkpoint tool"
 start statesync
 TARGET=$(( $(height_of 26657) ))
 wait_synced 27657 "$TARGET" || fail "state-sync node did not catch up (see $ROOT/statesync/node.log)"

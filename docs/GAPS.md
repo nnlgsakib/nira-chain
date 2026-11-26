@@ -59,7 +59,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
-| G-SEC-2 ✅ v0.1 (docs/security/threat-model.md, key-inventory.md) — runbooks and monitors still open | **No threat model document** covering the idea's §11 list (prevention, detection, recovery, test per threat) | T | — | quality-security |
+| G-SEC-2 ✅ v0.1 (docs/security/threat-model.md, key-inventory.md, runbooks.md; monitors in deploy/monitoring) | **No threat model document** covering the idea's §11 list (prevention, detection, recovery, test per threat) | T | — | quality-security |
 | G-SEC-3 🟡 (fuzzers added; found + fixed a zero-window panic) | No fuzzing: MerkleProof decoding, precompile ABI decoding, msg handlers, genesis import | T | — | quality-testing / quality-security |
 | G-SEC-4 ✅ FIXED (tests/evm-e2e/atomicity.mjs) | Precompile atomicity untested: an EVM call that invokes `0x…0900` and then **reverts** must leave no community state or escrow behind (the class of GO-2025-3684) | T | no test with a reverting contract | build-smart-contracts + quality-testing |
 | G-SEC-5 | 4 dependency advisories without upstream fixes (K9) | I | `make govulncheck` | quality-security |
@@ -73,7 +73,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 |---|---|---|---|---|
 | G-CONS-1 🟡 | **Docker testnet (8 validators):** real network partitions verified: 6|2 → majority finalises, minority stuck, catches up on heal; 5|3 (≥ 1/3 cut off) → halt, then resume with no fork (`make testnet-test SCENARIO=partition`). 10-min soak under load passed (52 074 txs, no alerts, memory falls back when idle); 24 h soak still open. Earlier: **Tested now** (tests/consensus/check_validators.sh, 16 validators): double-sign evidence → slash + tombstone + delegator propagation, downtime jail/unjail, rotation. Still untested: real network partitions, long-running soak | T | tests cover 1/4 and 2/4 stopped only | quality-testing |
 | G-CONS-2 ✅ FIXED (live via Cosmos tx + EVM precompile on 16 validators) | Live power-cap **rejection** never observed (needs ≥ 15 validators to activate) | T | Q7 | quality-testing (localtest N=16) |
-| G-CONS-3 | Weak subjectivity: no trusted-checkpoint publishing or state-sync trust procedure | M | — | ops-launch |
+| G-CONS-3 ✅ (scripts/trusted-checkpoint.py: requires ≥ 2 servers to agree on block hash + validator set, refuses with exit 2 on a forging server; used by tests/sync/check_sync.sh; procedure in runbooks RB-6) | Weak subjectivity: no trusted-checkpoint publishing or state-sync trust procedure | M | — | ops-launch |
 
 ### Community layer
 
