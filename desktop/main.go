@@ -14,11 +14,8 @@ import (
 var assets embed.FS
 
 func main() {
-	app, err := NewApp()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = wails.Run(&options.App{
+	app := NewApp()
+	err := wails.Run(&options.App{
 		Title:            "Nira Node",
 		Width:            1240,
 		Height:           820,

@@ -54,3 +54,28 @@ func TestEnvLimits(t *testing.T) {
 		t.Error("default memory limit not 4096 MiB")
 	}
 }
+
+// Real nirad (when on PATH): a hex private key imports into the file keyring
+// and yields the address that key controls; a malformed key is refused.
+func TestImportPrivateKey(t *testing.T) {
+	m, err := NewManager(t.TempDir())
+	if err != nil || m.Nirad == "" {
+		t.Skip("nirad not on PATH")
+	}
+	_ = m.SaveSettings(Settings{Network: "local"})
+	// Hardhat/Anvil account #0: address 0xf39F…2266
+	addr, err := m.ImportPrivateKey("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", "password-123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if addr != "nira17w0adeg64ky0daxwd2ugyuneellmjgnxgyasls" || m.Settings().Operator != addr {
+		t.Fatalf("address %s, settings %s", addr, m.Settings().Operator)
+	}
+	m.Lock()
+	if err := m.Unlock("password-123"); err != nil {
+		t.Fatalf("unlock with the new password: %v", err)
+	}
+	if _, err := m.ImportPrivateKey("zz12", "password-123"); err == nil {
+		t.Fatal("malformed key accepted")
+	}
+}

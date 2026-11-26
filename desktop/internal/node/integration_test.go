@@ -45,6 +45,15 @@ func TestDesktopEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer m.StopNode()
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, l := range m.Logs(60) {
+				if l.Source == "work" || strings.Contains(l.Text, "ERR") {
+					t.Logf("[%s] %s", l.Source, l.Text)
+				}
+			}
+		}
+	})
 	waitFor(t, 3*time.Minute, "node synced", func() bool {
 		st := m.Status(ctx)
 		return st.Reachable && !st.CatchingUp && st.Height > 2 && st.Peers >= 1

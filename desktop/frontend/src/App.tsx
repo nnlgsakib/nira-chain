@@ -7,6 +7,7 @@ import { Logs } from "./screens/Logs";
 import { Settings } from "./screens/Settings";
 import { Setup } from "./screens/Setup";
 import { Unlock } from "./screens/Unlock";
+import { Install } from "./screens/Install";
 
 type Tab = "overview" | "logs" | "settings";
 const TABS: { id: Tab; label: string; icon: typeof Activity }[] = [
@@ -17,6 +18,7 @@ const TABS: { id: Tab; label: string; icon: typeof Activity }[] = [
 
 export default function App() {
   const [status, setStatus] = useState<Status | null>(null);
+  const [installed, setInstalled] = useState<boolean | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
   const [theme, setThemeState] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "light") || "dark");
 
@@ -29,6 +31,7 @@ export default function App() {
   }, [theme]);
 
   const refresh = useCallback(() => {
+    api.InstallInfo().then((i) => setInstalled(i.installed)).catch(() => {});
     api.State().then(setStatus).catch(() => {});
   }, []);
   useEffect(() => {
@@ -44,7 +47,8 @@ export default function App() {
       </div>
     );
   }
-  if (!status) return <div className="h-full" />;
+  if (installed === false) return <Install onDone={refresh} />;
+  if (!status || installed === null) return <div className="h-full" />;
   if (!status.nirad_found) {
     return (
       <div className="grid h-full place-items-center p-8">

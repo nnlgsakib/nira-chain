@@ -9,9 +9,9 @@ import (
 
 func TestLeanKeep(t *testing.T) {
 	cases := map[string]int{
-		`{"app_state":{"community":{"params":{"apphash_window":"100","epoch_blocks":"600"}}}}`:   2000, // 1400 → floor
-		`{"app_state":{"community":{"params":{"apphash_window":"500","epoch_blocks":"1000"}}}}`:  3000,
-		`{"app_state":{"community":{"params":{"apphash_window":"10","epoch_blocks":"20"}}}}`:     2000,
+		`{"app_state":{"community":{"params":{"apphash_window":"100","epoch_blocks":"600"}}}}`:  2000, // 1400 → floor
+		`{"app_state":{"community":{"params":{"apphash_window":"500","epoch_blocks":"1000"}}}}`: 3000,
+		`{"app_state":{"community":{"params":{"apphash_window":"10","epoch_blocks":"20"}}}}`:    2000,
 		`not json`: 2000,
 		`{}`:       2000,
 	}

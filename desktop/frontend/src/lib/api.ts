@@ -49,10 +49,26 @@ export type Status = {
   error?: string;
 };
 
+export type InstallInfo = {
+  installed: boolean;
+  data_dir: string;
+  default_dir: string;
+  config_path: string;
+  nirad_version: string;
+  platform: string;
+  asset: string;
+  supported: boolean;
+};
+export type InstallProgress = { stage: string; done: number; total: number };
+
 export type LogLine = { time: string; source: "node" | "work"; text: string };
 export type SystemInfo = { cpus: number; os: string; data_dir: string };
 
 type Bound = {
+  InstallInfo(): Promise<InstallInfo>;
+  ChooseFolder(start: string): Promise<string>;
+  Install(dir: string): Promise<void>;
+  ImportPrivateKey(key: string, pass: string): Promise<string>;
   Networks(): Promise<Network[]>;
   State(): Promise<Status>;
   Settings(): Promise<Settings>;
@@ -93,6 +109,10 @@ export const api: Bound = new Proxy({} as Bound, {
 
 export function onEvent(name: string, cb: (data: string) => void): () => void {
   return window.runtime?.EventsOn(name, (d) => cb(String(d))) ?? (() => {});
+}
+
+export function onProgress(cb: (p: InstallProgress) => void): () => void {
+  return window.runtime?.EventsOn("install:progress", (d) => cb(d as InstallProgress)) ?? (() => {});
 }
 
 /** Error text from a rejected bound call (Wails rejects with a string). */

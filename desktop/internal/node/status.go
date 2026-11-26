@@ -31,7 +31,7 @@ type Status struct {
 
 	// Account and community node
 	Operator     string `json:"operator"`
-	Balance      string `json:"balance"` // anira
+	Balance      string `json:"balance"`     // anira
 	NodeStatus   string `json:"node_status"` // "", ACTIVE, UNBONDING
 	Bond         string `json:"bond"`
 	UnitsTotal   string `json:"units_total"`

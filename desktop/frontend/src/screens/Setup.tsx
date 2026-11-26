@@ -12,7 +12,8 @@ export function Setup({ onDone }: { onDone: () => void }) {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [network, setNetwork] = useState("");
   const [moniker, setMoniker] = useState("");
-  const [mode, setMode] = useState<"new" | "import">("new");
+  const [mode, setMode] = useState<"new" | "import" | "privkey">("new");
+  const [privkey, setPrivkey] = useState("");
   const [pass, setPass] = useState("");
   const [pass2, setPass2] = useState("");
   const [mnemonic, setMnemonic] = useState("");
@@ -51,8 +52,13 @@ export function Setup({ onDone }: { onDone: () => void }) {
       if (mode === "new") {
         setMnemonic(await api.CreateKey(pass));
         setStep("phrase");
-      } else {
+      } else if (mode === "import") {
         await api.ImportKey(mnemonic, pass);
+        setMnemonic("");
+        onDone();
+      } else {
+        await api.ImportPrivateKey(privkey, pass);
+        setPrivkey("");
         onDone();
       }
     } catch (e) {
@@ -136,8 +142,8 @@ export function Setup({ onDone }: { onDone: () => void }) {
         {step === "key" && (
           <>
             <Title title="Your node's key" body="It signs your node's work and holds its bond. The password protects it on this computer." />
-            <div className="grid grid-cols-2 gap-2 rounded-full bg-surface p-1" role="tablist">
-              {(["new", "import"] as const).map((m) => (
+            <div className="grid grid-cols-3 gap-1 rounded-full bg-surface p-1" role="tablist" aria-label="Key">
+              {(["new", "import", "privkey"] as const).map((m) => (
                 <button
                   key={m}
                   role="tab"
@@ -147,7 +153,7 @@ export function Setup({ onDone }: { onDone: () => void }) {
                     mode === m ? "bg-ink text-canvas" : "text-mute hover:text-ink"
                   }`}
                 >
-                  {m === "new" ? <Plus size={16} /> : <KeyRound size={16} />} {m === "new" ? "Create a new key" : "Import a phrase"}
+                  {m === "new" ? <Plus size={16} /> : <KeyRound size={16} />} {m === "new" ? "New key" : m === "import" ? "Recovery phrase" : "Private key"}
                 </button>
               ))}
             </div>
@@ -164,10 +170,29 @@ export function Setup({ onDone }: { onDone: () => void }) {
                 />
               </label>
             )}
-            <Field label="Password" type="password" value={pass} onChange={(e) => setPass(e.target.value)} hint="At least 8 characters. Needed when the app starts." autoFocus />
+            {mode === "privkey" && (
+              <>
+                <Field
+                  label="Private key"
+                  type="password"
+                  value={privkey}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="0x… (64 hex characters)"
+                  hint="An Ethereum-format key, for example exported from MetaMask. The same key signs on Nira's EVM and Cosmos sides."
+                  onChange={(e) => setPrivkey(e.target.value.trim())}
+                />
+              </>
+            )}
+            <Field label="Password" type="password" value={pass} onChange={(e) => setPass(e.target.value)} hint="At least 8 characters. Protects the key on this computer; asked when the app starts." />
             <Field label="Repeat the password" type="password" value={pass2} onChange={(e) => setPass2(e.target.value)} />
             {error && <Callout tone="danger">{error}</Callout>}
-            <Button size="lg" loading={busy} disabled={!pass || !pass2} onClick={makeKey}>
+            <Button
+              size="lg"
+              loading={busy}
+              disabled={!pass || !pass2 || (mode === "import" && !mnemonic.trim()) || (mode === "privkey" && !/^(0x)?[0-9a-fA-F]{64}$/.test(privkey))}
+              onClick={makeKey}
+            >
               {mode === "new" ? "Create key" : "Import key"}
             </Button>
           </>

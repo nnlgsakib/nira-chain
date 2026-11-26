@@ -26,8 +26,8 @@ type Settings struct {
 	Moniker  string `json:"moniker"`
 	Operator string `json:"operator"` // bech32 nira1…, known after key creation
 	// Resource limits for the node process.
-	MaxCPUs     int `json:"max_cpus"`      // GOMAXPROCS; 0 = half the cores
-	MaxMemoryMB int `json:"max_memory_mb"` // GOMEMLIMIT soft limit; 0 = 4096
+	MaxCPUs      int  `json:"max_cpus"`      // GOMAXPROCS; 0 = half the cores
+	MaxMemoryMB  int  `json:"max_memory_mb"` // GOMEMLIMIT soft limit; 0 = 4096
 	StartAtLogin bool `json:"start_at_login"`
 }
 

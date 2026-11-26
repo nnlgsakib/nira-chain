@@ -5,11 +5,11 @@ package node
 
 // Network is a chain the app can join.
 type Network struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	ChainID    string   `json:"chain_id"`
-	EVMChainID uint64   `json:"evm_chain_id"`
-	Launched   bool     `json:"launched"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	ChainID    string `json:"chain_id"`
+	EVMChainID uint64 `json:"evm_chain_id"`
+	Launched   bool   `json:"launched"`
 	// RPC endpoints used for genesis, peers and state-sync trust. State sync needs
 	// at least two that agree (same rule as scripts/trusted-checkpoint.py).
 	RPC       []string `json:"rpc"`
