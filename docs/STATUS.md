@@ -30,7 +30,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 18 | Monitoring / observability | ✅ | Prometheus rules (promtool-validated, checked on 16 live nodes), Grafana dashboard, on-chain security monitor (`scripts/monitor.py`) |
 | 19 | Security testing | 🟡 | Threat model (20 threats), key inventory, runbooks, fuzzing, adversarial unit + e2e tests, remote-signer test, govulncheck. *No external audit; economic attack simulation open* |
 | 20 | Performance benchmarks | 🟡 | Baseline (`docs/benchmarks/`): native 707, EVM 2 037, mixed 1 030 TPS on 1 validator; 673 / 494 at 4 / 16 co-located; 10-min Docker soak 52 074 txs. *Multi-host, 24 h soak, hundreds of community nodes not measured* |
-| 21 | Automated test infrastructure | 🟡 | `make test`, `make e2e` (Cosmos, EVM, governance, Foundry), `make localtest-check`, `make validators-test`, `make sync-test`, Docker `testnet-test`. CI configured for all of these; *first full run with the Foundry + simulation steps pending* |
+| 21 | Automated test infrastructure | ✅ | `make test`, `make e2e` (Cosmos, EVM, governance, Foundry), `make localtest-check`, `make validators-test`, `make sync-test`, Docker `testnet-test`. all run in CI (green on ea66dda) |
 | 22 | Reproducible build | 🟡 | `make release` bit-identical across clean clones; tag-only signed release workflow. *Not yet exercised: needs a first v* tag* |
 | 23 | Deployment documentation | 🟡 | `genesis/README.md` (ceremony), `docs/OPERATIONS.md`. *No infrastructure-as-code* |
 | 24 | Node operator documentation | 🟡 | `docs/OPERATIONS.md`, `docs/INSTALL.md` |
