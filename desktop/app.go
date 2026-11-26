@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 
@@ -104,11 +105,29 @@ func (a *App) InstallInfo() InstallInfo {
 	return info
 }
 
-// ChooseFolder opens the OS folder picker; "" when cancelled.
+// ChooseFolder opens the OS folder picker; "" when cancelled. The dialog
+// refuses a start folder that does not exist (the suggested data folder does
+// not until Install creates it), so it opens at the nearest existing parent.
 func (a *App) ChooseFolder(start string) (string, error) {
 	return wruntime.OpenDirectoryDialog(a.ctx, wruntime.OpenDialogOptions{
-		Title: "Choose where Nira Node keeps its data", DefaultDirectory: start, CanCreateDirectories: true,
+		Title: "Choose where Nira Node keeps its data", DefaultDirectory: existingParent(start), CanCreateDirectories: true,
 	})
+}
+
+// existingParent returns dir if it exists, else its nearest existing ancestor,
+// else "" (the dialog then uses its own default).
+func existingParent(dir string) string {
+	for dir != "" {
+		if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
+	}
+	return ""
 }
 
 // Install downloads and verifies nirad into dir and records it; progress goes
