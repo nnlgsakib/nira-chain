@@ -14,11 +14,11 @@ fail() { echo "FAIL: $*" >&2; exit 1; }
 json() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1], {'d': d}))" "$1"; }
 ME=$("$F/cast" wallet address "$KEY")
 
-[ "$("$F/cast" chain-id --rpc-url "$RPC")" = "47201" ] || fail "chain id"
+[ "$("$F/cast" chain-id --rpc-url "$RPC")" = "93000" ] || fail "chain id"
 "$F/forge" build -q
 ADDR=$("$F/forge" create src/Vault.sol:Vault --rpc-url "$RPC" --private-key "$KEY" --broadcast --legacy --json 2>/dev/null | json "d['deployedTo']")
 [ "$("$F/cast" code "$ADDR" --rpc-url "$RPC" | wc -c)" -gt 10 ] || fail "no code at $ADDR"
-ok "forge create deployed Vault at $ADDR (chain id 47201)"
+ok "forge create deployed Vault at $ADDR (chain id 93000)"
 
 RC=$("$F/cast" send "$ADDR" "deposit()" --value 5ether --rpc-url "$RPC" --private-key "$KEY" --json)
 [ "$(echo "$RC" | json "int(d['status'],16)")" = "1" ] || fail "deposit"

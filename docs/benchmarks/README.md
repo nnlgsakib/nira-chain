@@ -57,6 +57,6 @@ Network propagation across real hosts, snapshot-sync duration on a large state, 
 ```bash
 make localnet && nirad start                        # terminal 1
 make bench-load                                     # terminal 2: native, evm, mixed on 1 validator
-N=4 scripts/genesis/localtest.sh && make bench-load BENCH_CHAIN_ID=nira_47201-77 BENCH_HOME=~/.nira-localtest/val0
+N=4 scripts/genesis/localtest.sh && make bench-load BENCH_CHAIN_ID=nira_93000-77 BENCH_HOME=~/.nira-localtest/val0
 go test ./x/community/keeper -run '^$' -bench 'Verify|Submit'
 ```

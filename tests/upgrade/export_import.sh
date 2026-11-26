@@ -24,7 +24,7 @@ for l in sys.stdin:
     l=l.strip()
     if l.startswith('{'): print(json.loads(l)['txhash'])"; }
 tx() { local from=$1; shift
-  h=$("$BIN" tx "$@" --from "$from" --chain-id nira_47201-1 "${KR[@]}" --gas auto --gas-adjustment 1.6 --gas-prices 2000000000anira -y --output json 2>/dev/null | txh)
+  h=$("$BIN" tx "$@" --from "$from" --chain-id nira_93000-1 "${KR[@]}" --gas auto --gas-adjustment 1.6 --gas-prices 2000000000anira -y --output json 2>/dev/null | txh)
   for _ in $(seq 1 20); do sleep 1; r=$("$BIN" q tx "$h" --output json --home "$HOME_DIR" 2>/dev/null) && { [ "$(echo "$r" | json "d['code']")" = 0 ] || fail "tx $*"; return 0; }; done; fail "tx $h"; }
 
 BIN=$BIN "$REPO/scripts/localnet.sh" >/dev/null

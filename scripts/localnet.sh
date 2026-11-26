@@ -6,7 +6,7 @@ set -euo pipefail
 
 BIN=${BIN:-nirad}
 HOME_DIR=${HOME_DIR:-$HOME/.nira}
-CHAIN_ID=${CHAIN_ID:-nira_47201-1}
+CHAIN_ID=${CHAIN_ID:-nira_93000-1}
 DENOM=anira
 KR="--keyring-backend test --home $HOME_DIR"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

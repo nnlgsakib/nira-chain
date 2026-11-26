@@ -14,7 +14,7 @@ Start from `networks/mainnet.example.toml`. Every value in it is a proposal (CHA
 
 | Section | What it is | Notes |
 |---|---|---|
-| `[chain]` | chain-id, genesis time | chain-id must be `nira_47201-<n>`; the EVM chain ID 47201 is compiled in |
+| `[chain]` | chain-id, genesis time | chain-id must be `nira_91000-<n>` (mainnet), `nira_92000-<n>` (testnet) or `nira_93000-<n>` (local); the number is the EVM chain ID the node derives |
 | `[supply] total` | total NIRA at genesis | the builder requires every anira to be allocated exactly once |
 | `[[allocation]]` | named buckets: `kind = "account"` (optionally `vesting`) or `kind = "community_pool"` (protocol reserve, spent only by governance) | vesting is linear from `start` to `end`. Omitting `start` gives a single unlock at `end`. A cliff plus linear unlock = `start` at the cliff date |
 | `[[validator]]` | initial Core Validators: moniker, operator address, balance, `self_bond` | each must submit a gentx with exactly `self_bond` |
@@ -36,7 +36,7 @@ python3 scripts/genesis/build_genesis.py check genesis/networks/mainnet.toml
 python3 scripts/genesis/build_genesis.py pregenesis genesis/networks/mainnet.toml --out build/genesis
 
 # 3. Each validator, on their own machine, with the pregenesis as config/genesis.json:
-nirad genesis gentx <key> <self_bond>anira --chain-id nira_47201-1 --moniker core-1 \
+nirad genesis gentx <key> <self_bond>anira --chain-id nira_91000-1 --moniker core-1 \
   --min-self-delegation 100000000000000000000000 \
   --commission-rate 0.10 --commission-max-rate 0.20 --commission-max-change-rate 0.01 \
   --output-document core-1.json
@@ -73,7 +73,7 @@ scripts/genesis/localtest.sh stop
 python3 -m unittest discover -s tests/genesis -p 'test_*.py'   # builder validation rules
 ```
 
-Node i listens on the base port + 100·i: CometBFT RPC 26657, REST 1317, JSON-RPC 8545. The existing e2e suites run against node 0 with `HOME_DIR=~/.nira-localtest/val0 CHAIN_ID=nira_47201-77`.
+Node i listens on the base port + 100·i: CometBFT RPC 26657, REST 1317, JSON-RPC 8545. The existing e2e suites run against node 0 with `HOME_DIR=~/.nira-localtest/val0 CHAIN_ID=nira_93000-77`.
 
 ## Before mainnet
 

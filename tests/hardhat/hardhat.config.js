@@ -9,7 +9,7 @@ export default {
       type: "http",
       chainType: "l1",
       url: process.env.EVM_RPC ?? "http://127.0.0.1:8545",
-      chainId: 47201,
+      chainId: 93000,
       accounts: process.env.KEY ? [process.env.KEY.startsWith("0x") ? process.env.KEY : "0x" + process.env.KEY] : [],
     },
   },

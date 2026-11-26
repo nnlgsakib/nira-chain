@@ -27,7 +27,7 @@ nirad start
 ```
 
 Then:
-- **MetaMask:** network RPC `http://127.0.0.1:8545`, chain ID `47201`, symbol `NIRA`. Dev key: `nirad keys unsafe-export-eth-key dev1 --keyring-backend test` (test key, never use with real funds).
+- **MetaMask:** network RPC `http://127.0.0.1:8545`, chain ID `93000` (local), symbol `NIRA`. Dev key: `nirad keys unsafe-export-eth-key dev1 --keyring-backend test` (test key, never use with real funds).
 - **Cosmos CLI:** `nirad q bank balances $(nirad keys show dev1 -a --keyring-backend test)`
 - **Explore:** `nirad q community epoch`, `nirad q policy params`, `curl localhost:1317/nira/community/v1/nodes`
 
@@ -37,7 +37,7 @@ Then:
 |---|---|
 | Binary / home | `nirad` / `~/.nira` |
 | Token | `NIRA`, 18 decimals; base unit `anira` (1 NIRA = 10¹⁸ anira) |
-| EVM chain ID | `47201` (fixed) |
+| EVM chain ID | mainnet `91000` (`nira_91000-1`), testnet `92000` (`nira_92000-1`), local `93000` (`nira_93000-1`): taken from the chain-id in genesis |
 | Accounts | eth_secp256k1. The same 20 bytes as `nira1…` (bech32) or `0x…`. HD path m/44'/60' |
 | Ethereum JSON-RPC | `:8545` (HTTP), `:8546` (WS) |
 | Cosmos APIs | REST `:1317`, gRPC `:9090`, CometBFT RPC `:26657`. Standard modules under `/cosmos/...`, Nira modules under `/nira/community/v1`, `/nira/policy/v1` |

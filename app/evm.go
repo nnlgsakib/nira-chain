@@ -17,6 +17,13 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cast"
 
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	evmcryptocodec "github.com/cosmos/evm/crypto/codec"
 	"github.com/cosmos/evm/crypto/ethsecp256k1"
@@ -53,8 +60,12 @@ func init() {
 
 // registerEVMModules register EVM keepers and non dependency inject modules.
 func (app *App) registerEVMModules(appOpts servertypes.AppOptions) error {
-	// chain config
-	chainID := GetEVMChainID(appOpts)
+	// chain config: EIP-155 chain ID derived from the Cosmos chain-id
+	chainID, err := GetEVMChainID(appOpts)
+	if err != nil {
+		return err
+	}
+	eip712.SetEncodingConfig(app.legacyAmino, app.interfaceRegistry, chainID)
 
 	// set up non depinject support modules store keys
 	if err := app.RegisterStores(
@@ -188,17 +199,61 @@ func (app *App) GetMempool() sdkmempool.ExtMempool {
 
 // GetEVMChainID returns the EIP-155 chain ID used by the EVM.
 //
-// It is a protocol constant (ADR-0005, CHAIN.md Q2): wallets and EIP-155
-// signatures bind to it, so every node must use the same value and it must
-// never change after launch. It can be overridden only through the
-// `evm.evm-chain-id` app option for local test networks.
-func GetEVMChainID(appOpts servertypes.AppOptions) uint64 {
+// It is derived from the Cosmos chain-id (nira_<evm-chain-id>-<revision>), so
+// it is fixed by genesis and identical on every node: mainnet 91000, testnet
+// 92000, local 93000. The `evm.evm-chain-id` app option may be left at 0
+// (derive); if an operator sets it, it must equal the derived value, otherwise
+// the node refuses to start rather than sign for the wrong network.
+func GetEVMChainID(appOpts servertypes.AppOptions) (uint64, error) {
+	var configured uint64
 	if appOpts != nil {
-		if v := cast.ToUint64(appOpts.Get(srvflags.EVMChainID)); v != 0 {
-			return v
-		}
+		configured = cast.ToUint64(appOpts.Get(srvflags.EVMChainID))
 	}
-	return EVMChainID
+	cosmosID := cosmosChainID(appOpts)
+	if cosmosID == "" { // no genesis available (unit tests, simulation)
+		if configured != 0 {
+			return configured, nil
+		}
+		return EVMChainID, nil
+	}
+	derived, err := ParseEVMChainID(cosmosID)
+	if err != nil {
+		return 0, err
+	}
+	if configured != 0 && configured != derived {
+		return 0, fmt.Errorf("app.toml evm.evm-chain-id = %d but chain-id %s means EVM chain ID %d; set it to 0 or %d",
+			configured, cosmosID, derived, derived)
+	}
+	return derived, nil
+}
+
+// cosmosChainID resolves the chain-id the same way the SDK server does:
+// the --chain-id flag, else the genesis file in the node home.
+func cosmosChainID(appOpts servertypes.AppOptions) string {
+	if appOpts == nil {
+		return ""
+	}
+	if id := cast.ToString(appOpts.Get(flags.FlagChainID)); id != "" {
+		return id
+	}
+	home := cast.ToString(appOpts.Get(flags.FlagHome))
+	if home == "" {
+		return ""
+	}
+	gen, _ := appOpts.Get("genesis_file").(string)
+	if gen == "" {
+		gen = filepath.Join("config", "genesis.json")
+	}
+	f, err := os.Open(filepath.Join(home, gen))
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	id, err := genutiltypes.ParseChainIDFromGenesis(f)
+	if err != nil {
+		return ""
+	}
+	return id
 }
 
 // RegisterEVM Since the EVM modules don't support dependency injection,

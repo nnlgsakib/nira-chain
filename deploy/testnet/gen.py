@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate a Docker testnet inside the nira image (writes /data).
 
-    python3 /opt/nira/gen.py --validators 8 --community 6 --chain-id nira_47201-88
+    python3 /opt/nira/gen.py --validators 8 --community 6 --chain-id nira_93000-88
 
 Nodes (container hostname = directory under /data):
   val0..valN-2   validators on the public mesh
@@ -63,7 +63,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--validators", type=int, default=4)
     ap.add_argument("--community", type=int, default=4)
-    ap.add_argument("--chain-id", default="nira_47201-88")
+    ap.add_argument("--chain-id", default="nira_93000-88")
     a = ap.parse_args()
     if a.validators < 4:
         raise SystemExit("need ≥ 4 validators")

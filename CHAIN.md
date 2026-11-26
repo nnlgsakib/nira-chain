@@ -46,7 +46,7 @@ Detail: `docs/spec/architecture.md`
 - Trust assumptions: < 1/3 Byzantine power (safety), > 2/3 online (liveness, else halt), weak subjectivity within unbonding period
 
 ## Stack
-- Framework + versions: Cosmos SDK v0.53.6, CometBFT v0.38.21, ibc-go v10.4.0, cosmos/evm v0.6.0 (go-ethereum → cosmos/go-ethereum v1.16.2-cosmos-1), Go 1.26, EVM chain ID 47201 (proposed, Q2)
+- Framework + versions: Cosmos SDK v0.53.6, CometBFT v0.38.21, ibc-go v10.4.0, cosmos/evm v0.6.0 (go-ethereum → cosmos/go-ethereum v1.16.2-cosmos-1), Go 1.26, EVM chain IDs 91000 mainnet, 92000 testnet, 93000 local (Q2)
 - Adapter skill: stack-cosmos-ignite + stack-cosmos-evm
 - Decision: ADR-0005
 
@@ -92,7 +92,7 @@ Full gap analysis: docs/GAPS.md (IDs G-*). Requirement-by-requirement check: doc
 - [ ] Q7 Live power-cap *rejection* needs ≥ 15 validators (cap activation); 4-validator ceremony + BFT fault tests done (tests/genesis/check_localtest.sh)
 - [ ] Q6 Dev bootstrap uses scripts/localnet.sh (eth_secp256k1 keys); `ignite chain serve` creates plain secp256k1 keys that can't sign EVM txs — don't use it for EVM testing
 - [ ] Q1 Token supply, genesis allocation and vesting — now data-driven: edit genesis/networks/<net>.toml (template: mainnet.example.toml, all values proposed). Decision still needed from the user before mainnet
-- [x] Q2 EVM chain ID 47201: unused in chainid.network registry (checked 2026-11-25); register it before testnet (G-OPS-5)
+- [x] Q2 EVM chain IDs (owner decision 2026-11-26): mainnet 91000, testnet 92000, local 93000, carried in the chain-id `nira_<id>-<rev>` and derived by the node. 91000/92000 unused in chainid.network (2 909 chains, 2026-11-26); 93000 is registered to "Zero (Beacon Chain) Devnet" (harmless for a local-only net). Register 91000 + 92000 before public launch (G-OPS-5)
 - [ ] Q3 Reward split 50/25/15/10 from the idea: validators vs delegators is set by commission in the F1 model, not by protocol. Needs a tokenomics spec (protocol-tokenomics)
 - [x] Q4 Decided (ADR-0009, option A): no v2 storage tasks for consumer nodes; v1 rewards proven, correct, live state access, not storage
 - [ ] Q5 Formal model of x/community settlement (quality-formal-verification)

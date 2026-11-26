@@ -140,7 +140,7 @@ Format per threat: **Attack · Subsystem · Prevention · Detection · Recovery 
 |---|---|---|
 | Reentrancy into precompiles / partial writes | cosmos/evm cache-context per precompile call; fix of GO-2025-3684 confirmed present in v0.6.0 | `tests/evm-e2e/atomicity.mjs`: caught inner revert after registerNode + delegate leaves no state |
 | Precompile used to bypass module rules | precompiles call the same msg server and hooks (cap, min self-bond) | `e2e.mjs` precompile delegate under cap, createValidator below floor reverts |
-| Replay across chains | EIP-155 chain ID 47201; `allow-unprotected-txs = false` | `e2e.mjs` chainId check |
+| Replay across chains | EIP-155 chain IDs 91000 / 92000 / 93000 per network (from genesis; a node with a conflicting app.toml value refuses to start); `allow-unprotected-txs = false` | `e2e.mjs` chainId check |
 | Balance inconsistency native ↔ EVM | single bank state; balance handler for precompile coin moves | bank == `eth_getBalance` checks in all suites |
 | Contract-level bugs | out of protocol scope (application security) | — |
 

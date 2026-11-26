@@ -41,8 +41,8 @@ const wallet = new ethers.Wallet(process.env.KEY, new ethers.JsonRpcProvider(RPC
 
 // 1. identity and scalar methods
 check(await call("eth_chainId"), QTY, "eth_chainId");
-if (BigInt(await call("eth_chainId")) !== 47201n) fail("chain id != 47201");
-if ((await call("net_version")) !== "47201") fail("net_version != \"47201\"");
+if (BigInt(await call("eth_chainId")) !== 93000n) fail("chain id != 93000");
+if ((await call("net_version")) !== "93000") fail("net_version != \"93000\"");
 if (typeof (await call("web3_clientVersion")) !== "string") fail("web3_clientVersion");
 for (const m of ["eth_blockNumber", "eth_gasPrice", "eth_maxPriorityFeePerGas"]) check(await call(m), QTY, m);
 const syncing = await call("eth_syncing");
@@ -51,7 +51,7 @@ check(await call("eth_getBalance", [wallet.address, "latest"]), QTY, "eth_getBal
 check(await call("eth_getTransactionCount", [wallet.address, "latest"]), QTY, "eth_getTransactionCount");
 check(await call("eth_getCode", [wallet.address, "latest"]), DATA, "eth_getCode");
 check(await call("eth_getStorageAt", [wallet.address, "0x0", "latest"]), data(32), "eth_getStorageAt");
-ok("identity + scalars: eth_chainId/net_version 47201, QUANTITY/DATA encodings (blockNumber, gasPrice, maxPriorityFeePerGas, balance, nonce, code, storage), eth_syncing");
+ok("identity + scalars: eth_chainId/net_version 93000, QUANTITY/DATA encodings (blockNumber, gasPrice, maxPriorityFeePerGas, balance, nonce, code, storage), eth_syncing");
 
 // 2. a real tx, then block / tx / receipt objects
 const tx = await wallet.sendTransaction({ to: ethers.Wallet.createRandom().address, value: 1n, type: 2 });

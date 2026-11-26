@@ -14,3 +14,5 @@ deploy/monitoring/targets.json
 tests/hardhat/artifacts/
 tests/hardhat/cache/
 tests/hardhat/types/
+__pycache__/
+*.pyc

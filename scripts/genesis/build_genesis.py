@@ -38,7 +38,8 @@ from pathlib import Path
 DECIMALS = 18
 BASE = 10**DECIMALS
 HRP = "nira"
-EVM_CHAIN_ID = 47201  # protocol constant, app/denom.go
+# EVM chain ID per network (app/denom.go); the chain-id carries it: nira_<evm-chain-id>-<revision>
+EVM_CHAIN_IDS = {91000: "mainnet", 92000: "testnet", 93000: "local"}
 PRECOMPILES = [
     "0x0000000000000000000000000000000000000100",  # P256
     "0x0000000000000000000000000000000000000400",  # bech32
@@ -197,11 +198,20 @@ class Network:
                 rows.append((f"community node {n['moniker']} (liquid)", "account", nira_to_base(n["balance"]), n))
         return rows
 
+    def evm_chain_id(self) -> int | None:
+        m = re.fullmatch(r"nira_([1-9][0-9]*)-[1-9][0-9]*", self.chain_id)
+        return int(m.group(1)) if m else None
+
+    def network_name(self) -> str:
+        return EVM_CHAIN_IDS.get(self.evm_chain_id(), "invalid")
+
     def validate(self) -> tuple[list[str], list[str]]:
         errors, warns = [], []
         e = errors.append
-        if not re.fullmatch(rf"nira_{EVM_CHAIN_ID}-\d+", self.chain_id):
-            e(f"chain.chain_id must look like nira_{EVM_CHAIN_ID}-<n> (EVM chain ID {EVM_CHAIN_ID} is a protocol constant), got {self.chain_id!r}")
+        m = re.fullmatch(r"nira_([1-9][0-9]*)-[1-9][0-9]*", self.chain_id)
+        if not m or int(m.group(1)) not in EVM_CHAIN_IDS:
+            e("chain.chain_id must be nira_91000-<n> (mainnet), nira_92000-<n> (testnet) or nira_93000-<n> (local); "
+              f"the number is the EVM chain ID wallets use. Got {self.chain_id!r}")
         if self.denom != "anira":
             e("chain.denom must be 'anira' (compiled into the binary)")
         if self.genesis_time:
@@ -320,10 +330,38 @@ class Network:
                 e(f"{who}: {x}")
         return errors, warns
 
+    def economics(self) -> list[str]:
+        """Plain-number summary of what the [params] in this file mean for rewards
+        (SDK defaults for anything the file leaves out)."""
+        mint = self.params.get("mint", {})
+        d = lambda v, dflt: float(v) if v is not None else dflt
+        start = d(self.app_state.get("mint", {}).get("minter", {}).get("inflation"), 0.13)
+        lo, hi = d(mint.get("inflation_min"), 0.07), d(mint.get("inflation_max"), 0.20)
+        goal = d(mint.get("goal_bonded"), 0.67)
+        bpy = int(mint.get("blocks_per_year", 6311520))
+        tax = d(self.params.get("distribution", {}).get("community_tax"), 0.02)
+        share = int(self.params.get("community", {}).get("reward_share_bps", 1500)) / 10_000
+        comm = d(self.params.get("staking", {}).get("min_commission_rate"), 0.0)
+        supply_nira = self.total / BASE
+        y1 = supply_nira * start
+        stakers = (1 - share) * (1 - tax)
+        pct = lambda x: f"{x * 100:.2f} %"
+        return ["", "## Economics at a glance", "",
+                "| Item | Value |", "|---|---|",
+                f"| Inflation at launch | {pct(start)} / year (moves between {pct(lo)} and {pct(hi)}; rises while < {pct(goal)} of supply is staked) |",
+                f"| New tokens in year 1 (at launch rate) | ≈ {y1:,.0f} NIRA ≈ {y1 / bpy:,.4f} NIRA per block ({bpy:,} blocks/year) |",
+                "", "Each block's rewards (new tokens + transaction fees) are split:", "",
+                "| Recipient | Share | Set by |", "|---|---:|---|",
+                f"| Community Nodes (paid per verified proof) | {pct(share)} | `params.community.reward_share_bps` |",
+                f"| Community pool (governance treasury) | {pct((1 - share) * tax)} | `params.distribution.community_tax` (applied after the community share) |",
+                f"| Validators + delegators (by stake) | {pct(stakers)} | remainder |",
+                f"|   of which validator commission | each validator's rate × that share (minimum {pct(comm)}) | `params.staking.min_commission_rate` |"]
+
     def report(self, genesis_sha: str | None = None, warns=()) -> str:
         rows = self.ledger()
         L = [f"# Genesis report — {self.chain_id}", "",
              f"- Network file: `{self.path}`",
+             f"- Network: **{self.network_name()}** (EVM chain ID {self.evm_chain_id() or '?'})",
              f"- Total supply: **{fmt(self.total)} NIRA** ({self.total} anira)",
              f"- Genesis time: {self.genesis_time or '(set at build)'}"]
         if genesis_sha:
@@ -358,6 +396,7 @@ class Network:
         L += ["", f"## Community Nodes ({len(self.nodes)})", "", "| Moniker | Operator | Bond NIRA | Onion length |", "|---|---|---:|---:|"]
         for n in self.nodes:
             L.append(f"| {n['moniker']} | `{acc(addr_bytes(n['operator']))}` | {fmt(nira_to_base(n['bond']))} | {n['onion_length']} |")
+        L += self.economics()
         L += ["", "## Parameter overrides", "", "```json", json.dumps(self.params, indent=1), "```"]
         if self.consensus:
             L += ["", "Consensus:", "```json", json.dumps(self.consensus, indent=1), "```"]

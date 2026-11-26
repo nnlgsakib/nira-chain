@@ -69,8 +69,12 @@ class TestBuilder(unittest.TestCase):
         self.assertTrue(any("onion_tip" in e for e in self.errors(t)))
 
     def test_chain_id_must_bind_evm_chain_id(self):
-        t = self.base.replace('chain_id = "nira_47201-1"', 'chain_id = "nira-1"')
-        self.assertTrue(any("chain_id" in e for e in self.errors(t)))
+        for bad in ("nira-1", "nira_47201-1", "nira_91000-0"):
+            t = self.base.replace('chain_id = "nira_91000-1"', f'chain_id = "{bad}"')
+            self.assertTrue(any("chain_id" in e for e in self.errors(t)), bad)
+        for good in ("nira_92000-1", "nira_93000-4"):
+            t = self.base.replace('chain_id = "nira_91000-1"', f'chain_id = "{good}"')
+            self.assertFalse(any("chain_id" in e for e in self.errors(t)), good)
 
     def test_amount_precision(self):
         self.assertEqual(b.nira_to_base("1.5"), 15 * 10**17)

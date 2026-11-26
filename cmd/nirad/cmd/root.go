@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	srvflags "github.com/cosmos/evm/server/flags"
+
 	"os"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -72,7 +74,10 @@ func NewRootCmd() *cobra.Command {
 			customAppTemplate, customAppConfig := initAppConfig()
 			customCMTConfig := initCometBFTConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+			if err := server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig); err != nil {
+				return err
+			}
+			return resolveEVMChainID(cmd)
 		},
 	}
 
@@ -128,4 +133,22 @@ func ProvideClientContext(
 	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
+}
+
+// resolveEVMChainID puts the EVM chain ID derived from the genesis chain-id
+// (nira_<id>-<rev>) into the server config, so the app, EIP-712 and the
+// JSON-RPC server (which reads evm.evm-chain-id itself) all use the same value.
+// A conflicting value set in app.toml stops `start`; other commands (keys,
+// queries, init before genesis exists) keep working.
+func resolveEVMChainID(cmd *cobra.Command) error {
+	v := server.GetServerContextFromCmd(cmd).Viper
+	id, err := app.GetEVMChainID(v)
+	if err != nil {
+		if cmd.Name() == "start" {
+			return err
+		}
+		return nil
+	}
+	v.Set(srvflags.EVMChainID, id)
+	return nil
 }

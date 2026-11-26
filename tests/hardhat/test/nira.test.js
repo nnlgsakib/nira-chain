@@ -21,8 +21,8 @@ describe("Nira via Hardhat", function () {
     await counter.waitForDeployment();
   });
 
-  it("reports chain id 47201", async () => {
-    expect((await ethers.provider.getNetwork()).chainId).to.equal(47201n);
+  it("reports chain id 93000", async () => {
+    expect((await ethers.provider.getNetwork()).chainId).to.equal(93000n);
   });
 
   it("deploys a contract and reads its code", async () => {

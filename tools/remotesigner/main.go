@@ -7,7 +7,7 @@
 // an HSM. This tool exists to test the node side of remote signing.
 //
 //	go run ./tools/remotesigner --key signer/priv_validator_key.json --state signer/priv_validator_state.json \
-//	    --node 127.0.0.1:26659 --chain-id nira_47201-1
+//	    --node 127.0.0.1:26659 --chain-id nira_93000-1
 package main
 
 import (

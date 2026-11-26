@@ -63,8 +63,8 @@ var (
 	rpcURL    = flag.String("evm-rpc", "http://127.0.0.1:8545", "Ethereum JSON-RPC")
 	restURL   = flag.String("rest", "http://127.0.0.1:1317", "Cosmos REST")
 	cmtURL    = flag.String("cmt", "http://127.0.0.1:26657", "CometBFT RPC")
-	chainID   = flag.String("chain-id", "nira_47201-1", "Cosmos chain-id")
-	evmChain  = flag.Int64("evm-chain-id", 47201, "EVM chain ID")
+	chainID   = flag.String("chain-id", "nira_93000-1", "Cosmos chain-id")
+	evmChain  = flag.Int64("evm-chain-id", 93000, "EVM chain ID")
 	gasPrice  = flag.Int64("gas-price", 2_000_000_000, "gas price in anira (≥ fee floor)")
 )
 

@@ -18,7 +18,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-DOC-1 | Architecture doc still described community miss counters and auto-pause, which the spec removed (selection is secret, so misses are unobservable) | architecture.md v0.2 | |
 | G-DOC-2 | Spec said the app-hash ring holds `apphash_window` entries; the code keeps `window + epoch_blocks` (required so proofs stay verifiable for the whole epoch) | spec v0.3, INV-COMM-7 updated | |
 | G-DOC-3 | Invariant registry lumped INV-COMM-1…10 into one row with no test mapping | `docs/spec/invariants.md`: every ID → test | |
-| Q2 | EVM chain ID 47201 uniqueness unverified | Checked against chainid.network (2 909 chains): **unused**; registration still to do (G-OPS-5) | |
+| Q2 | EVM chain ID uniqueness unverified | Owner chose 91000 mainnet / 92000 testnet / 93000 local; 91000 and 92000 **unused** in chainid.network (2 909 chains, 2026-11-26), 93000 taken by a devnet (local only, acceptable); registration still to do (G-OPS-5) | |
 
 ## Phase gates (production mode)
 
@@ -96,7 +96,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-OPS-2 ✅ FIXED (tests/sync/check_sync.sh) | State-sync snapshots and archive node not configured or tested | T | | ops-infrastructure |
 | G-OPS-3 ✅ (promtool-validated rules, Grafana dashboard, `testnet.py monitor` verifies all 8 rules healthy on 16 live nodes, every referenced metric has data, stopping a validator shows 12.5 % missing power; found + fixed a rule on a non-existent metric) | No monitoring dashboards or alerts | T | | ops-infrastructure |
 | G-OPS-4 🟡 (make release + SHA256SUMS, bit-identical across clean clones; tag-only release workflow builds amd64+arm64, signs SHA256SUMS keylessly with cosign, drafts the GitHub release — not yet exercised: needs a first v* tag) | Release pipeline (Ignite action) never run; no signed checksums; reproducibility not verified | M | `.github/workflows/release.yml` | ops-launch |
-| G-OPS-5 | Register EVM chain ID 47201 in ethereum-lists/chains | T | free as of 2026-11-25 | ops-launch |
+| G-OPS-5 | Register EVM chain IDs 91000 (mainnet) and 92000 (testnet) in ethereum-lists/chains | T | free as of 2026-11-25 | ops-launch |
 | G-OPS-6 ✅ FIXED (Apache-2.0: LICENSE + NOTICE) | No LICENSE file | — | — | owner decision |
 
 ## Recommended order

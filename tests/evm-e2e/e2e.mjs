@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 
 const RPC = process.env.RPC ?? "http://127.0.0.1:8545";
 const REST = process.env.COSMOS_REST ?? "http://127.0.0.1:1317";
-const EXPECTED_CHAIN_ID = BigInt(process.env.CHAIN_ID ?? 47201);
+const EXPECTED_CHAIN_ID = BigInt(process.env.CHAIN_ID ?? 93000);
 const provider = new ethers.JsonRpcProvider(RPC, undefined, { cacheTimeout: -1 }); // no response caching: nonce/balance reads must be fresh
 const wallet = new ethers.Wallet(process.env.KEY, provider);
 let passed = 0;

@@ -154,7 +154,7 @@ What remains ❌ is outside the current logic: infrastructure-concentration cont
 | JSON-RPC: event filters, pending tx filter, fee info, network status | ✅ | automated in `evm-e2e` (newFilter + getFilterChanges on a real event, block/pending filters, feeHistory, net_*, web3, eth_syncing, txpool_status). Was 🟢: probed live: `eth_newFilter`, `eth_newBlockFilter`, `eth_newPendingTransactionFilter`, `eth_feeHistory`, `eth_maxPriorityFeePerGas`, `eth_syncing`, `net_version/listening/peerCount` respond. Not in automated tests |
 | Pending transactions | ✅ | pending-tx filter + `txpool_status` (txpool enabled on dev/RPC nodes); `eth_pendingTransactions` not provided by cosmos/evm (non-standard method) |
 | WebSocket subscriptions | ✅ | newHeads via ethers WebSocketProvider on `:8546` (`evm-e2e`) |
-| Wallet chain identification | ✅ | `eth_chainId` and `net_version` = 47201, unused in the public registry |
+| Wallet chain identification | ✅ | `eth_chainId` / `net_version` = 91000 mainnet, 92000 testnet (both unused in the public registry), 93000 local |
 | Common developer tools | 🟡 | ethers.js automated; Foundry, Hardhat and MetaMask not automated (G-TEST-3) |
 | DoS / resource limits | 🟡 | block gas 100 M, EIP-1559, fee floor in network template (K6); invalid txs rejected with reasons, failures mined as status 0 (K7 closed). Note: ≥ 50 % of gasLimit is always charged (min_gas_multiplier) |
 | "Don't claim full compatibility without tests" | ✅ | docs claim only what's tested |

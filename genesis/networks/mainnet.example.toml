@@ -17,7 +17,7 @@
 # to be confirmed before mainnet. Addresses are placeholders.
 
 [chain]
-chain_id = "nira_47201-1"                 # Cosmos chain-id; EVM chain ID 47201 is fixed in the binary
+chain_id = "nira_91000-1"                 # mainnet: EVM chain ID 91000 (testnet nira_92000-1, local nira_93000-1)
 genesis_time = "2027-03-01T12:00:00Z"
 denom = "anira"                           # 18 decimals, display "nira" (fixed)
 

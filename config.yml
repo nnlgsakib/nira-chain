@@ -16,7 +16,7 @@ validators:
     bonded: 1000000000000000000000000anira # 1,000,000 NIRA
     app:
       evm:
-        evm-chain-id: "47201"
+        evm-chain-id: "93000"
       json-rpc:
         enable: true
         address: 0.0.0.0:8545
@@ -33,7 +33,7 @@ client:
   openapi:
     path: docs/static/openapi.json
 genesis:
-  chain_id: nira_47201-1
+  chain_id: nira_93000-1
   consensus:
     params:
       block:

@@ -109,7 +109,7 @@ e2e-evm: ## EVM-interface e2e (needs a running localnet and `make e2e-deps`)
 e2e-gov: ## Governance e2e: param change (CLI + EVM vote), false-alert slashing (running localnet)
 	@tests/cosmos-e2e/governance.sh
 
-BENCH_CHAIN_ID ?= nira_47201-1
+BENCH_CHAIN_ID ?= nira_93000-1
 BENCH_HOME ?= $(HOME)/.nira
 bench-load: ## Throughput baseline (native, evm, mixed) against a running network → docs/benchmarks/raw
 	@go build -o $(BUILDDIR)/loadgen ./tools/loadgen
