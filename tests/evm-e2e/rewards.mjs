@@ -114,7 +114,11 @@ const p = {
   share: BigInt((await rest("/nira/community/v1/params")).params.reward_share_bps),
 };
 const rate = dec((await rest(`/cosmos/staking/v1beta1/validators/${VALOPER}`)).validator.commission.commission_rates.rate);
-const dels = { validator: SELF, dev1: DEV1, dev2: DEV2 };
+// every delegator of the validator (other suites may have delegated too), named where known
+const named = { [SELF]: "validator", [DEV1]: "dev1", [DEV2]: "dev2" };
+const dels = {};
+for (const d of (await rest(`/cosmos/staking/v1beta1/validators/${VALOPER}/delegations?pagination.limit=1000`)).delegation_responses)
+  dels[named[d.delegation.delegator_address] ?? d.delegation.delegator_address] = d.delegation.delegator_address;
 
 async function snapshot(h) {
   const s = {
@@ -171,7 +175,7 @@ for (const n of Object.keys(dels)) {
 }
 // F1 rounds the per-token ratio to nearest (LegacyDec), so the total may land slightly above or below
 if (sum > shared + tol || sum < shared - tol) fail(`Σ delegator rewards ${sum} vs shared ${shared} (±${tol})`);
-ok(`delegator rewards pro rata to stake (validator ${a.stake.validator / E18}, dev1 ${a.stake.dev1 / E18}, dev2 ${a.stake.dev2 / E18} NIRA); Σ = validator rewards − commission`);
+ok(`delegator rewards pro rata to stake for all ${Object.keys(dels).length} delegators (validator ${a.stake.validator / E18}, dev1 ${a.stake.dev1 / E18}, dev2 ${a.stake.dev2 / E18} NIRA, …); Σ = validator rewards − commission`);
 
 // --- 2. EVM precompile reads the same numbers at the same height ---------------
 const at = { blockTag: H + 1 };
