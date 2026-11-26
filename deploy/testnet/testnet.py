@@ -95,7 +95,9 @@ def write_compose(m):
                  f"    volumes: [\"{VOLUME}:/data\"]", "    networks: [nira]", "    restart: unless-stopped",
                  "    stop_grace_period: 20s"]
         if n.startswith("cn"):
-            lines += ["    entrypoint: [\"sh\", \"/opt/nira/community.sh\"]", f"    environment: {{ NODE: {n} }}"]
+            lines += ["    entrypoint: [\"sh\", \"/opt/nira/community.sh\"]", f"    environment: {{ NODE: {n} }}",
+                      # consumer-hardware budget for community nodes (G-COMM-3): 2 CPUs, 2 GiB RAM
+                      "    cpus: 2", "    mem_limit: 2g"]
         else:
             lines += [f"    command: [\"start\", \"--home\", \"/data/{n}\"]"]
         if n == "rpc0":

@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"time"
+
+	"cosmossdk.io/math"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,7 +35,7 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	cmd.AddCommand(OnionInitCmd(), ProveCmd(), RunCmd())
+	cmd.AddCommand(OnionInitCmd(), ProveCmd(), RunCmd(), StatusCmd())
 	return cmd
 }
 
@@ -186,4 +189,126 @@ func proveOnce(cmd *cobra.Command, clientCtx client.Context) (int, error) {
 		return 0, err
 	}
 	return len(msgs), nil
+}
+
+// StatusCmd prints everything an operator needs to know about its node:
+// registration, eligibility and (privately, from the local onion) selection
+// in the current epoch, proven work, rewards, slashes, and actions required.
+func StatusCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "status",
+		Short: "Show this community node's state, current-epoch selection, rewards and required actions",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			st, err := communityStatus(cmd.Context(), clientCtx)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintObjectLegacy(st)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NodeStatus is the operator-facing summary printed by `status`.
+type NodeStatus struct {
+	Operator          string   `json:"operator"`
+	Status            string   `json:"status"`
+	Bond              string   `json:"bond"`
+	Epoch             uint64   `json:"epoch"`
+	NextEpochHeight   int64    `json:"next_epoch_height"`
+	Eligible          bool     `json:"eligible_this_epoch"`
+	Selected          bool     `json:"selected_this_epoch"`
+	TasksProven       uint32   `json:"tasks_proven_this_epoch"`
+	TasksAssigned     int      `json:"tasks_assigned_this_epoch"`
+	UnitsTotal        uint64   `json:"units_total"`
+	RewardsTotal      string   `json:"rewards_total"`
+	SlashedTotal      string   `json:"slashed_total"`
+	OnionEpochsLeft   uint64   `json:"onion_epochs_left"`
+	RevealDistance    uint64   `json:"reveal_distance"`
+	MaxRevealDistance uint32   `json:"max_reveal_distance"`
+	SelectionChance   string   `json:"selection_chance_per_epoch"`
+	Actions           []string `json:"actions_required"`
+}
+
+func communityStatus(ctx context.Context, clientCtx client.Context) (NodeStatus, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	q := types.NewQueryClient(clientCtx)
+	op := clientCtx.GetFromAddress()
+	st := NodeStatus{Operator: op.String(), Actions: []string{}}
+	params, err := q.Params(ctx, &types.QueryParamsRequest{})
+	if err != nil {
+		return st, err
+	}
+	epRes, err := q.CurrentEpoch(ctx, &types.QueryCurrentEpochRequest{})
+	if err != nil {
+		return st, err
+	}
+	ep, p := epRes.Epoch, params.Params
+	st.Epoch, st.NextEpochHeight = ep.Number, epRes.NextEpochHeight
+	nodeRes, err := q.Node(ctx, &types.QueryNodeRequest{Operator: st.Operator})
+	if err != nil {
+		st.Status = "NOT_REGISTERED"
+		st.Actions = append(st.Actions, fmt.Sprintf("register: tx community register-node <moniker> %s%s <onion-tip> <length>", p.MinBond, p.BondDenom))
+		return st, nil
+	}
+	n := nodeRes.Node
+	st.Status, st.Bond, st.UnitsTotal = n.Status.String(), n.Bond.String()+p.BondDenom, n.UnitsTotal
+	st.RewardsTotal, st.SlashedTotal = intStr(n.RewardsTotal)+p.BondDenom, intStr(n.SlashedTotal)+p.BondDenom
+	st.TasksProven, st.MaxRevealDistance = nodeRes.UnitsThisEpoch, p.MaxRevealDistance
+	if ep.EligibleBond.IsPositive() {
+		chance := new(big.Float).Quo(new(big.Float).SetInt(n.Bond.MulRaw(int64(p.TargetCommittee)).BigInt()), new(big.Float).SetInt(ep.EligibleBond.BigInt()))
+		if chance.Cmp(big.NewFloat(1)) > 0 {
+			chance = big.NewFloat(1)
+		}
+		f, _ := chance.Float64()
+		st.SelectionChance = fmt.Sprintf("%.2f%%", f*100)
+	}
+	if n.Status != types.NODE_STATUS_ACTIVE {
+		if n.Status == types.NODE_STATUS_UNBONDING {
+			st.Actions = append(st.Actions, fmt.Sprintf("none: bond is returned at height %d", n.UnbondCompleteHeight))
+		}
+		return st, nil
+	}
+	st.RevealDistance = types.RevealDistance(n.OnionAnchorEpoch, ep.Number)
+	st.Eligible = n.RegisteredEpoch < ep.Number && ep.Number >= n.OnionBaseEpoch
+	if used := ep.Number - n.OnionBaseEpoch + 1; ep.Number >= n.OnionBaseEpoch && uint64(n.OnionLength) >= used {
+		st.OnionEpochsLeft = uint64(n.OnionLength) - used
+	}
+	if st.RevealDistance > uint64(p.MaxRevealDistance) || (ep.Number >= n.OnionBaseEpoch && st.OnionEpochsLeft == 0) {
+		st.Actions = append(st.Actions, "rotate the onion: tx community onion-init --overwrite, then tx community rotate-onion <tip> <length>")
+	} else if st.RevealDistance > uint64(p.MaxRevealDistance)*9/10 || (st.OnionEpochsLeft > 0 && st.OnionEpochsLeft < 100) {
+		st.Actions = append(st.Actions, "rotate the onion soon (reveal distance or onion length nearly exhausted)")
+	}
+	if st.Eligible {
+		onion, err := loadOnion(clientCtx.HomeDir)
+		if err != nil {
+			st.Actions = append(st.Actions, "onion secret missing in this home: run status/run on the machine that registered the node")
+			return st, nil
+		}
+		if reveal, err := onion.Layer(ep.Number, n.OnionBaseEpoch); err == nil {
+			st.Selected = types.IsSelected(types.Ticket(ep.Seed, reveal, op), n.Bond, ep.EligibleBond, p.TargetCommittee)
+		}
+		if st.Selected {
+			st.TasksAssigned = int(p.TasksPerSelection)
+			if st.TasksProven < p.TasksPerSelection {
+				st.Actions = append(st.Actions, "prove now: tx community prove (or keep `tx community run` running)")
+			}
+		}
+	}
+	return st, nil
+}
+
+func intStr(i math.Int) string {
+	if i.IsNil() {
+		return "0"
+	}
+	return i.String()
 }

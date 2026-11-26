@@ -80,6 +80,14 @@ units=$(q node "$OP" | json "d.get('units_this_epoch', 0)")
 EPOCH=$(q epoch | json "d['epoch']['number']")
 ok "selected + 2 real ICS-23 state proofs accepted in epoch $EPOCH"
 
+# 3b. Operator status command (G-COMM-3): selection computed locally from the onion, proven work shown
+stj=$($BIN tx community status --from "$KEY" "${KR[@]}" --chain-id "$CHAIN_ID" --output json 2>/dev/null)
+[ "$(echo "$stj" | json "d['status']")" = "NODE_STATUS_ACTIVE" ] || fail "status: $stj"
+[ "$(echo "$stj" | json "d['selected_this_epoch']")" = "True" ] || fail "status not selected: $stj"
+[ "$(echo "$stj" | json "int(d['tasks_proven_this_epoch'])")" = "2" ] || fail "status tasks: $stj"
+[ "$(echo "$stj" | json "len(d['actions_required'])")" = "0" ] || fail "unexpected actions: $stj"
+ok "tx community status: ACTIVE, selected (from local onion), 2/2 tasks proven, no action required"
+
 # 4. Re-proving the same tasks is rejected (no double pay)
 out=$($BIN tx community prove "${TXF[@]}" --gas-prices "$(gas_price)" 2>&1) || true
 for h in $(echo "$out" | txhash); do
