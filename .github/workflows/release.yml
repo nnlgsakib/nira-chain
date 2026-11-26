@@ -1,10 +1,15 @@
 # Release (G-OPS-4): runs ONLY when a version tag is pushed (v1.2.3, v1.2.3-rc.1).
-# Builds the reproducible linux/amd64 + linux/arm64 tarballs (make release), writes
-# SHA256SUMS, signs it keylessly with Sigstore cosign (GitHub OIDC identity, no
-# long-lived secret), and creates a draft GitHub release for a maintainer to publish.
+# Builds nirad for linux (amd64, arm64; reproducible via make release), macOS
+# (arm64, amd64) and Windows (amd64), writes one SHA256SUMS over every archive,
+# signs it keylessly with Sigstore cosign (GitHub OIDC identity, no long-lived
+# secret), and creates a draft GitHub release for a maintainer to publish.
+#
+# Archive names (the desktop app downloads these by name):
+#   nirad-<tag>-<os>-<arch>.tar.gz   (linux, darwin)   containing  nirad
+#   nirad-<tag>-windows-amd64.zip                      containing  nirad.exe
 #
 # Verify a release:
-#   sha256sum -c SHA256SUMS
+#   sha256sum -c SHA256SUMS --ignore-missing
 #   cosign verify-blob SHA256SUMS --bundle SHA256SUMS.bundle \
 #     --certificate-identity-regexp 'https://github.com/nnlgsakib/nira-chain/.github/workflows/release.yml@refs/tags/v.*' \
 #     --certificate-oidc-issuer https://token.actions.githubusercontent.com
@@ -17,8 +22,11 @@ permissions:
   contents: write   # create the draft release
   id-token: write   # keyless signing
 
+env:
+  CGO_ENABLED: "1"
+
 jobs:
-  build:
+  linux:
     strategy:
       matrix:
         include:
@@ -30,23 +38,68 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version-file: go.mod }
       - run: make release VERSION=${{ github.ref_name }}
+      - run: build/release/nirad version
       - uses: actions/upload-artifact@v4
         with:
-          name: nirad-${{ matrix.arch }}
+          name: nirad-linux-${{ matrix.arch }}
           path: build/release/*.tar.gz
 
+  macos:
+    runs-on: macos-14   # Apple silicon; amd64 is cross-compiled with clang -arch x86_64
+    strategy:
+      matrix:
+        include:
+          - { arch: arm64, cc: clang }
+          - { arch: amd64, cc: "clang -arch x86_64" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - name: Build
+        env: { GOARCH: "${{ matrix.arch }}", CC: "${{ matrix.cc }}" }
+        run: |
+          V=${{ github.ref_name }}; C=$(git rev-parse HEAD)
+          LD="-X github.com/cosmos/cosmos-sdk/version.Name=nira -X github.com/cosmos/cosmos-sdk/version.AppName=nirad -X github.com/cosmos/cosmos-sdk/version.Version=$V -X github.com/cosmos/cosmos-sdk/version.Commit=$C"
+          mkdir -p out && go build -trimpath -mod=readonly -buildvcs=false -ldflags "$LD" -o out/nirad ./cmd/nirad
+          [ "${{ matrix.arch }}" = arm64 ] && out/nirad version
+          cd out && tar -czf nirad-$V-darwin-${{ matrix.arch }}.tar.gz nirad
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nirad-darwin-${{ matrix.arch }}
+          path: out/*.tar.gz
+
+  windows:
+    runs-on: windows-latest   # has MinGW-w64 gcc on PATH for cgo
+    defaults: { run: { shell: bash } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - name: Build
+        run: |
+          gcc --version | head -1
+          V=${{ github.ref_name }}; C=$(git rev-parse HEAD)
+          LD="-X github.com/cosmos/cosmos-sdk/version.Name=nira -X github.com/cosmos/cosmos-sdk/version.AppName=nirad -X github.com/cosmos/cosmos-sdk/version.Version=$V -X github.com/cosmos/cosmos-sdk/version.Commit=$C"
+          mkdir -p out && go build -trimpath -mod=readonly -buildvcs=false -ldflags "$LD" -o out/nirad.exe ./cmd/nirad
+          out/nirad.exe version
+          cd out && 7z a -tzip nirad-$V-windows-amd64.zip nirad.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nirad-windows-amd64
+          path: out/*.zip
+
   publish:
-    needs: build
+    needs: [linux, macos, windows]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
-      - run: cd dist && sha256sum *.tar.gz > SHA256SUMS && cat SHA256SUMS
+      - run: cd dist && sha256sum nirad-* > SHA256SUMS && cat SHA256SUMS
       - uses: sigstore/cosign-installer@v3
       - run: cd dist && cosign sign-blob --yes SHA256SUMS --bundle SHA256SUMS.bundle
       - name: Draft release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          gh release create "${{ github.ref_name }}" dist/*.tar.gz dist/SHA256SUMS dist/SHA256SUMS.bundle \
+          gh release create "${{ github.ref_name }}" dist/nirad-* dist/SHA256SUMS dist/SHA256SUMS.bundle \
             --repo "${{ github.repository }}" --draft --generate-notes \
             --title "Nira ${{ github.ref_name }}"
