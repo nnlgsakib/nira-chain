@@ -169,7 +169,8 @@ for (const n of Object.keys(dels)) {
   if (got > want + t || got < want - t) fail(`${n} reward ${got} vs pro-rata ${want} (±${t})`);
   sum += got; tol += t;
 }
-if (sum > shared || sum < shared - tol) fail(`Σ delegator rewards ${sum} vs shared ${shared}`);
+// F1 rounds the per-token ratio to nearest (LegacyDec), so the total may land slightly above or below
+if (sum > shared + tol || sum < shared - tol) fail(`Σ delegator rewards ${sum} vs shared ${shared} (±${tol})`);
 ok(`delegator rewards pro rata to stake (validator ${a.stake.validator / E18}, dev1 ${a.stake.dev1 / E18}, dev2 ${a.stake.dev2 / E18} NIRA); Σ = validator rewards − commission`);
 
 // --- 2. EVM precompile reads the same numbers at the same height ---------------
