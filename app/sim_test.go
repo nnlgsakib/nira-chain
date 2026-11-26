@@ -137,6 +137,37 @@ func TestFullAppSimulation(t *testing.T) {
 		app.SetNotSigverifyTx()
 	}
 	require.Equal(t, "nira", app.Name())
+	// G-TEST-1b: the SDK simulator draws evidenceFraction uniformly in [0,1) and injects
+	// f/(1-f) double-sign offences per block on average (x/simulation/mock_cometbft.go), so
+	// for large f every validator is tombstoned and the simulator skips with "empty
+	// validator set". That end state is correct; verify it instead of trusting the skip:
+	// the chain itself must have no active validators and every validator must be
+	// tombstoned (or have no bonded tokens left), never removed by a Nira bug.
+	defer func() {
+		if !t.Skipped() {
+			return
+		}
+		ctx := app.NewUncachedContext(false, cmtproto.Header{})
+		last, err := app.StakingKeeper.GetLastValidators(ctx)
+		require.NoError(t, err)
+		require.Empty(t, last, "simulator saw an empty set but the chain has active validators")
+		all, err := app.StakingKeeper.GetAllValidators(ctx)
+		require.NoError(t, err)
+		tomb := 0
+		for _, v := range all {
+			ca, err := v.GetConsAddr()
+			require.NoError(t, err)
+			si, err := app.SlashingKeeper.GetValidatorSigningInfo(ctx, ca)
+			if err == nil && si.Tombstoned {
+				tomb++
+				continue
+			}
+			require.Truef(t, v.Tokens.IsZero() || !v.IsBonded(),
+				"validator %s left the set without being tombstoned (jailed=%v tokens=%s)", v.OperatorAddress, v.Jailed, v.Tokens)
+		}
+		t.Logf("empty validator set verified at height %d: %d/%d validators tombstoned by simulated double-sign evidence",
+			app.LastBlockHeight(), tomb, len(all))
+	}()
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(

@@ -19,9 +19,9 @@ jobs:
         with: { go-version-file: go.mod }
       - run: make test
       - run: make fuzz FUZZTIME=15s
-      - name: App simulation (seeds that complete; see docs/GAPS.md G-TEST-1b)
+      - name: App simulation (seed 5 ends with every validator tombstoned: the skip is verified, see G-TEST-1b)
         run: |
-          for seed in 1 2 4 7 13; do
+          for seed in 1 2 4 5 7 13; do
             go test ./app -run '^TestFullAppSimulation$' -Enabled=true -NumBlocks=40 -BlockSize=30 -Commit=true -Seed=$seed -Period=0 -timeout 20m
           done
 
