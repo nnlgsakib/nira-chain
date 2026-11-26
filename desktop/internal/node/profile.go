@@ -50,21 +50,21 @@ type Setting struct {
 // LeanProfile is the community-node configuration of scripts/node-profile.py
 // (role "community"), plus the app's own ports so it never clashes with another
 // local node. JSON-RPC stays off: proving needs only CometBFT RPC and REST.
-func LeanProfile(keep int) (cfg, app []Setting) {
+func LeanProfile(keep int, ports Ports) (cfg, app []Setting) {
 	k := strconv.Itoa(keep)
 	cfg = []Setting{
-		{"p2p", "laddr", fmt.Sprintf(`"tcp://0.0.0.0:%d"`, PortP2P)},
+		{"p2p", "laddr", fmt.Sprintf(`"tcp://0.0.0.0:%d"`, ports.P2P)},
 		{"p2p", "pex", "true"},
 		{"p2p", "addr_book_strict", "true"},
 		{"p2p", "max_num_inbound_peers", "20"},
 		{"p2p", "max_num_outbound_peers", "10"},
 		{"p2p", "send_rate", "20480000"},
 		{"p2p", "recv_rate", "20480000"},
-		{"rpc", "laddr", fmt.Sprintf(`"tcp://127.0.0.1:%d"`, PortRPC)},
+		{"rpc", "laddr", fmt.Sprintf(`"tcp://127.0.0.1:%d"`, ports.RPC)},
 		{"rpc", "pprof_laddr", `""`},
 		{"tx_index", "indexer", `"null"`},
 		{"instrumentation", "prometheus", "true"},
-		{"instrumentation", "prometheus_listen_addr", fmt.Sprintf(`"127.0.0.1:%d"`, PortPrometheus)},
+		{"instrumentation", "prometheus_listen_addr", fmt.Sprintf(`"127.0.0.1:%d"`, ports.Metrics)},
 	}
 	app = []Setting{
 		{"", "pruning", `"custom"`},
@@ -72,8 +72,8 @@ func LeanProfile(keep int) (cfg, app []Setting) {
 		{"", "pruning-interval", `"100"`},
 		{"", "min-retain-blocks", k},
 		{"api", "enable", "true"},
-		{"api", "address", fmt.Sprintf(`"tcp://127.0.0.1:%d"`, PortREST)},
-		{"grpc", "address", fmt.Sprintf(`"127.0.0.1:%d"`, PortGRPC)},
+		{"api", "address", fmt.Sprintf(`"tcp://127.0.0.1:%d"`, ports.REST)},
+		{"grpc", "address", fmt.Sprintf(`"127.0.0.1:%d"`, ports.GRPC)},
 		{"json-rpc", "enable", "false"},
 	}
 	return cfg, app
@@ -107,8 +107,8 @@ func SetTOML(text string, s Setting) (string, bool, error) {
 
 // ApplyProfile writes the lean profile into home/config/{config,app}.toml and
 // returns the number of changed lines.
-func ApplyProfile(home string, keep int) (int, error) {
-	cfg, app := LeanProfile(keep)
+func ApplyProfile(home string, keep int, ports Ports) (int, error) {
+	cfg, app := LeanProfile(keep, ports)
 	n := 0
 	for file, settings := range map[string][]Setting{"config.toml": cfg, "app.toml": app} {
 		p := filepath.Join(home, "config", file)

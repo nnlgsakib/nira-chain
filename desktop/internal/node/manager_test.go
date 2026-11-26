@@ -1,6 +1,8 @@
 package node
 
 import (
+	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -117,5 +119,57 @@ func TestNodeExitIsReported(t *testing.T) {
 	b, _ := os.ReadFile(m.LogPath())
 	if !strings.Contains(string(b), "bad port") || !strings.Contains(string(b), "process exited") {
 		t.Fatalf("support log:\n%s", b)
+	}
+}
+
+// A busy port is replaced by the next free one: settings, config.toml and the
+// activity log all reflect it, and status/tx use the new port.
+func TestBusyPortMovesToNextFree(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script stand-in")
+	}
+	dir := t.TempDir()
+	m, err := NewManager(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = m.SaveSettings(Settings{Network: "local"})
+	home := m.Home()
+	if err := os.MkdirAll(filepath.Join(home, "config"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	// minimal config files with the keys the profile sets
+	cfg := "[p2p]\nladdr = \"x\"\n[rpc]\nladdr = \"x\"\n[instrumentation]\nprometheus_listen_addr = \"x\"\n"
+	app := "[api]\naddress = \"x\"\n[grpc]\naddress = \"x\"\n"
+	_ = os.WriteFile(filepath.Join(home, "config", "config.toml"), []byte(cfg), 0o600)
+	_ = os.WriteFile(filepath.Join(home, "config", "app.toml"), []byte(app), 0o600)
+
+	def := DefaultPorts()
+	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", def.RPC))
+	if err != nil {
+		t.Skipf("default RPC port already busy here: %v", err)
+	}
+	defer l.Close()
+
+	fake := filepath.Join(dir, "fake-nirad")
+	_ = os.WriteFile(fake, []byte("#!/bin/sh\nsleep 1\n"), 0o755)
+	m.Nirad = fake
+	if err := m.StartNode(); err != nil {
+		t.Fatal(err)
+	}
+	defer m.StopNode()
+	p := m.Ports()
+	if p.RPC == def.RPC || p.RPC <= def.RPC {
+		t.Fatalf("RPC port not moved: %d", p.RPC)
+	}
+	b, _ := os.ReadFile(filepath.Join(home, "config", "config.toml"))
+	if !strings.Contains(string(b), fmt.Sprintf(`laddr = "tcp://127.0.0.1:%d"`, p.RPC)) {
+		t.Fatalf("config.toml not updated:\n%s", b)
+	}
+	if !strings.Contains(fmt.Sprint(m.Logs(20)), fmt.Sprintf("port %d for the RPC was busy: using %d", def.RPC, p.RPC)) {
+		t.Fatal("port change not noted in the activity log")
+	}
+	if got := m.Settings().Ports; got != p {
+		t.Fatalf("settings not saved: %+v vs %+v", got, p)
 	}
 }

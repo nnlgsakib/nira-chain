@@ -47,7 +47,7 @@ func TestSetTOML(t *testing.T) {
 // The Go profile must match scripts/node-profile.py's community role on the keys
 // both set (the script is the reference for operators without the app).
 func TestLeanProfileMatchesScript(t *testing.T) {
-	cfg, app := LeanProfile(2000)
+	cfg, app := LeanProfile(2000, DefaultPorts())
 	want := map[string]string{
 		"/pruning": `"custom"`, "/pruning-keep-recent": `"2000"`, "/pruning-interval": `"100"`, "/min-retain-blocks": "2000",
 		"tx_index/indexer": `"null"`, "json-rpc/enable": "false", "api/enable": "true", "p2p/pex": "true",

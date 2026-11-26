@@ -91,7 +91,16 @@ func (m *Manager) Setup(ctx context.Context, networkID, moniker string, report S
 
 	report("Applying the lean community-node profile")
 	keep := LeanKeep(gen.Result.Genesis)
-	if _, err := ApplyProfile(home, keep); err != nil {
+	ports, _, err := pickFreePorts(m.Ports())
+	if err != nil {
+		return err
+	}
+	if _, err := ApplyProfile(home, keep, ports); err != nil {
+		return err
+	}
+	s = m.Settings()
+	s.Ports = ports
+	if err := m.SaveSettings(s); err != nil {
 		return err
 	}
 
@@ -274,7 +283,7 @@ func (m *Manager) GasPrice(ctx context.Context) (string, error) {
 	var bf struct {
 		BaseFee string `json:"base_fee"`
 	}
-	if err := getJSON(ctx, fmt.Sprintf("http://127.0.0.1:%d/cosmos/evm/feemarket/v1/base_fee", PortREST), &bf); err != nil {
+	if err := getJSON(ctx, m.Ports().RESTURL()+"/cosmos/evm/feemarket/v1/base_fee", &bf); err != nil {
 		return "", err
 	}
 	f, ok := new(big.Float).SetString(bf.BaseFee)
@@ -305,7 +314,7 @@ func (m *Manager) tx(ctx context.Context, args ...string) (string, error) {
 	}
 	full := append([]string{"tx"}, args...)
 	full = append(full, "--from", KeyName, "--keyring-backend", "file", "--home", m.Home(), "--chain-id", n.ChainID,
-		"--node", fmt.Sprintf("tcp://127.0.0.1:%d", PortRPC), "--gas", "auto", "--gas-adjustment", "1.5",
+		"--node", m.Ports().NodeArg(), "--gas", "auto", "--gas-adjustment", "1.5",
 		"--gas-prices", gp, "-y", "--output", "json")
 	out, err := m.run(ctx, pass+"\n", full...)
 	if err != nil {

@@ -76,7 +76,8 @@ func (m *Manager) Status(ctx context.Context) Status {
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
 	defer cancel()
 
-	rpc := fmt.Sprintf("http://127.0.0.1:%d", PortRPC)
+	ports := m.Ports()
+	rpc := ports.RPCURL()
 	var cs struct {
 		Result struct {
 			SyncInfo struct {
@@ -107,7 +108,7 @@ func (m *Manager) Status(ctx context.Context) Status {
 		return st // REST answers from a state that is not current yet
 	}
 
-	rest := fmt.Sprintf("http://127.0.0.1:%d", PortREST)
+	rest := ports.RESTURL()
 	var p struct {
 		Params struct {
 			MinBond string `json:"min_bond"`

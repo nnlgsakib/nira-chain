@@ -3,6 +3,8 @@
 // re-implements chain logic: everything on-chain goes through `nirad` itself.
 package node
 
+import "fmt"
+
 // Network is a chain the app can join.
 type Network struct {
 	ID         string `json:"id"`
@@ -59,12 +61,27 @@ func NetworkByID(id string) (Network, bool) {
 	return Network{}, false
 }
 
-// Ports of the app's own node. They are offset from the defaults so the app can
-// run next to a validator or a localnet on the same machine.
-const (
-	PortP2P        = 26756
-	PortRPC        = 26757
-	PortREST       = 1417
-	PortGRPC       = 9190
-	PortPrometheus = 26760
-)
+// Ports of the app's own node. Defaults are offset from nirad's so the app can
+// run next to a validator or a localnet on the same machine; a busy port is
+// replaced by the next free one before the node starts (Manager.ensurePorts).
+type Ports struct {
+	P2P     int `json:"p2p"`
+	RPC     int `json:"rpc"`
+	REST    int `json:"rest"`
+	GRPC    int `json:"grpc"`
+	Metrics int `json:"metrics"`
+}
+
+// DefaultPorts are the first choice for a new node.
+func DefaultPorts() Ports {
+	return Ports{P2P: 26756, RPC: 26757, REST: 1417, GRPC: 9190, Metrics: 26760}
+}
+
+func (p Ports) valid() bool {
+	return p.P2P > 0 && p.RPC > 0 && p.REST > 0 && p.GRPC > 0 && p.Metrics > 0
+}
+
+// RPCURL / RESTURL are the node's local endpoints.
+func (p Ports) RPCURL() string  { return fmt.Sprintf("http://127.0.0.1:%d", p.RPC) }
+func (p Ports) RESTURL() string { return fmt.Sprintf("http://127.0.0.1:%d", p.REST) }
+func (p Ports) NodeArg() string { return fmt.Sprintf("tcp://127.0.0.1:%d", p.RPC) }

@@ -30,6 +30,8 @@ type Settings struct {
 	MaxCPUs      int  `json:"max_cpus"`      // GOMAXPROCS; 0 = half the cores
 	MaxMemoryMB  int  `json:"max_memory_mb"` // GOMEMLIMIT soft limit; 0 = 4096
 	StartAtLogin bool `json:"start_at_login"`
+	// Ports the node uses; chosen at setup, moved when one is busy.
+	Ports Ports `json:"ports"`
 }
 
 // Manager owns one node home and its two processes: `nirad start` and the
@@ -110,6 +112,20 @@ func (m *Manager) SaveSettings(s Settings) error {
 	m.mu.Unlock()
 	b, _ := json.MarshalIndent(s, "", "  ")
 	return os.WriteFile(filepath.Join(m.Dir, "settings.json"), b, 0o600)
+}
+
+// Ports returns the node's configured ports (defaults until set).
+func (m *Manager) Ports() Ports {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.portsLocked()
+}
+
+func (m *Manager) portsLocked() Ports {
+	if m.settings.Ports.valid() {
+		return m.settings.Ports
+	}
+	return DefaultPorts()
 }
 
 // Home is the node home of the selected network.
@@ -297,7 +313,7 @@ func (m *Manager) StartNode() error {
 	if m.node.running() {
 		return nil
 	}
-	if err := portsFree(); err != nil {
+	if err := m.ensurePortsLocked(); err != nil {
 		return err
 	}
 	p, err := m.spawn("node", "", "start", "--home", filepath.Join(m.Dir, "homes", m.settings.Network))
@@ -332,7 +348,7 @@ func (m *Manager) StartWorker(gasPrice string) error {
 	home := filepath.Join(m.Dir, "homes", m.settings.Network)
 	p, err := m.spawn("work", m.pass+"\n", "tx", "community", "run", "--from", KeyName,
 		"--keyring-backend", "file", "--home", home, "--chain-id", n.ChainID,
-		"--node", fmt.Sprintf("tcp://127.0.0.1:%d", PortRPC), "--gas", "auto", "--gas-adjustment", "1.5",
+		"--node", m.portsLocked().NodeArg(), "--gas", "auto", "--gas-adjustment", "1.5",
 		"--gas-prices", gasPrice, "-y")
 	if err != nil {
 		return err
@@ -413,29 +429,112 @@ func (r *ring) last(n int) []LogLine {
 	return append(make([]LogLine, 0, n), r.lines[len(r.lines)-n:]...) // never nil: the UI expects a list
 }
 
-// portsFree checks that the node's ports can be opened before starting it, so a
-// clash (another program, or a range Windows reserves for Hyper-V/WSL) is
-// reported by name instead of the node exiting a moment after it starts.
-func portsFree() error {
-	for _, p := range []struct {
-		name string
-		addr string
-	}{
-		{"peer (P2P)", fmt.Sprintf("0.0.0.0:%d", PortP2P)},
-		{"RPC", fmt.Sprintf("127.0.0.1:%d", PortRPC)},
-		{"REST API", fmt.Sprintf("127.0.0.1:%d", PortREST)},
-		{"gRPC", fmt.Sprintf("127.0.0.1:%d", PortGRPC)},
-		{"metrics", fmt.Sprintf("127.0.0.1:%d", PortPrometheus)},
-	} {
-		l, err := net.Listen("tcp", p.addr)
-		if err != nil {
-			hint := "another program is using it"
-			if runtime.GOOS == "windows" {
-				hint = "another program is using it, or Windows reserves it (check: netsh interface ipv4 show excludedportrange protocol=tcp)"
-			}
-			return fmt.Errorf("the node's %s port %s can't be opened: %s (%v)", p.name, p.addr, hint, err)
+// ensurePortsLocked makes sure every port the node needs can be opened. A busy
+// one (another program, or a range Windows reserves for Hyper-V/WSL) is moved
+// to the next free port; the node's config files and the settings are updated
+// and the change is noted in the activity log. Caller holds m.mu.
+func (m *Manager) ensurePortsLocked() error {
+	cur := m.portsLocked()
+	next, moved, err := pickFreePorts(cur)
+	if err != nil {
+		return err
+	}
+	if !moved && m.settings.Ports.valid() {
+		return nil
+	}
+	home := filepath.Join(m.Dir, "homes", m.settings.Network)
+	if _, err := os.Stat(filepath.Join(home, "config", "config.toml")); err == nil {
+		if err := applyPorts(home, next); err != nil {
+			return fmt.Errorf("updating the node's ports: %w", err)
 		}
-		_ = l.Close()
+	}
+	for _, c := range portChanges(cur, next) {
+		m.logs.add("node", c)
+	}
+	m.settings.Ports = next
+	b, _ := json.MarshalIndent(m.settings, "", "  ")
+	return os.WriteFile(filepath.Join(m.Dir, "settings.json"), b, 0o600)
+}
+
+// pickFreePorts keeps each free port and replaces a busy one with the next free
+// port above it (never one already taken by another of the node's ports).
+func pickFreePorts(want Ports) (Ports, bool, error) {
+	type slot struct {
+		name string
+		host string
+		port *int
+	}
+	got := want
+	slots := []slot{{"peer (P2P)", "0.0.0.0", &got.P2P}, {"RPC", "127.0.0.1", &got.RPC}, {"REST API", "127.0.0.1", &got.REST},
+		{"gRPC", "127.0.0.1", &got.GRPC}, {"metrics", "127.0.0.1", &got.Metrics}}
+	used := map[int]bool{}
+	moved := false
+	for _, s := range slots {
+		p := *s.port
+		for tries := 0; ; tries++ {
+			if tries > 500 || p > 65535 {
+				return want, false, fmt.Errorf("no free port near %d for the node's %s", *s.port, s.name)
+			}
+			if !used[p] && canListen(s.host, p) {
+				break
+			}
+			p++
+		}
+		if p != *s.port {
+			moved = true
+			*s.port = p
+		}
+		used[p] = true
+	}
+	return got, moved, nil
+}
+
+func canListen(host string, port int) bool {
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+	if err != nil {
+		return false
+	}
+	_ = l.Close()
+	return true
+}
+
+func portChanges(a, b Ports) []string {
+	var out []string
+	for _, c := range []struct {
+		name     string
+		old, new int
+	}{{"peer (P2P)", a.P2P, b.P2P}, {"RPC", a.RPC, b.RPC}, {"REST API", a.REST, b.REST}, {"gRPC", a.GRPC, b.GRPC}, {"metrics", a.Metrics, b.Metrics}} {
+		if c.old != c.new {
+			out = append(out, fmt.Sprintf("port %d for the %s was busy: using %d", c.old, c.name, c.new))
+		}
+	}
+	return out
+}
+
+// applyPorts rewrites only the port settings of the lean profile.
+func applyPorts(home string, p Ports) error {
+	cfg, app := LeanProfile(LeanFloor, p)
+	isPort := func(s Setting) bool {
+		return strings.Contains(s.Value, ":") && strings.Contains(s.Value, "127.0.0.1") || strings.Contains(s.Value, "0.0.0.0")
+	}
+	for file, all := range map[string][]Setting{"config.toml": cfg, "app.toml": app} {
+		path := filepath.Join(home, "config", file)
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		text := string(b)
+		for _, s := range all {
+			if !isPort(s) {
+				continue
+			}
+			if text, _, err = SetTOML(text, s); err != nil {
+				return err
+			}
+		}
+		if err := os.WriteFile(path, []byte(text), 0o600); err != nil {
+			return err
+		}
 	}
 	return nil
 }
