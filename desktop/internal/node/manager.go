@@ -254,6 +254,7 @@ func (m *Manager) spawn(tag, stdin string, args ...string) (*proc, error) {
 		}
 		return nil, err
 	}
+	afterStart(cmd)
 	m.logs.add(tag, "started: nirad "+strings.Join(args, " "))
 	p := &proc{cmd: cmd, done: make(chan struct{})}
 	scanned := make(chan []string)
@@ -313,6 +314,9 @@ func (m *Manager) StartNode() error {
 	if m.node.running() {
 		return nil
 	}
+	// a nirad left running by an earlier session (crash, forced close) holds the
+	// database and ports; stop it first, before ports are checked
+	m.stopLeftoversLocked()
 	if err := m.ensurePortsLocked(); err != nil {
 		return err
 	}
@@ -427,6 +431,42 @@ func (r *ring) last(n int) []LogLine {
 		n = len(r.lines)
 	}
 	return append(make([]LogLine, 0, n), r.lines[len(r.lines)-n:]...) // never nil: the UI expects a list
+}
+
+// stopLeftoversLocked stops nirad processes started from the app's own binary
+// that this session does not own: leftovers of a crashed or killed app. Caller holds m.mu.
+func (m *Manager) stopLeftoversLocked() {
+	if m.Nirad == "" {
+		return
+	}
+	mine := map[int]bool{}
+	for _, p := range []*proc{m.node, m.worker} {
+		if p.running() {
+			mine[p.cmd.Process.Pid] = true
+		}
+	}
+	for _, pid := range pidsOf(m.Nirad) {
+		if mine[pid] || pid == os.Getpid() {
+			continue
+		}
+		if p, err := os.FindProcess(pid); err == nil {
+			_ = p.Kill()
+			m.logs.add("node", fmt.Sprintf("stopped a nirad (pid %d) left running by an earlier session", pid))
+		}
+	}
+	// give the OS a moment to release the database files
+	for i := 0; i < 50; i++ {
+		left := false
+		for _, pid := range pidsOf(m.Nirad) {
+			if !mine[pid] {
+				left = true
+			}
+		}
+		if !left {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 // ensurePortsLocked makes sure every port the node needs can be opened. A busy

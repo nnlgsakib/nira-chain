@@ -173,3 +173,48 @@ func TestBusyPortMovesToNextFree(t *testing.T) {
 		t.Fatalf("settings not saved: %+v vs %+v", got, p)
 	}
 }
+
+// A nirad left running by an earlier session (same binary path) is stopped
+// before a new node starts: on Windows it held the database open and the new
+// node failed with "being used by another process".
+func TestLeftoverNiradIsStopped(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("uses /proc and a copied sleep binary")
+	}
+	dir := t.TempDir()
+	sleepBin, err := exec.LookPath("sleep")
+	if err != nil {
+		t.Skip("no sleep")
+	}
+	b, _ := os.ReadFile(sleepBin)
+	fake := filepath.Join(dir, "nirad")
+	if err := os.WriteFile(fake, b, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	orphan := exec.Command(fake, "300") // "earlier session": not started by the manager
+	if err := orphan.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	go func() { _ = orphan.Wait(); close(done) }()
+
+	m, err := NewManager(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Nirad = fake
+	_ = m.SaveSettings(Settings{Network: "local"})
+	if err := m.StartNode(); err != nil { // the new "node" is sleep with bad args: exits at once
+		t.Fatal(err)
+	}
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		_ = orphan.Process.Kill()
+		t.Fatal("leftover nirad was not stopped")
+	}
+	if !strings.Contains(fmt.Sprint(m.Logs(20)), fmt.Sprintf("pid %d", orphan.Process.Pid)) {
+		t.Fatal("stopping the leftover was not logged")
+	}
+	m.StopNode()
+}
