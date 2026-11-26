@@ -60,7 +60,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
 | G-SEC-2 ✅ v0.1 (docs/security/threat-model.md, key-inventory.md, runbooks.md; monitors in deploy/monitoring) | **No threat model document** covering the idea's §11 list (prevention, detection, recovery, test per threat) | T | — | quality-security |
-| G-SEC-3 🟡 (fuzzers added; found + fixed a zero-window panic) | No fuzzing: MerkleProof decoding, precompile ABI decoding, msg handlers, genesis import | T | — | quality-testing / quality-security |
+| G-SEC-3 ✅ FIXED (6 fuzzers in `make fuzz`/CI: proof decoding, onion reveal, task derivation, SubmitTaskProof, precompile calldata → ABI decode → handlers → output encoding, genesis import/export round trip; found + fixed a zero-window panic) | No fuzzing: MerkleProof decoding, precompile ABI decoding, msg handlers, genesis import | T | — | quality-testing / quality-security |
 | G-SEC-4 ✅ FIXED (tests/evm-e2e/atomicity.mjs) | Precompile atomicity untested: an EVM call that invokes `0x…0900` and then **reverts** must leave no community state or escrow behind (the class of GO-2025-3684) | T | no test with a reverting contract | build-smart-contracts + quality-testing |
 | G-SEC-5 | 4 dependency advisories without upstream fixes (K9) | I | `make govulncheck` | quality-security |
 | G-SEC-6 ✅ CLOSED (not reproducible: errors are surfaced; root cause was the fixed precompile panic; e2e added) | `ExperimentalEVMMempool` in use; txs that fail CheckTx are dropped silently (K7) | T | `app/evm.go`, hang seen in e2e | stack-cosmos-evm |

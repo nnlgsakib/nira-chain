@@ -82,7 +82,9 @@ FUZZTIME ?= 30s
 fuzz: ## Run every fuzz target for FUZZTIME each (default 30s)
 	@for f in FuzzVerifyStateProof FuzzVerifyReveal FuzzDeriveTaskAndSelection; do \
 	  go test ./x/community/types -run '^$$' -fuzz "^$$f$$" -fuzztime $(FUZZTIME) || exit 1; done
-	@go test ./x/community/keeper -run '^$$' -fuzz '^FuzzSubmitTaskProof$$' -fuzztime $(FUZZTIME)
+	@for f in FuzzSubmitTaskProof FuzzGenesisImport; do \
+	  go test ./x/community/keeper -run '^$$' -fuzz "^$$f$$" -fuzztime $(FUZZTIME) || exit 1; done
+	@go test ./precompiles/community -run '^$$' -fuzz '^FuzzPrecompileCalldata$$' -fuzztime $(FUZZTIME)
 
 test-genesis: ## Genesis builder validation tests (python3)
 	@python3 -m unittest discover -s tests/genesis -p 'test_*.py'
