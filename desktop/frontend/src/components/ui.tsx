@@ -1,5 +1,5 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
-import { AlertTriangle, Info } from "lucide-react";
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { AlertTriangle, Check, Copy, Info } from "lucide-react";
 
 // Kit follows nira-wallet/src/components/ui.tsx: pills for buttons and inputs,
 // 26px cards, the mint fill only for the one primary action, text on mint is
@@ -92,14 +92,69 @@ export const Stat = ({
   </div>
 );
 
+export type Tone = "up" | "down" | "warn" | "faint";
+
 /** Live state dot: a ring pulses only while the thing is live (status, not decoration). */
-export const Dot = ({ tone, live = false }: { tone: "up" | "down" | "warn" | "faint"; live?: boolean }) => {
+export const Dot = ({ tone, live = false }: { tone: Tone; live?: boolean }) => {
   const c = { up: "bg-up", down: "bg-down", warn: "bg-warn", faint: "bg-faint" }[tone];
   return (
     <span className="relative inline-flex size-2.5 shrink-0" aria-hidden>
       {live && <span className={`absolute inset-0 rounded-full ${c} animate-ring`} />}
       <span className={`relative size-2.5 rounded-full ${c}`} />
     </span>
+  );
+};
+
+/** Compact status pill pairing a live Dot with a readable state label. */
+export const StatusPill = ({ tone, live = false, label }: { tone: Tone; live?: boolean; label: string }) => {
+  const pill = {
+    up: "bg-up/15 text-up ring-up/25",
+    down: "bg-down/15 text-down ring-down/25",
+    warn: "bg-warn/15 text-warn ring-warn/25",
+    faint: "bg-raised text-mute ring-line/60",
+  }[tone];
+  return (
+    <span className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold ring-1 ${pill}`}>
+      <Dot tone={tone} live={live} />
+      <span>{label}</span>
+    </span>
+  );
+};
+
+/** Copy button with transient "Copied" feedback. */
+export const CopyButton = ({
+  value,
+  label = "Copy",
+  size = "sm",
+  className = "",
+}: {
+  value: string;
+  label?: string;
+  size?: keyof typeof SIZE;
+  className?: string;
+}) => {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+  }, []);
+
+  return (
+    <Button
+      variant="secondary"
+      size={size}
+      className={className}
+      disabled={!value}
+      icon={copied ? <Check size={14} className="text-up" aria-hidden /> : <Copy size={14} aria-hidden />}
+      onClick={() => {
+        navigator.clipboard?.writeText(value);
+        setCopied(true);
+        if (timer.current !== null) window.clearTimeout(timer.current);
+        timer.current = window.setTimeout(() => setCopied(false), 1500);
+      }}
+    >
+      {copied ? "Copied" : label}
+    </Button>
   );
 };
 
