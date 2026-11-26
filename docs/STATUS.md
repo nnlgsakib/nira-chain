@@ -20,18 +20,18 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 8 | Native EVM execution | ✅ | cosmos/evm v0.6.0. Deploy, call, logs, revert, EIP-1559 and legacy txs (`tests/evm-e2e/e2e.mjs`) |
 | 9 | Ethereum JSON-RPC | 🟡 | Exercised by the e2e suites: eth_chainId, blockNumber, getBalance, getCode, getBlockByNumber, getTransactionCount, gasPrice, call, estimateGas, sendRawTransaction, getTransactionByHash, getTransactionReceipt, getLogs, newFilter/newBlockFilter/newPendingTransactionFilter/getFilterChanges/uninstallFilter, feeHistory, syncing, net_version/listening, web3_clientVersion, txpool_status, eth_subscribe(newHeads). *No full Ethereum JSON-RPC conformance suite run yet* |
 | 10 | Solidity deployment | ✅ | `tests/evm-e2e/Counter.sol` deployed and used through ethers.js |
-| 11 | Community Node software | 🟡 | CLI client: `onion-init`, `register-node`, `prove`, `run`, `deregister-node` (Linux tested). *No GUI/desktop app; Windows/macOS untested; no resource limiting yet* |
-| 12 | Independent verification | 🟡 | Random state-possession proofs (ICS-23) verified on-chain; advisory divergence alerts (ADR-0003). *Full re-execution verification, DA sampling and history serving are v2 task types (Q4)* |
-| 13 | P2P networking | 🟡 | CometBFT p2p (PEX, persistent peers). *Sentry topology, peer limits and eclipse hardening not configured or tested* |
+| 11 | Community Node software | 🟡 | CLI client: `onion-init`, `register-node`, `prove`, `run`, `status`, `deregister-node`; 6 nodes ran unattended in Docker within 2 CPU / 2 GB. *No GUI/installer; Windows/macOS untested* |
+| 12 | Independent verification | 🟡 | Random state-access proofs (ICS-23) verified on-chain; advisory divergence alerts with bond slashing on false alerts. *No block re-execution checks; storage/DA tasks decided out of scope (ADR-0009)* |
+| 13 | P2P networking | ✅ | CometBFT p2p; role profiles (`scripts/node-profile.py`); sentry topology verified in the Docker testnet; real network partitions tested |
 | 14 | Full node support | ✅ | Default node mode; all test networks |
 | 15 | Archive node support | ✅ | `make sync-test`: archive serves historical state, pruned node refuses |
 | 16 | Snapshot synchronisation | ✅ | `make sync-test`: state sync from a light-client-verified snapshot |
 | 17 | Governance | ✅ | x/gov; module authorities = gov; e2e: param-change proposal (vote via CLI and EVM gov precompile), ResolveAlert slashing, software-upgrade rehearsal with binary switch |
-| 18 | Monitoring / observability | 🟡 | Prometheus scrape + alert rules + compose stack (`deploy/monitoring`); on-chain security monitor (`scripts/monitor.py`, verified live). Grafana dashboard; rules promtool-validated and checked against 16 live nodes (`testnet.py monitor`) |
-| 19 | Security testing | 🟡 | Threat model (20 threats, evidence per threat), key inventory, fuzzing (`make fuzz`), adversarial unit + e2e tests (forged/copied/duplicate proofs, grinding, precompile atomicity, double sign), govulncheck. *No external audit, no runbooks yet* |
-| 20 | Performance benchmarks | 🟡 | Baseline in `docs/benchmarks/` (native 707, EVM 2 037, mixed 1 030 TPS on 1 validator; 673 / 494 TPS mixed at 4 / 16 co-located validators; proof verification 9 µs). *Multi-host, soak and community-at-scale not measured* |
-| 21 | Automated test infrastructure | 🟡 | `make test`, `make e2e`, `make localtest-check`. CI runs `make test` on PRs. *e2e not in CI yet* |
-| 22 | Reproducible build | ✅ | `make release` (tarball + SHA256SUMS); `scripts/verify-reproducible.sh` builds from two clean clones → bit-identical. *Release signing and CI publishing pending* |
+| 18 | Monitoring / observability | ✅ | Prometheus rules (promtool-validated, checked on 16 live nodes), Grafana dashboard, on-chain security monitor (`scripts/monitor.py`) |
+| 19 | Security testing | 🟡 | Threat model (20 threats), key inventory, runbooks, fuzzing, adversarial unit + e2e tests, remote-signer test, govulncheck. *No external audit; economic attack simulation open* |
+| 20 | Performance benchmarks | 🟡 | Baseline (`docs/benchmarks/`): native 707, EVM 2 037, mixed 1 030 TPS on 1 validator; 673 / 494 at 4 / 16 co-located; 10-min Docker soak 52 074 txs. *Multi-host, 24 h soak, hundreds of community nodes not measured* |
+| 21 | Automated test infrastructure | 🟡 | `make test`, `make e2e` (Cosmos, EVM, governance, Foundry), `make localtest-check`, `make validators-test`, `make sync-test`, Docker `testnet-test`. CI configured for all of these; *first full run with the Foundry + simulation steps pending* |
+| 22 | Reproducible build | 🟡 | `make release` bit-identical across clean clones; tag-only signed release workflow. *Not yet exercised: needs a first v* tag* |
 | 23 | Deployment documentation | 🟡 | `genesis/README.md` (ceremony), `docs/OPERATIONS.md`. *No infrastructure-as-code* |
 | 24 | Node operator documentation | 🟡 | `docs/OPERATIONS.md`, `docs/INSTALL.md` |
 | 25 | Developer documentation | 🟡 | `readme.md`, `precompiles/community/ICommunity.sol`, specs in `docs/spec/`. *No dApp tutorial or JS SDK* |
@@ -45,20 +45,20 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | | Blocks proposed and finalised; voting power correct | ✅ all 4 sign; equal power from the network file |
 | | Validator rotation | ⬜ not tested |
 | | Double signing handled | ⬜ not tested (SDK evidence module present) |
-| | Partitions don't violate safety | 🟡 halt-not-fork tested with 2/4 stopped; real partition not simulated |
+| | Partitions don't violate safety | ✅ real Docker network partitions: 6|2 continues, 5|3 halts, heal without fork |
 | | Failures within fault tolerance | ✅ 1/4 down stays live |
 | Staking | Self-bond, delegate, non-custodial, unbond | ✅ |
 | | Rewards and commission correct | 🟡 not asserted numerically |
 | | Slashing works | ⬜ |
-| | Concentration protections | ✅ unit (randomised); 🟡 live rejection pending (≥ 15 validators) |
+| | Concentration protections | ✅ unit (randomised) + live rejection on 16 validators (Cosmos + EVM) |
 | Community | Join without permission; disconnect/reconnect | ✅ (offline = no penalty; onion rotation) |
 | | Independent verification; tasks verifiable; fake work rejected | ✅ real ICS-23 proofs; forged/copied/duplicate proofs rejected |
 | | Not a consensus dependency | ✅ hooks never error (INV-COMM-8); chain runs with zero community nodes |
-| | Ordinary computers can run nodes | 🟡 Linux only; resource use not measured |
+| | Ordinary computers can run nodes | 🟡 Linux only; ran within 2 CPU / 2 GB in Docker; Windows/macOS untested |
 | EVM | Deploy, execute, txs, RPC, gas, receipts, logs, state consistency | ✅ (bank balance == EVM balance on both paths) |
-| | Common developer tools | 🟡 ethers.js tested; MetaMask/Foundry/Hardhat documented, not automated |
+| | Common developer tools | 🟡 ethers.js + Foundry automated; MetaMask/Hardhat not automated |
 | Performance | Benchmarks, mixed load, scaling, sync, long-run | ⬜ |
-| Security | Threat model, attack tests, economic simulation, independent review | 🟡 attack tests in unit suites; ⬜ threat model, simulation, review |
+| Security | Threat model, attack tests, economic simulation, independent review | ✅ threat model + attack tests; ⬜ economic simulation, external review |
 
 ## Test inventory
 
