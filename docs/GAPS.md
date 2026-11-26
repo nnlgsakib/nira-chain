@@ -80,7 +80,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | ID | Gap | Sev | Evidence | Close with |
 |---|---|---|---|---|
 | G-COMM-2 ✅ DECIDED (ADR-0009, option A: keep v1; no unsound storage proofs) | Proof outsourcing to archive RPCs (K1); v2 local-data tasks (history serving, DA sampling) not built | — | ADR-0003 | protocol-verifiable-participation |
-| G-COMM-3 🟡 | 6 containerised community nodes ran the prove loop unattended (30 tasks, all rewarded) in the Docker testnet. Node software is CLI-only. Reward tracking **done** (`rewards_total` via CLI, REST, precompile); still missing: resource monitoring/limits, installer, or Windows/macOS validation | T | `x/community/client/cli` | build-node-software |
+| G-COMM-3 🟡 | **Sustainable storage done:** the `community` profile is a lean node (keeps max(2000, 2×(apphash_window+epoch_blocks)) state versions and blocks, no tx index); `make lean-node-test` proves old versions are pruned and the node still proves 6/6 epochs, Cosmos + EVM (state db 3.2 MB at h300 vs 31 MB default). 6 containerised community nodes ran the prove loop unattended in Docker; reward tracking via CLI, REST, precompile. Still open: desktop app (in progress), Windows/macOS validation, installer | T | `scripts/node-profile.py`, `tests/community/lean_node.sh` | build-node-software |
 | G-COMM-4 ✅ FIXED (epoch_work, task_done, app_hashes exported; TestGenesisPreservesInEpochWork) | Genesis export drops in-epoch work, so operators lose unsettled units across an export/import upgrade | I | `genesis.proto` comment | stack-cosmos-ignite |
 
 ### Testing, infrastructure, operations

@@ -10,7 +10,7 @@
 | **Full node** | `nirad start`, no validator key | default pruning (keeps the last 362 880 states) | 4 cores, 8 GB, 500 GB SSD |
 | **RPC node** | full node with the APIs enabled | `[api] enable`, `[json-rpc] enable`, `api = "eth,net,web3,txpool"`, behind a reverse proxy with rate limits | 8 cores, 16 GB |
 | **Archive node** | full node that keeps everything | `pruning = "nothing"` in app.toml | multi-TB |
-| **Community Node** | full node + `nirad tx community run` | default pruning (must keep ≥ `apphash_window + epoch_blocks` versions); a funded key with ≥ `min_bond` | 4 cores, 8 GB, 500 GB SSD, 25 Mbps; may go offline |
+| **Community Node** | **lean** full node + `nirad tx community run` | `node-profile.py community`: keeps only the last max(2000, 2 × (`apphash_window + epoch_blocks`)) state versions and blocks (CometBFT still keeps the evidence window, 100 000 blocks), no tx index, join by state sync; a funded key with ≥ `min_bond` | 4 cores, 8 GB, SSD sized for the **current state** plus a few GB (disk does not grow with chain age); 25 Mbps; may go offline |
 
 ## Hardened role profiles
 

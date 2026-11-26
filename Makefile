@@ -133,7 +133,7 @@ upgrade-rehearsal: install ## Software upgrade with a real binary switch (stop o
 	@go build $(BUILD_FLAGS) -tags rehearsal -o $(BUILDDIR)/$(BINARY)-rehearsal ./cmd/$(BINARY)
 	@tests/upgrade/rehearsal.sh
 
-.PHONY: e2e-hardhat fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e-foundry e2e upgrade-rehearsal export-import bench-load
+.PHONY: lean-node-test e2e-hardhat fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e-foundry e2e upgrade-rehearsal export-import bench-load
 
 ###################
 ###  Networks  ###
@@ -147,6 +147,9 @@ localtest: install ## 4-validator network via the full genesis ceremony (ports b
 
 localtest-check: ## Verify the 4-validator network (allocations, BFT fault tolerance)
 	@tests/genesis/check_localtest.sh
+
+lean-node-test: install ## Lean community node: pruned to N versions, still proves every epoch (Cosmos + EVM)
+	@tests/community/lean_node.sh
 
 validators-test: install ## 16 validators (15 active): rotation, live cap, double-sign + downtime slashing
 	@N=16 MAX_VALIDATORS=15 scripts/genesis/localtest.sh

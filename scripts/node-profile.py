@@ -10,8 +10,13 @@ Roles
              persistent peer to the validator, APIs off, generous peer limits
   rpc        full node serving APIs: REST/gRPC/JSON-RPC (eth,net,web3,txpool) on, rate-limit at a proxy
   archive    pruning=nothing, APIs on, snapshots every 1000 blocks for state-sync clients
-  community  pruned full node for x/community proofs: keeps enough versions, modest peer limits,
-             APIs local-only (the prove loop queries 127.0.0.1)
+  community  LEAN full node for x/community proofs (sustainable on consumer hardware): verifies
+             every block but keeps only the last N state versions and N blocks, where
+             N = max(2000, 2 × (apphash_window + epoch_blocks)) from genesis (or --keep-recent);
+             no tx index; modest peer limits; APIs local-only (the prove loop queries 127.0.0.1).
+             Blocks actually kept = max(N, consensus evidence max_age_num_blocks), because
+             CometBFT keeps evidence-relevant blocks (100 000 ≈ 2.3 days at 2 s): still a fixed
+             window. Disk then tracks the size of the current state, not the age of the chain.
 
 The script only edits keys it knows; it prints every change. Re-run safely.
 """
@@ -100,10 +105,16 @@ PROFILES = {
             ("p2p", "max_num_inbound_peers"): "20",
             ("p2p", "max_num_outbound_peers"): "10",
             ("rpc", "laddr"): '"tcp://127.0.0.1:26657"',
+            ("tx_index", "indexer"): '"null"',   # tx search is an RPC/archive-node job
         },
         "app": {
-            # default pruning keeps 362 880 versions: far above apphash_window + epoch_blocks
-            (None, "pruning"): '"default"',
+            # proofs are only ever for heights inside apphash_window + epoch_blocks, so keep a
+            # small multiple of that instead of "default" (362 880 versions ≈ 8 days, plus
+            # every block forever). The two KEEP values are filled in by lean_keep().
+            (None, "pruning"): '"custom"',
+            (None, "pruning-keep-recent"): "KEEP",
+            (None, "pruning-interval"): '"100"',
+            (None, "min-retain-blocks"): "KEEP_INT",
             ("api", "enable"): "true",
             ("api", "address"): '"tcp://127.0.0.1:1317"',
             ("grpc", "address"): '"127.0.0.1:9090"',
@@ -141,6 +152,24 @@ def apply(path: Path, changes: dict) -> list:
     return log
 
 
+LEAN_FLOOR = 2000
+
+
+def lean_keep(home: Path, override: int | None) -> int:
+    """Versions/blocks a community node must keep: 2 × (apphash_window + epoch_blocks) from
+    genesis, at least LEAN_FLOOR. Proof heights never fall outside apphash_window +
+    epoch_blocks (docs/spec/community.md), so this leaves a 2× margin."""
+    if override:
+        return override
+    import json
+    try:
+        p = json.load(open(home / "config" / "genesis.json"))["app_state"]["community"]["params"]
+        need = 2 * (int(p["apphash_window"]) + int(p["epoch_blocks"]))
+    except (OSError, KeyError, ValueError):
+        need = 0
+    return max(LEAN_FLOOR, need)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("role", choices=sorted(PROFILES))
@@ -148,6 +177,8 @@ def main():
     ap.add_argument("--sentries", default="", help="validator: id@host:port of its sentries")
     ap.add_argument("--private-ids", default="", help="sentry: node IDs never gossiped (the validator)")
     ap.add_argument("--validator-peer", default="", help="sentry: id@host:port of the validator")
+    ap.add_argument("--keep-recent", type=int, default=None,
+                    help="community: state versions and blocks to keep (default max(2000, 2×(apphash_window+epoch_blocks)))")
     a = ap.parse_args()
 
     prof = PROFILES[a.role]
@@ -169,8 +200,12 @@ def main():
     def section_cfg(changes):  # config.toml uses [p2p] etc.; root keys have section None
         return changes
 
+    app_changes = dict(prof["app"])
+    if a.role == "community":
+        keep = lean_keep(a.home, a.keep_recent)
+        app_changes = {k: (f'"{keep}"' if v == "KEEP" else str(keep) if v == "KEEP_INT" else v) for k, v in app_changes.items()}
     log = apply(a.home / "config" / "config.toml", section_cfg(cfg))
-    log += apply(a.home / "config" / "app.toml", prof["app"])
+    log += apply(a.home / "config" / "app.toml", app_changes)
     print(f"profile '{a.role}' applied to {a.home}:")
     for line in log or ["(already applied)"]:
         print("  " + line)
