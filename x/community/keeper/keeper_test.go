@@ -240,3 +240,8 @@ func (f *fixture) checkInvariants(t *testing.T) {
 	require.NoError(t, f.keeper.AppHashes.Walk(ctx, nil, func(int64, []byte) (bool, error) { n++; return false, nil }))
 	require.LessOrEqual(t, n, int(p.ApphashWindow+uint32(p.EpochBlocks))+2, "INV-COMM-7")
 }
+
+// proofMsgFor builds a proof message on fixture f's proof chain for use against g.
+func (g *fixture) proofMsgFor(t *testing.T, o *operator, i uint32, f *fixture) *types.MsgSubmitTaskProof {
+	return f.proofMsg(t, o, i)
+}

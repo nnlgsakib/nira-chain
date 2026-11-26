@@ -2,19 +2,43 @@ syntax = "proto3";
 package nira.community.v1;
 
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "nira/community/v1/params.proto";
 import "nira/community/v1/types.proto";
 
 option go_package = "nira-chain/x/community/types";
 
-// GenesisState defines the community module's genesis state. Epoch-scoped data
-// (work, task records, app-hash ring) is transient and not exported; the
-// exported epoch restarts at the next block.
+// EpochWork: proven units of one operator in one epoch (unsettled at export).
+message EpochWork {
+  uint64 epoch = 1;
+  string operator = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint32 units = 3;
+}
+
+// TaskDone: a proven task (prevents double payment after import).
+message TaskDone {
+  uint64 epoch = 1;
+  string operator = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint32 task_index = 3;
+}
+
+// AppHashEntry: committed app hash at a height (the proof window).
+message AppHashEntry {
+  int64 height = 1;
+  bytes app_hash = 2;
+}
+
+// GenesisState defines the community module's genesis state, including the
+// in-progress epoch (work, proven tasks, app-hash window) so an export → import
+// upgrade loses no unsettled community work (G-COMM-4).
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   repeated Node nodes = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   repeated Alert alerts = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   uint64 next_alert_id = 4;
   Epoch epoch = 5;
+  repeated EpochWork epoch_work = 6 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated TaskDone task_done = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated AppHashEntry app_hashes = 8 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

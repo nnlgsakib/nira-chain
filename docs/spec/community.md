@@ -263,6 +263,7 @@ task 1: height offset 41, store index 3, key 8e943b4a68c9aef377d174f2f5db8832b89
 (Height offsets use W = 100; store index mod 4.)
 
 ## Changelog
+- 0.5 (2026-11-26): genesis exports the in-progress epoch (epoch_work, task_done, app_hashes), so export → import upgrades keep unsettled work and double-pay protection (G-COMM-4).
 - 0.4 (2026-11-25): false-alert bond slashing (`false_alert_slash_bps`, G-COMM-1); per-node `rewards_total` / `slashed_total` (G-COMM-3).
 - 0.3 (2026-11-25): reveal hashing gas-metered (72 gas per hash, gap G-SEC-1); app-hash ring size documented as implemented (window + epoch_blocks).
 - 0.2 (2026-11-25): default sample_stores changed from [acc, bank, staking, evm] after live measurement: random-key non-membership proofs failed for 70 % of staking keys and 0.5 % of bank keys (KeySet entries with empty values), and 100 % for empty stores.

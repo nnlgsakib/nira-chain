@@ -9,9 +9,9 @@ import (
 	"nira-chain/x/community/types"
 )
 
-// InitGenesis imports params, nodes, alerts and the epoch. Epoch-scoped work
-// and the app-hash ring are not exported: an imported chain resumes with the
-// current epoch's work empty (documented in genesis.proto).
+// InitGenesis imports params, nodes, alerts, the epoch and the in-progress
+// epoch state (work, proven tasks, app-hash window), so an export → import
+// upgrade settles the epoch exactly as if it had never been interrupted.
 func (k Keeper) InitGenesis(ctx context.Context, gs types.GenesisState) error {
 	if err := k.Params.Set(ctx, gs.Params); err != nil {
 		return err
@@ -70,6 +70,29 @@ func (k Keeper) InitGenesis(ctx context.Context, gs types.GenesisState) error {
 			return err
 		}
 	}
+	for _, w := range gs.EpochWork {
+		op, err := k.addressCodec.StringToBytes(w.Operator)
+		if err != nil {
+			return err
+		}
+		if err := k.EpochWork.Set(ctx, collections.Join(w.Epoch, op), w.Units); err != nil {
+			return err
+		}
+	}
+	for _, t := range gs.TaskDone {
+		op, err := k.addressCodec.StringToBytes(t.Operator)
+		if err != nil {
+			return err
+		}
+		if err := k.TaskDone.Set(ctx, collections.Join3(t.Epoch, op, t.TaskIndex)); err != nil {
+			return err
+		}
+	}
+	for _, a := range gs.AppHashes {
+		if err := k.AppHashes.Set(ctx, a.Height, a.AppHash); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -99,6 +122,26 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	gs.NextAlertId = seq + 1
 	if ep, err := k.Epoch.Get(ctx); err == nil {
 		gs.Epoch = &ep
+	}
+	if err := k.EpochWork.Walk(ctx, nil, func(key collections.Pair[uint64, []byte], units uint32) (bool, error) {
+		op, err := k.addressCodec.BytesToString(key.K2())
+		gs.EpochWork = append(gs.EpochWork, types.EpochWork{Epoch: key.K1(), Operator: op, Units: units})
+		return false, err
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.TaskDone.Walk(ctx, nil, func(key collections.Triple[uint64, []byte, uint32]) (bool, error) {
+		op, err := k.addressCodec.BytesToString(key.K2())
+		gs.TaskDone = append(gs.TaskDone, types.TaskDone{Epoch: key.K1(), Operator: op, TaskIndex: key.K3()})
+		return false, err
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.AppHashes.Walk(ctx, nil, func(h int64, hash []byte) (bool, error) {
+		gs.AppHashes = append(gs.AppHashes, types.AppHashEntry{Height: h, AppHash: hash})
+		return false, nil
+	}); err != nil {
+		return nil, err
 	}
 	return gs, nil
 }

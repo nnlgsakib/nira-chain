@@ -356,9 +356,44 @@ func TestGenesisRoundTrip(t *testing.T) {
 	require.Equal(t, gs, gs2)
 	total, _ := g.keeper.TotalActiveBond.Get(g.ctx)
 	require.True(t, total.Equal(nira(1000)))
-	res, err := g.msg.ReportDivergence(g.ctx, &types.MsgReportDivergence{Operator: a.bech, Height: 6, ClaimedAppHash: bytes.Repeat([]byte{9}, 32)})
-	_ = res
-	require.Error(t, err) // app-hash ring is not exported → no divergence claim possible yet
+	// G-COMM-4: the app-hash window is exported → a divergence claim on an exported height works
+	g.bank.bal[string(a.addr)] = f.bank.bal[string(a.addr)]
+	_, err = g.msg.ReportDivergence(g.ctx, &types.MsgReportDivergence{Operator: a.bech, Height: 6, ClaimedAppHash: bytes.Repeat([]byte{9}, 32)})
+	require.NoError(t, err)
+}
+
+// G-COMM-4: unsettled work proven before an export is paid after the import, and
+// already-proven tasks can't be proven again.
+func TestGenesisPreservesInEpochWork(t *testing.T) {
+	f := initFixture(t)
+	a := f.newOperator(t, 1, nira(10_000))
+	startEligible(t, f, a)
+	_, err := f.msg.SubmitTaskProof(f.ctx, f.proofMsg(t, a, 0))
+	require.NoError(t, err)
+	gs, err := f.keeper.ExportGenesis(f.ctx)
+	require.NoError(t, err)
+	require.Len(t, gs.EpochWork, 1)
+	require.Len(t, gs.TaskDone, 1)
+	require.NotEmpty(t, gs.AppHashes)
+
+	g := initFixture(t)
+	g.ctx = g.ctx.WithBlockHeight(f.ctx.BlockHeight())
+	g.chain = f.chain
+	require.NoError(t, g.keeper.InitGenesis(g.ctx, *gs))
+	g.bank.bal[string(modAddr(types.ModuleName))] = f.bank.bal[string(modAddr(types.ModuleName))]
+	g.bank.bal[string(a.addr)] = f.bank.bal[string(a.addr)]
+
+	// the same task can't be paid twice after the import
+	_, err = g.msg.SubmitTaskProof(g.ctx, g.proofMsgFor(t, a, 0, f))
+	require.ErrorIs(t, err, types.ErrTaskDone)
+	// settlement after import pays the pre-export unit
+	before := g.bank.bal[string(a.addr)].AmountOf(denom)
+	ep, _ := g.keeper.Epoch.Get(g.ctx)
+	ep.Budget = nira(10)
+	require.NoError(t, g.keeper.Epoch.Set(g.ctx, ep))
+	g.bank.bal[string(modAddr(types.ModuleName))] = g.bank.bal[string(modAddr(types.ModuleName))].Add(sdk.NewCoin(denom, nira(10)))
+	g.advance(t, ep.StartHeight+int64(testParams().EpochBlocks))
+	require.True(t, g.bank.bal[string(a.addr)].AmountOf(denom).Sub(before).Equal(nira(10)), "pre-export unit paid after import")
 }
 
 // Randomised operations over many epochs; invariants checked every block.

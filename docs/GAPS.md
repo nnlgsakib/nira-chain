@@ -81,7 +81,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 |---|---|---|---|---|
 | G-COMM-2 | Proof outsourcing to archive RPCs (K1); v2 local-data tasks (history serving, DA sampling) not built | M | ADR-0003 | protocol-verifiable-participation |
 | G-COMM-3 🟡 | 6 containerised community nodes ran the prove loop unattended (30 tasks, all rewarded) in the Docker testnet. Node software is CLI-only. Reward tracking **done** (`rewards_total` via CLI, REST, precompile); still missing: resource monitoring/limits, installer, or Windows/macOS validation | T | `x/community/client/cli` | build-node-software |
-| G-COMM-4 | Genesis export drops in-epoch work, so operators lose unsettled units across an export/import upgrade | I | `genesis.proto` comment | stack-cosmos-ignite |
+| G-COMM-4 ✅ FIXED (epoch_work, task_done, app_hashes exported; TestGenesisPreservesInEpochWork) | Genesis export drops in-epoch work, so operators lose unsettled units across an export/import upgrade | I | `genesis.proto` comment | stack-cosmos-ignite |
 
 ### Testing, infrastructure, operations
 
