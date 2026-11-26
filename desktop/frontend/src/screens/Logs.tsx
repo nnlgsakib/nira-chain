@@ -18,7 +18,9 @@ export function Logs() {
       clearInterval(id);
     };
   }, []);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [lines]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [lines]);
 
   const shown = lines.filter((l) => source === "all" || l.source === source);
   return (

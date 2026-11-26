@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -47,6 +48,11 @@ type Manager struct {
 	pass     string // keyring passphrase while unlocked; never written to disk
 	logs     *ring
 	exits    map[string]ExitInfo // last exit of each process ("node", "work")
+
+	// work loop supervision: restarted after an unexpected exit
+	workWanted   bool
+	workGas      string
+	workRestarts []time.Time
 }
 
 // ExitInfo says why a process stopped: its error and its last output lines.
@@ -191,8 +197,19 @@ func (m *Manager) run(ctx context.Context, stdin string, args ...string) (string
 	return s, nil
 }
 
+// ansiRe matches terminal color/control sequences (CSI and OSC) emitted by
+// nirad when writing formatted log lines.
+var ansiRe = regexp.MustCompile("\x1b(?:\\[[0-9;?]*[ -/]*[@-~]|\\][^\x07\x1b]*(?:\x07|\x1b\\\\))")
+
+func stripANSI(s string) string {
+	if !strings.ContainsRune(s, '\x1b') {
+		return s
+	}
+	return ansiRe.ReplaceAllString(s, "")
+}
+
 func lastLines(s string, n int) string {
-	lines := strings.Split(strings.TrimSpace(s), "\n")
+	lines := strings.Split(strings.TrimSpace(stripANSI(s)), "\n")
 	if len(lines) > n {
 		lines = lines[len(lines)-n:]
 	}
@@ -263,7 +280,7 @@ func (m *Manager) spawn(tag, stdin string, args ...string) (*proc, error) {
 		sc := bufio.NewScanner(r)
 		sc.Buffer(make([]byte, 64*1024), 1024*1024)
 		for sc.Scan() {
-			line := sc.Text()
+			line := stripANSI(sc.Text())
 			m.logs.add(tag, line)
 			if logf != nil {
 				fmt.Fprintf(logf, "%s [%s] %s\n", time.Now().Format(time.RFC3339), tag, line)
@@ -348,22 +365,67 @@ func (m *Manager) StartWorker(gasPrice string) error {
 	if m.pass == "" {
 		return errors.New("locked: enter your password")
 	}
+	m.workWanted, m.workGas, m.workRestarts = true, gasPrice, nil
+	return m.startWorkerLocked()
+}
+
+func (m *Manager) startWorkerLocked() error {
 	n, _ := NetworkByID(m.settings.Network)
 	home := filepath.Join(m.Dir, "homes", m.settings.Network)
 	p, err := m.spawn("work", m.pass+"\n", "tx", "community", "run", "--from", KeyName,
 		"--keyring-backend", "file", "--home", home, "--chain-id", n.ChainID,
 		"--node", m.portsLocked().NodeArg(), "--gas", "auto", "--gas-adjustment", "1.5",
-		"--gas-prices", gasPrice, "-y")
+		"--gas-prices", m.workGas, "-y")
 	if err != nil {
 		return err
 	}
 	m.worker = p
+	go m.superviseWorker(p)
 	return nil
 }
 
-// StopWorker stops the work loop.
+// superviseWorker restarts the work loop if it stops while it is wanted and the
+// node runs (with a growing pause); after 5 stops in 10 minutes it gives up and
+// the overview shows the last exit.
+func (m *Manager) superviseWorker(p *proc) {
+	<-p.done
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if !m.workWanted || m.worker != p {
+		return // stopped on purpose, or already replaced
+	}
+	now := time.Now()
+	recent := m.workRestarts[:0]
+	for _, t := range m.workRestarts {
+		if now.Sub(t) < 10*time.Minute {
+			recent = append(recent, t)
+		}
+	}
+	m.workRestarts = recent
+	if len(recent) >= 5 || !m.node.running() || m.pass == "" {
+		m.workWanted = false
+		m.logs.add("work", "work loop stopped and was not restarted (stopped 5 times in 10 minutes, the node is down, or the app is locked)")
+		return
+	}
+	wait := time.Duration(5*(len(recent)+1)) * time.Second
+	m.workRestarts = append(m.workRestarts, now)
+	m.logs.add("work", fmt.Sprintf("work loop stopped unexpectedly; restarting in %s", wait))
+	go func() {
+		time.Sleep(wait)
+		m.mu.Lock()
+		defer m.mu.Unlock()
+		if m.workWanted && !m.worker.running() && m.node.running() {
+			if err := m.startWorkerLocked(); err != nil {
+				m.logs.add("work", "restart failed: "+err.Error())
+			}
+		}
+	}()
+}
+
+// StopWorker stops the work loop (and keeps it stopped).
 func (m *Manager) StopWorker() {
 	m.mu.Lock()
+	m.workWanted = false
 	p := m.worker
 	m.mu.Unlock()
 	stop(p)

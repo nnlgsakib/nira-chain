@@ -218,3 +218,99 @@ func TestLeftoverNiradIsStopped(t *testing.T) {
 	}
 	m.StopNode()
 }
+
+func TestStripANSI(t *testing.T) {
+	in := "\x1b[90m4:23PM\x1b[0m \x1b[32mINF\x1b[0m \x1b[1mexecuted block\x1b[0m \x1b[36mapp_hash=\x1b[0m19AF \x1b[36mheight=\x1b[0m713"
+	want := "4:23PM INF executed block app_hash=19AF height=713"
+	if got := stripANSI(in); got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	if got := stripANSI("plain text"); got != "plain text" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestSpawnStripsANSIFromLogsAndTail(t *testing.T) {
+	if os.Getenv("GO_WANT_ANSI_HELPER") == "1" {
+		fmt.Println("\x1b[90m4:23PM\x1b[0m \x1b[32mINF\x1b[0m \x1b[1mexecuted block\x1b[0m \x1b[36mheight=\x1b[0m713")
+		os.Exit(2)
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GO_WANT_ANSI_HELPER", "1")
+	m, err := NewManager(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Nirad = exe
+	p, err := m.spawn("node", "", "-test.run=^TestSpawnStripsANSIFromLogsAndTail$")
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-p.done
+
+	want := "4:23PM INF executed block height=713"
+	logs := m.Logs(20)
+	var found bool
+	for _, l := range logs {
+		if strings.Contains(l.Text, "\x1b") || strings.Contains(l.Text, "[90m") {
+			t.Fatalf("ANSI escape leaked into logs: %q", l.Text)
+		}
+		if l.Text == want {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected clean line %q in logs: %+v", want, logs)
+	}
+	ex, ok := m.LastExit("node")
+	if !ok || len(ex.Tail) == 0 || ex.Tail[len(ex.Tail)-1] != want {
+		t.Fatalf("unexpected exit tail: %+v", ex)
+	}
+	b, err := os.ReadFile(m.LogPath())
+	if err != nil || !strings.Contains(string(b), want) || strings.Contains(string(b), "\x1b") {
+		t.Fatalf("support log invalid (err=%v):\n%s", err, b)
+	}
+}
+
+// A work loop that exits while the node runs is restarted (with a pause and a
+// log line); StopWorker keeps it stopped.
+func TestWorkerIsRestarted(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script stand-in")
+	}
+	dir := t.TempDir()
+	fake := filepath.Join(dir, "fake-nirad")
+	// "start" keeps running (the node); anything else (the work loop) exits 1 at once
+	_ = os.WriteFile(fake, []byte("#!/bin/sh\nif [ \"$1\" = start ]; then sleep 25; fi\nexit 1\n"), 0o755)
+	m, err := NewManager(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Nirad = fake
+	_ = m.SaveSettings(Settings{Network: "local"})
+	m.pass = "password1"
+	if err := m.StartNode(); err != nil {
+		t.Fatal(err)
+	}
+	defer m.StopNode()
+	if err := m.StartWorker("1anira"); err != nil {
+		t.Fatal(err)
+	}
+	starts := func() int { return strings.Count(fmt.Sprint(m.Logs(100)), "started: nirad tx community run") }
+	deadline := time.Now().Add(15 * time.Second)
+	for starts() < 2 && time.Now().Before(deadline) {
+		time.Sleep(200 * time.Millisecond)
+	}
+	if starts() < 2 || !strings.Contains(fmt.Sprint(m.Logs(100)), "restarting in 5s") {
+		t.Fatalf("work loop not restarted; log: %v", m.Logs(20))
+	}
+	m.StopWorker()
+	n := starts()
+	time.Sleep(12 * time.Second)
+	if starts() != n {
+		t.Fatal("work loop restarted after StopWorker")
+	}
+}
