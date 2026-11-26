@@ -114,7 +114,10 @@ bench-load: ## Throughput baseline (native, evm, mixed) against a running networ
 	  for m in native evm mixed; do $(BUILDDIR)/loadgen --mode $$m --accounts 100 --txs 50 --funder-key $$KEY \
 	    --chain-id $(BENCH_CHAIN_ID) | tee docs/benchmarks/raw/latest-$$m.json; done
 
-e2e: e2e-cosmos e2e-evm e2e-gov ## All e2e suites against a running localnet
+e2e-foundry: ## Foundry (forge/cast) e2e against a running localnet (needs foundryup)
+	@KEY=$$(echo y | $(BINARY) keys unsafe-export-eth-key dev1 --keyring-backend test 2>/dev/null | tail -1) tests/foundry/run.sh
+
+e2e: e2e-cosmos e2e-evm e2e-gov e2e-foundry ## All e2e suites against a running localnet
 
 export-import: install ## Genesis export → reset → import with state checks (stop other nodes first)
 	@tests/upgrade/export_import.sh
@@ -123,7 +126,7 @@ upgrade-rehearsal: install ## Software upgrade with a real binary switch (stop o
 	@go build $(BUILD_FLAGS) -tags rehearsal -o $(BUILDDIR)/$(BINARY)-rehearsal ./cmd/$(BINARY)
 	@tests/upgrade/rehearsal.sh
 
-.PHONY: fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e upgrade-rehearsal export-import bench-load
+.PHONY: fuzz test test-unit test-race test-cover test-genesis bench e2e-deps e2e-cosmos e2e-evm e2e-gov e2e-foundry e2e upgrade-rehearsal export-import bench-load
 
 ###################
 ###  Networks  ###

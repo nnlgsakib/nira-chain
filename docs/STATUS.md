@@ -68,6 +68,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | Genesis builder | `make test-genesis` | 11 |
 | Cosmos e2e | `make e2e-cosmos` | 8 + 6 |
 | EVM e2e | `make e2e-evm` | 12 + 9 + 2 (incl. JSON-RPC filters/fee/net/WS, precompile atomicity) |
+| Foundry e2e | `make e2e-foundry` | 4: forge create, cast send/call/balance, revert, contract delegating via staking precompile |
 | Governance e2e | `make e2e-gov` | 2 (param change with EVM-precompile vote; false-alert slashing via proposal) |
 | Upgrade rehearsal | `make upgrade-rehearsal` | 4 (old binary halts at plan height, new binary applies handler, state + EVM preserved) |
 | Multi-validator + BFT | `make localtest && make localtest-check` | 8 |
