@@ -135,6 +135,15 @@ LimitNOFILE=65535
 WantedBy=multi-user.target
 ```
 
+## Remote signing
+
+Mainnet validators keep the consensus key in a remote signer (TMKMS or Horcrux, backed by an HSM), never in the node's `config/`:
+1. Move `priv_validator_key.json` and `data/priv_validator_state.json` to the signer host.
+2. On the node, set `priv_validator_laddr = "tcp://<private-ip>:26659"` in `config.toml`.
+3. Start the signer, then the node. The node produces nothing until the signer connects.
+
+`tests/consensus/remote_signer.sh` proves this end to end with the reference signer `tools/remotesigner` (CometBFT's privval protocol, the one TMKMS and Horcrux speak): no key on the node, no blocks without the signer, blocks resume when it reconnects, and the double-sign state lives with the signer. The reference signer keeps the key in a file, so use it for testing only.
+
 ## Security checklist for operators
 
 - Validators: sentry topology, consensus key in a remote signer/HSM (e.g. TMKMS or Horcrux), JSON-RPC off, firewall everything except P2P.

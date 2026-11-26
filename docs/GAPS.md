@@ -64,7 +64,7 @@ Every gap has an ID, the evidence for it, what it blocks, and the skill that clo
 | G-SEC-4 ✅ FIXED (tests/evm-e2e/atomicity.mjs) | Precompile atomicity untested: an EVM call that invokes `0x…0900` and then **reverts** must leave no community state or escrow behind (the class of GO-2025-3684) | T | no test with a reverting contract | build-smart-contracts + quality-testing |
 | G-SEC-5 | 4 dependency advisories without upstream fixes (K9) | I | `make govulncheck` | quality-security |
 | G-SEC-6 ✅ CLOSED (not reproducible: errors are surfaced; root cause was the fixed precompile panic; e2e added) | `ExperimentalEVMMempool` in use; txs that fail CheckTx are dropped silently (K7) | T | `app/evm.go`, hang seen in e2e | stack-cosmos-evm |
-| G-SEC-7 | Validator key management: remote signer / HSM not set up or tested | M | docs only | quality-security + ops-infrastructure |
+| G-SEC-7 🟡 (remote signing verified: tests/consensus/remote_signer.sh 4/4 with tools/remotesigner — node holds no key, produces nothing without the signer, signer holds double-sign state. HSM-backed TMKMS/Horcrux deployment still per-operator) | Validator key management: remote signer / HSM not set up or tested | M | docs only | quality-security + ops-infrastructure |
 | G-SEC-8 | No external audit of x/community, x/policy, the precompile and the genesis builder | M | — | quality-security |
 
 ### Consensus and staking
