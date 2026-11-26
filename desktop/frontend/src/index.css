@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens are the Nira wallet's (nira-wallet/src/index.css), so both apps read as
+   one product: the logo's blue #1359A8 → teal #128AA3 → mint #1BEC8A on a
+   near-black canvas. Mint (`accent`) is the one thing to do; an ink fill marks
+   where you are. Dark is the default; html[data-theme] switches. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: 5 8 12;
+  --surface: 13 18 25;
+  --raised: 23 30 40;
+  --line: 36 46 59;
+  --ink: 242 246 247;
+  --mute: 140 151 164;
+  --faint: 90 102 117;
+  --accent: 27 236 138;
+  --on-accent: 3 22 14;
+  --accent-soft: 96 240 172;
+  --accent-alt: 19 89 168;
+  --accent-deep: 18 138 163;
+  --sky: 124 178 240;
+  --up: 52 226 142;
+  --down: 255 94 110;
+  --warn: 247 186 70;
+  --shadow-alpha: 0.55;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --canvas: 241 244 246;
+  --surface: 255 255 255;
+  --raised: 229 234 238;
+  --line: 213 220 226;
+  --ink: 6 16 28;
+  --mute: 80 92 106;
+  --faint: 136 146 158;
+  --accent: 30 226 134;
+  --on-accent: 3 22 14;
+  --accent-soft: 6 120 76;
+  --accent-alt: 19 89 168;
+  --accent-deep: 12 112 134;
+  --sky: 18 78 168;
+  --up: 4 126 76;
+  --down: 212 38 52;
+  --warn: 172 90 6;
+  --shadow-alpha: 0.14;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  html {
+    background: rgb(var(--canvas));
+  }
+  body {
+    margin: 0;
+    overflow: hidden; /* each pane owns its scroll area */
+    background: rgb(var(--canvas));
+    color: rgb(var(--ink));
+    @apply font-sans;
+    font-size: 15px;
+    line-height: 1.5;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* a desktop app, not a page: labels are not selectable; values that are
+       worth copying opt back in with .selectable */
+    user-select: none;
+  }
+  input,
+  textarea,
+  .selectable {
+    user-select: text;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    @apply appearance-none border-0 bg-transparent outline-none;
+    font: inherit;
+    color: inherit;
+  }
+  button:not(:disabled),
+  [role="button"],
+  a {
+    cursor: pointer;
+  }
+  ::placeholder {
+    color: rgb(var(--faint));
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent-soft));
+    outline-offset: 2px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line)) transparent;
+  }
+}
+
+@layer components {
+  .pressable {
+    transition:
+      transform 160ms var(--ease-out),
+      background-color 160ms ease,
+      color 160ms ease,
+      opacity 160ms ease;
+  }
+  .pressable:active:not(:disabled) {
+    transform: scale(0.97);
+    transition-duration: 90ms;
+  }
+  .brand-fill {
+    background-image: linear-gradient(115deg, #1359a8 0%, #128aa3 48%, #1bec8a 100%);
+  }
+  .display {
+    @apply font-display;
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum";
+  }
+  .skeleton {
+    border-radius: 999px;
+    background: linear-gradient(100deg, rgb(var(--raised)) 20%, rgb(var(--line)) 40%, rgb(var(--raised)) 60%);
+    background-size: 220% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .animate-rise {
+    animation: arrive 240ms var(--ease-out) both;
+  }
+  .animate-fade {
+    animation: fade 200ms var(--ease-out) both;
+  }
+  /* status only: a live, running thing */
+  .animate-ring {
+    animation: ring 2s var(--ease-out) infinite;
+  }
+  .animate-spin-fast {
+    animation: spin 700ms linear infinite;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ring {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

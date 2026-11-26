@@ -16,3 +16,11 @@ tests/hardhat/cache/
 tests/hardhat/types/
 __pycache__/
 *.pyc
+desktop/build/bin/
+desktop/frontend/dist/
+desktop/frontend/node_modules/
+desktop/frontend/wailsjs/
+build/windows/
+desktop/frontend/package.json.md5
+!desktop/build/
+desktop/build/bin/
