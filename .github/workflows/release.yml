@@ -11,12 +11,16 @@
 # Verify a release:
 #   sha256sum -c SHA256SUMS --ignore-missing
 #   cosign verify-blob SHA256SUMS --bundle SHA256SUMS.bundle \
-#     --certificate-identity-regexp 'https://github.com/nnlgsakib/nira-chain/.github/workflows/release.yml@refs/tags/v.*' \
+#     --certificate-identity-regexp 'https://github.com/nnlgsakib/nira-chain/.github/workflows/release.yml@refs/(tags/v.*|heads/main)' \
 #     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 name: Release
 on:
   push:
     tags: ["v*"]
+  # re-run for an existing tag with the current workflow (the code built is the tag's)
+  workflow_dispatch:
+    inputs:
+      tag: { description: "existing tag to build, e.g. v0.1.0", required: true }
 
 permissions:
   contents: write   # create the draft release
@@ -24,6 +28,7 @@ permissions:
 
 env:
   CGO_ENABLED: "1"
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   linux:
@@ -35,9 +40,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
       - uses: actions/setup-go@v5
         with: { go-version-file: go.mod }
-      - run: make release VERSION=${{ github.ref_name }}
+      - run: make release VERSION=${{ env.TAG }}
       - run: build/release/nirad version
       - uses: actions/upload-artifact@v4
         with:
@@ -45,7 +51,7 @@ jobs:
           path: build/release/*.tar.gz
 
   macos:
-    runs-on: macos-14   # Apple silicon; amd64 is cross-compiled with clang -arch x86_64
+    runs-on: macos-latest   # Apple silicon; amd64 is cross-compiled with clang -arch x86_64 (macos-14 images are retired)
     strategy:
       matrix:
         include:
@@ -53,12 +59,13 @@ jobs:
           - { arch: amd64, cc: "clang -arch x86_64" }
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
       - uses: actions/setup-go@v5
         with: { go-version-file: go.mod }
       - name: Build
         env: { GOARCH: "${{ matrix.arch }}", CC: "${{ matrix.cc }}" }
         run: |
-          V=${{ github.ref_name }}; C=$(git rev-parse HEAD)
+          V=${{ env.TAG }}; C=$(git rev-parse HEAD)
           LD="-X github.com/cosmos/cosmos-sdk/version.Name=nira -X github.com/cosmos/cosmos-sdk/version.AppName=nirad -X github.com/cosmos/cosmos-sdk/version.Version=$V -X github.com/cosmos/cosmos-sdk/version.Commit=$C"
           mkdir -p out && go build -trimpath -mod=readonly -buildvcs=false -ldflags "$LD" -o out/nirad ./cmd/nirad
           [ "${{ matrix.arch }}" = arm64 ] && out/nirad version
@@ -73,12 +80,13 @@ jobs:
     defaults: { run: { shell: bash } }
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
       - uses: actions/setup-go@v5
         with: { go-version-file: go.mod }
       - name: Build
         run: |
           gcc --version | head -1
-          V=${{ github.ref_name }}; C=$(git rev-parse HEAD)
+          V=${{ env.TAG }}; C=$(git rev-parse HEAD)
           LD="-X github.com/cosmos/cosmos-sdk/version.Name=nira -X github.com/cosmos/cosmos-sdk/version.AppName=nirad -X github.com/cosmos/cosmos-sdk/version.Version=$V -X github.com/cosmos/cosmos-sdk/version.Commit=$C"
           mkdir -p out && go build -trimpath -mod=readonly -buildvcs=false -ldflags "$LD" -o out/nirad.exe ./cmd/nirad
           out/nirad.exe version
@@ -100,6 +108,6 @@ jobs:
       - name: Draft release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          gh release create "${{ github.ref_name }}" dist/nirad-* dist/SHA256SUMS dist/SHA256SUMS.bundle \
+          gh release create "${{ env.TAG }}" dist/nirad-* dist/SHA256SUMS dist/SHA256SUMS.bundle \
             --repo "${{ github.repository }}" --draft --generate-notes \
-            --title "Nira ${{ github.ref_name }}"
+            --title "Nira ${{ env.TAG }}"
