@@ -163,5 +163,26 @@ await check("JSON-RPC: log, block and pending-tx filters; fee history; net/web3/
   await ws.destroy();
 });
 
+await check("invalid txs are rejected at submission with a reason; failing execution is mined with status 0 (K7)", async () => {
+  const to = ethers.Wallet.createRandom().address;
+  const n = await provider.getTransactionCount(wallet.address, "pending");
+  const gp = (await provider.getFeeData()).gasPrice * 2n;
+  const reject = async (tx, re) => {
+    const raw = await wallet.signTransaction({ chainId: EXPECTED_CHAIN_ID, type: 0, to, value: 1n, gasLimit: 21000, gasPrice: gp, nonce: n, ...tx });
+    await assert.rejects(provider.send("eth_sendRawTransaction", [raw]), e => re.test(String(e.error?.message ?? e.message)));
+  };
+  await reject({ gasLimit: 1000 }, /intrinsic gas too low/);
+  await reject({ nonce: 0 }, /nonce/);
+  await reject({ value: 10n ** 40n }, /insufficient funds/);
+  // passes CheckTx, reverts in execution → included, receipt status 0, nonce consumed (never silently dropped)
+  const tx = await counter.inc(1000, { gasLimit: 100000 });
+  const rc = await provider.waitForTransaction(tx.hash, 1, 30000);
+  assert.equal(rc.status, 0);
+  // cosmos/evm charges at least gasLimit × feemarket min_gas_multiplier (0.5): documented difference from Ethereum
+  const mult = (await (await fetch(`${REST}/cosmos/evm/feemarket/v1/params`)).json()).params.min_gas_multiplier;
+  assert.ok(rc.gasUsed >= 100000n * BigInt(Math.round(Number(mult) * 100)) / 100n);
+  assert.equal(await provider.getTransactionCount(wallet.address, "latest"), n + 1);
+});
+
 console.log(`\n${passed} checks passed`);
 process.exit(0);

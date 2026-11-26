@@ -156,7 +156,7 @@ What remains ❌ is outside the current logic: infrastructure-concentration cont
 | WebSocket subscriptions | ✅ | newHeads via ethers WebSocketProvider on `:8546` (`evm-e2e`) |
 | Wallet chain identification | ✅ | `eth_chainId` and `net_version` = 47201, unused in the public registry |
 | Common developer tools | 🟡 | ethers.js automated; Foundry, Hardhat and MetaMask not automated (G-TEST-3) |
-| DoS / resource limits | 🟡 | block gas 100 M, EIP-1559; **fee floor ≈ 0 on default config** (K6), silent mempool drops (K7) |
+| DoS / resource limits | 🟡 | block gas 100 M, EIP-1559, fee floor in network template (K6); invalid txs rejected with reasons, failures mined as status 0 (K7 closed). Note: ≥ 50 % of gasLimit is always charged (min_gas_multiplier) |
 | "Don't claim full compatibility without tests" | ✅ | docs claim only what's tested |
 
 ## §8 Validator selection and decentralisation
