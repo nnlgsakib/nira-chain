@@ -151,6 +151,9 @@ func peersOf(ctx context.Context, net Network) (string, error) {
 		if i := strings.LastIndex(st.Result.NodeInfo.ListenAddr, ":"); i >= 0 {
 			port = st.Result.NodeInfo.ListenAddr[i+1:]
 		}
+		if net.P2PPort != 0 {
+			port = fmt.Sprint(net.P2PPort)
+		}
 		out = append(out, fmt.Sprintf("%s@%s:%s", st.Result.NodeInfo.ID, u.Hostname(), port))
 	}
 	if len(out) == 0 {
@@ -325,24 +328,52 @@ func (m *Manager) tx(ctx context.Context, args ...string) (string, error) {
 // OnionLength is the number of epochs one onion covers (~1 year at 600-block epochs, 2 s blocks).
 const OnionLength = 100000
 
+// onionPath is where nirad keeps the onion secret in a node home.
+func (m *Manager) onionPath() string { return filepath.Join(m.Home(), "community", "onion.json") }
+
+// HasOnion reports whether this computer holds an onion secret for the node.
+func (m *Manager) HasOnion() bool {
+	_, err := os.Stat(m.onionPath())
+	return err == nil
+}
+
+// newOnion creates a fresh onion secret (moving any previous one aside) and returns its tip.
+func (m *Manager) newOnion(ctx context.Context) (string, error) {
+	if m.HasOnion() {
+		_ = os.Rename(m.onionPath(), fmt.Sprintf("%s.%d.bak", m.onionPath(), time.Now().Unix()))
+	}
+	out, err := m.run(ctx, "", "tx", "community", "onion-init", "--length", fmt.Sprint(OnionLength), "--overwrite", "--home", m.Home())
+	if err != nil {
+		return "", err
+	}
+	for _, line := range strings.Split(out, "\n") {
+		if f := strings.Fields(line); len(f) == 2 && f[0] == "onion_tip:" {
+			return f[1], nil
+		}
+	}
+	return "", errors.New("onion-init printed no tip")
+}
+
+// RotateOnion gives an already-registered node (for example one whose key was
+// imported from another machine) a new onion secret held on this computer.
+// The new commitment counts from the next epoch.
+func (m *Manager) RotateOnion(ctx context.Context) (string, error) {
+	tip, err := m.newOnion(ctx)
+	if err != nil {
+		return "", err
+	}
+	return m.tx(ctx, "community", "rotate-onion", tip, fmt.Sprint(OnionLength))
+}
+
 // Register creates the onion secret (kept in the node home) and registers the
 // node with a bond of bondNIRA whole NIRA.
 func (m *Manager) Register(ctx context.Context, bondNIRA int64) (string, error) {
 	if bondNIRA <= 0 {
 		return "", errors.New("bond must be positive")
 	}
-	out, err := m.run(ctx, "", "tx", "community", "onion-init", "--length", fmt.Sprint(OnionLength), "--overwrite", "--home", m.Home())
+	tip, err := m.newOnion(ctx)
 	if err != nil {
 		return "", err
-	}
-	tip := ""
-	for _, line := range strings.Split(out, "\n") {
-		if f := strings.Fields(line); len(f) == 2 && f[0] == "onion_tip:" {
-			tip = f[1]
-		}
-	}
-	if tip == "" {
-		return "", errors.New("onion-init printed no tip")
 	}
 	bond := new(big.Int).Mul(big.NewInt(bondNIRA), new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 	return m.tx(ctx, "community", "register-node", m.Settings().Moniker, bond.String()+"anira", tip, fmt.Sprint(OnionLength))

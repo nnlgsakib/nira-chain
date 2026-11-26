@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { Copy, Pause, Play, Power, Square, Wallet } from "lucide-react";
+import { Copy, KeyRound, Pause, Play, Power, Square, Wallet } from "lucide-react";
 import { api, errText, type Status } from "../lib/api";
 import { ago, bytes, nira } from "../lib/format";
 import { Button, Callout, Card, Dot, Field, Section, Stat } from "../components/ui";
 
-type Phase = "stopped" | "starting" | "syncing" | "unfunded" | "unregistered" | "paused" | "earning" | "unbonding";
+type Phase = "stopped" | "starting" | "syncing" | "unfunded" | "unregistered" | "onion" | "paused" | "earning" | "unbonding";
 
 export function phaseOf(s: Status): Phase {
   if (!s.node_running) return "stopped";
   if (!s.reachable) return "starting";
   if (s.catching_up) return "syncing";
   if (s.node_status === "UNBONDING") return "unbonding";
+  if (s.node_status === "ACTIVE" && !s.has_onion) return "onion";
   if (s.node_status === "ACTIVE") return s.worker_running ? "earning" : "paused";
   return BigInt(s.balance || "0") >= BigInt(s.min_bond || "0") && s.min_bond ? "unregistered" : "unfunded";
 }
@@ -21,6 +22,12 @@ const HERO: Record<Phase, { title: string; body: string; tone: "up" | "down" | "
   syncing: { title: "Syncing", body: "Downloading and checking blocks. Work starts when it has caught up.", tone: "warn", live: true },
   unfunded: { title: "Fund your node", body: "Send at least the minimum bond to your node's address to register.", tone: "warn", live: false },
   unregistered: { title: "Ready to register", body: "Bond NIRA to start being selected for verified work.", tone: "warn", live: false },
+  onion: {
+    title: "Set up this computer",
+    body: "This node is registered, but its selection secret (the onion) is on another computer. Make a new one here; it counts from the next epoch.",
+    tone: "warn",
+    live: false,
+  },
   paused: { title: "Registered, not working", body: "Start the work loop to prove your assigned tasks.", tone: "warn", live: false },
   earning: { title: "Working", body: "Checking the chain and proving tasks when selected.", tone: "up", live: true },
   unbonding: { title: "Leaving", body: "Your bond is unbonding and will be returned automatically.", tone: "faint", live: false },
@@ -70,6 +77,11 @@ export function Overview({ status, refresh }: { status: Status; refresh: () => v
             </Button>
           ) : (
             <>
+              {phase === "onion" && (
+                <Button size="lg" icon={<KeyRound size={18} />} loading={busy === "onion"} onClick={act("onion", api.RotateOnion)}>
+                  Set up this computer
+                </Button>
+              )}
               {phase === "paused" && (
                 <Button size="lg" icon={<Play size={18} />} loading={busy === "work"} onClick={act("work", api.StartWork)}>
                   Start working

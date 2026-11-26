@@ -45,6 +45,7 @@ export type Status = {
   next_epoch_height: string;
   min_bond: string;
   unbond_complete_height: string;
+  has_onion: boolean;
   disk_bytes: number;
   error?: string;
 };
@@ -85,6 +86,7 @@ type Bound = {
   StopWork(): Promise<void>;
   Register(bondNira: number): Promise<string>;
   Deregister(): Promise<string>;
+  RotateOnion(): Promise<string>;
   Logs(n: number): Promise<LogLine[]>;
 };
 

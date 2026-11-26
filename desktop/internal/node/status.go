@@ -42,6 +42,7 @@ type Status struct {
 	MinBond      string `json:"min_bond"`
 	UnbondAt     string `json:"unbond_complete_height"`
 
+	HasOnion  bool   `json:"has_onion"` // this computer holds the node's onion secret
 	DiskBytes int64  `json:"disk_bytes"`
 	Error     string `json:"error,omitempty"`
 }
@@ -60,6 +61,7 @@ func (m *Manager) Status(ctx context.Context) Status {
 		return st
 	}
 	st.DiskBytes = dirSize(filepath.Join(m.Home(), "data"))
+	st.HasOnion = m.HasOnion()
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
 	defer cancel()
 

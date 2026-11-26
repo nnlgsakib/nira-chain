@@ -16,7 +16,10 @@ type Network struct {
 	REST      string   `json:"rest"`
 	Seeds     string   `json:"seeds"`
 	StateSync bool     `json:"state_sync"`
-	Note      string   `json:"note"`
+	// P2PPort, when set, is the port peers are dialled on instead of the one the
+	// RPC node reports (it differs behind Docker port publishing).
+	P2PPort int    `json:"p2p_port,omitempty"`
+	Note    string `json:"note"`
 }
 
 // Networks lists the presets. Mainnet and testnet are placeholders until their
@@ -30,6 +33,12 @@ func Networks() []Network {
 		{
 			ID: "testnet", Name: "Testnet", ChainID: "nira_92000-1", EVMChainID: 92000,
 			StateSync: true, Note: "Not launched yet",
+		},
+		{
+			ID: "docker", Name: "Docker testnet", ChainID: "nira_93000-88", EVMChainID: 93000, Launched: true,
+			RPC: []string{"http://127.0.0.1:36657"}, REST: "http://127.0.0.1:31317", P2PPort: 36656,
+			// 8 validators + 6 community nodes started by deploy/testnet/testnet.py up
+			StateSync: false, Note: "Multi-node test network from deploy/testnet (Docker)",
 		},
 		{
 			ID: "local", Name: "Local network", ChainID: "nira_93000-1", EVMChainID: 93000, Launched: true,

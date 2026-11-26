@@ -284,6 +284,14 @@ func (a *App) Register(bondNira int64) (string, error) {
 	return m.Register(a.ctx, bondNira)
 }
 
+func (a *App) RotateOnion() (string, error) {
+	m, err := a.mgr()
+	if err != nil {
+		return "", err
+	}
+	return m.RotateOnion(a.ctx)
+}
+
 func (a *App) Deregister() (string, error) {
 	m, err := a.mgr()
 	if err != nil {
