@@ -87,8 +87,11 @@ ok "genesis community node ACTIVE (REST + precompile) and proved 2 tasks on the 
 stop() { kill "$(cat "$ROOT/val$1/node.pid")"; }
 start() { nohup $BIN start --home "$ROOT/val$1" >>"$ROOT/val$1/node.log" 2>&1 & echo $! >"$ROOT/val$1/node.pid"; }
 stop 3
-h0=$(height 0); sleep 8; h1=$(height 0)
-python3 -c "assert $h1 >= $h0 + 3" || fail "with 3/4 online height $h0 → $h1"
+# rounds whose proposer is the stopped validator must time out first, so poll
+# (up to 30 s) instead of judging a fixed window on a slow runner
+h0=$(height 0)
+for _ in $(seq 1 30); do sleep 1; h1=$(height 0); [ "$h1" -ge "$((h0 + 3))" ] && break; done
+python3 -c "assert $h1 >= $h0 + 3" || fail "with 3/4 online height $h0 → $h1 in 30 s"
 ok "1 of 4 validators down (25 % < 1/3): chain stays live ($h0 → $h1)"
 stop 2
 sleep 4; h0=$(height 0); sleep 10; h1=$(height 0)
