@@ -184,8 +184,10 @@ func (p *proc) running() bool {
 }
 
 // env applies the resource limits (Go runtime limits work on every OS).
+// The caller holds m.mu (spawn runs inside StartNode/StartWorker), so it reads
+// m.settings directly; calling m.Settings() here would deadlock.
 func (m *Manager) env() []string {
-	s := m.Settings()
+	s := m.settings
 	cpus := s.MaxCPUs
 	if cpus <= 0 {
 		cpus = max(1, runtime.NumCPU()/2)
