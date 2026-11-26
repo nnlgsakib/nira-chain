@@ -31,7 +31,7 @@ Legend: ✅ done and tested · 🟡 partial or untested · ⬜ not started
 | 19 | Security testing | 🟡 | Threat model (20 threats), key inventory, runbooks, fuzzing, adversarial unit + e2e tests, remote-signer test, govulncheck. *No external audit; economic attack simulation open* |
 | 20 | Performance benchmarks | 🟡 | Baseline (`docs/benchmarks/`): native 707, EVM 2 037, mixed 1 030 TPS on 1 validator; 673 / 494 at 4 / 16 co-located; 10-min Docker soak 52 074 txs. *Multi-host, 24 h soak, hundreds of community nodes not measured* |
 | 21 | Automated test infrastructure | ✅ | `make test`, `make e2e` (Cosmos, EVM, governance, Foundry), `make localtest-check`, `make validators-test`, `make sync-test`, Docker `testnet-test`. all run in CI (green on ea66dda) |
-| 22 | Reproducible build | 🟡 | `make release` bit-identical across clean clones; tag-only signed release workflow. *Not yet exercised: needs a first v* tag* |
+| 22 | Reproducible build | 🟡 | v0.1.1 published for 5 platforms with signed SHA256SUMS (cosign verified). Bit-identical between clean clones on one machine; *not across machines yet (C toolchain not pinned)* |
 | 23 | Deployment documentation | 🟡 | `genesis/README.md` (ceremony), `docs/OPERATIONS.md`. *No infrastructure-as-code* |
 | 24 | Node operator documentation | 🟡 | `docs/OPERATIONS.md`, `docs/INSTALL.md` |
 | 25 | Developer documentation | 🟡 | `readme.md`, `precompiles/community/ICommunity.sol`, specs in `docs/spec/`. *No dApp tutorial or JS SDK* |

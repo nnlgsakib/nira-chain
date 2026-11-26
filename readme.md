@@ -16,6 +16,10 @@
 
 Design documents: [architecture](docs/spec/architecture.md) · [community layer spec](docs/spec/community.md) · [decisions (ADRs)](docs/decisions/) · [project state, risks, open questions](CHAIN.md) · [original vision](docs/idea.md)
 
+## Download
+
+Pre-built `nirad` for Linux, macOS and Windows: [latest release](https://github.com/nnlgsakib/nira-chain/releases) (v0.1.1 is a pre-release: not audited). Check a download with `sha256sum -c SHA256SUMS --ignore-missing`; the release notes show how to verify the cosign signature. The **Nira Node** desktop app (`desktop/`) installs `nirad` for you and runs a lean community node.
+
 ## Quick start
 
 ```bash
