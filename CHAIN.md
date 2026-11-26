@@ -6,7 +6,7 @@
 - Mode: production
 - Phase: quality (build complete for CONS/STAKE/EXEC/COMM/GOV; threat model v0.1; testnets under fault, sync, upgrade and load tests). Ops gate still open: external audit, multi-host testnet, runbooks
 - Last updated: 2026-11-26 by blockchain-dev (remaining-tasks round: K7 closed, monitoring verified, community status + genesis export, checkpoints, runbooks, Foundry, release workflow, remote signing)
-- Next step: owner decisions (economics Q1/Q3, license, design choice for community v2 tasks G-COMM-2, chain-ID registration G-OPS-5); then first v* tag to exercise the release workflow; external audit
+- Next step: owner decisions (economics Q1/Q3, license, chain-ID registration G-OPS-5); then first v* tag to exercise the release workflow; external audit
 
 ## Idea
 Full text: `docs/idea.md`. Hybrid L1: professional Core Validators run Tendermint-style BFT consensus with delegated, non-custodial PoS. Ordinary home machines run Community Nodes that do randomly assigned, verifiable work and never sit on the finality path. Native EVM with Ethereum JSON-RPC shares one state with native modules. Rewards split between capital, validator responsibility and verified community service, with governed issuance.
@@ -80,6 +80,7 @@ Detail: `docs/spec/architecture.md`
 | ADR-0004 | Per-validator voting-power cap at delegation time | accepted |
 | ADR-0005 | Stack: Cosmos SDK + cosmos/evm via Ignite | accepted |
 | ADR-0007 | Nira naming for chain-owned APIs, modules and binary | accepted |
+| ADR-0009 | Community v2: no storage-proof tasks for consumer nodes (keep v1) | accepted |
 | ADR-0008 | Validator-set cadence (per-block) and performance-aware eligibility | accepted |
 | ADR-0006 | x/community reachable from Cosmos and EVM (precompile 0x…0900) | accepted |
 
@@ -93,13 +94,13 @@ Full gap analysis: docs/GAPS.md (IDs G-*). Requirement-by-requirement check: doc
 - [ ] Q1 Token supply, genesis allocation and vesting — now data-driven: edit genesis/networks/<net>.toml (template: mainnet.example.toml, all values proposed). Decision still needed from the user before mainnet
 - [x] Q2 EVM chain ID 47201: unused in chainid.network registry (checked 2026-11-25); register it before testnet (G-OPS-5)
 - [ ] Q3 Reward split 50/25/15/10 from the idea: validators vs delegators is set by commission in the F1 model, not by protocol. Needs a tokenomics spec (protocol-tokenomics)
-- [ ] Q4 v2 community task types (history serving, DA sampling) — design-spec
+- [x] Q4 Decided (ADR-0009, option A): no v2 storage tasks for consumer nodes; v1 rewards proven, correct, live state access, not storage
 - [ ] Q5 Formal model of x/community settlement (quality-formal-verification)
 
 ## Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner skill |
 |---|---|---|---|---|---|
-| K1 | Community nodes outsource state proofs to public archive RPCs | high | medium | Short proof window, v2 local-data tasks; documented limitation | protocol-verifiable-participation |
+| K1 | Community nodes can fetch proofs from public archive RPCs (they prove state access, not storage) | high | low (accepted, ADR-0009) | Documented: rewards pay for correct live state access by a bonded node; storage would need an audited PoRep tiered limitation | protocol-verifiable-participation |
 | K2 | Proposer biases the epoch seed | low | low | Hash-onion per-node reveal; reward-fairness impact only | protocol-randomness |
 | K3 | One operator runs several validators to bypass the cap | medium | high | Monitoring, operator disclosure, delegator UI | protocol-staking-validators |
 | K4 | > 1/3 stake on one cloud provider | medium | high | Diversity monitoring, validator docs | ops-infrastructure |

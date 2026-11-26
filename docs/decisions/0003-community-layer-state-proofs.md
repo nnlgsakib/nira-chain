@@ -1,6 +1,6 @@
 # ADR-0003: Community layer = hash-onion sortition + ICS-23 state-possession proofs
 
-- Status: accepted
+- Status: accepted (v2 task plan superseded by ADR-0009: no storage-proof tasks for consumer nodes)
 - Date: 2026-11-25
 - Written by: design-protocol (protocol-verifiable-participation, protocol-randomness)
 - Related: R-F5–R-F8, INV-COMM-*, K1, K2

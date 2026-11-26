@@ -97,7 +97,7 @@ Detailed, evidence-based list with IDs: [GAPS.md](GAPS.md).
 4. **Governance e2e**: param-change proposals, `MsgResolveAlert`, a software-upgrade rehearsal with an upgrade handler.
 5. **Performance**: benchmark plan and baseline (native, EVM, mixed; block time at 4/16/50 validators; community proof load).
 6. **Sync and storage**: state-sync snapshots, an archive node, community node resource limits.
-7. **Community layer v2** (Q4): history serving and DA sampling tasks to reduce the outsourcing risk (K1).
+7. ~~Community layer v2~~ decided against for consumer nodes (ADR-0009): sound storage proofs need GPU-class PoRep. A professional archive-provider tier stays possible later.
 8. **CI**: run `make e2e` and `make localtest-check` on PRs; release pipeline with checksums.
 9. **Ops**: monitoring dashboards and alerts, sentry/validator reference topology, runbooks.
 10. **Mainnet readiness** review (`docs/readiness.md`).

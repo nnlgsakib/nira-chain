@@ -66,7 +66,7 @@ What remains ❌ is outside the current logic: infrastructure-concentration cont
 | Verify finalised blocks independently | 🟡 | Running a full node verifies every block, but the protocol can't force it: proofs can be fetched from an archive RPC (K1, G-COMM-2) |
 | Relay transactions / blocks | ✅ (unrewarded) | Native p2p gossip. **Deliberately not rewarded**: relay work can't be verified ("no fake rewards") |
 | Perform assigned verification tasks | ✅ | ICS-23 state proofs at derived (store, height, key); `community_test.go`, e2e |
-| Data availability services | ❌→v2 | Not implemented (Q4). Counted under §9 |
+| Data availability services | ❌ | Not provided by consumer nodes: no sound, consumer-hardware proof exists (ADR-0009). Counted under §9 |
 | Disconnect / reconnect, keep identity and config | ✅ | identity = operator key + on-chain node; onion file local; offline never penalised; `TestOfflineNodeNoPenaltyAndRejoin` |
 | Not required to be validators | ✅ | separate module, separate bond |
 | Different hardware / connectivity | ✅ | no uptime requirement; pruned node is enough (window + epoch_blocks versions) |
@@ -189,7 +189,7 @@ What remains ❌ is outside the current logic: infrastructure-concentration cont
 | Snapshot creation, verification | ✅ | node 0 serves snapshots; restore verified end to end |
 | Pruning, archive, indexing, historical queries | 🟢 | pruning modes; CometBFT kv indexer; historical queries at any retained height (community proofs depend on this, and are tested) |
 | Defined storage per node class | 🟡 | documented in OPERATIONS.md; not measured |
-| Data availability layer | ❌ | v2 (Q4) |
+| Data availability layer | ❌ | decided out of scope for consumer nodes (ADR-0009) |
 
 ## §12 Governance
 

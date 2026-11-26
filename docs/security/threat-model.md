@@ -161,7 +161,7 @@ Format per threat: **Attack · Subsystem · Prevention · Detection · Recovery 
 | Double pay | TaskDone per (epoch, operator, index) | duplicate rejected in unit + both e2e |
 | Overpay the budget | floor division; remainder to community pool (INV-COMM-1) | `TestProofAndSettlement` |
 | Copying another node's proof | tasks are derived from the operator address | copy test (`ErrWrongTask`) |
-| Outsourcing proofs to an archive RPC | not preventable in v1. **ACCEPTED RISK K1**, v2 local-data tasks (G-COMM-2) | — |
+| Outsourcing proofs to an archive RPC | not preventable without GPU-class proof of replication. **ACCEPTED RISK K1** (ADR-0009): rewards are defined as paying for correct, live state access, not storage | — |
 
 ### TM-16 Fake community work
 - **Attack:** submit fabricated proofs, forged values, or random bytes.
